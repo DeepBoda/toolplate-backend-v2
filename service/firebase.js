@@ -68,30 +68,23 @@ exports.pushNotificationToBulk = async (to, title, body, click_action) => {
 };
 
 exports.pushNotificationTopic = async (topic, title, body, click_action) => {
-  const data = await new Promise((resolve, reject) => {
-    const message = {
-      notification: {
-        title,
-        body,
-      },
-      data: {
-        click_action,
-      },
-      topic,
-    };
-    admin
-      .messaging()
-      .send(message)
-      .then(function (response) {
-        // See the MessagingTopicManagementResponse reference documentation
-        // for the contents of response.
-        console.log("Successfully subscribed to topic:", response);
-        resolve("success");
-      })
-      .catch(function (error) {
-        console.log("Error subscribing to topic:", error);
-        resolve("success");
-      });
-  });
-  return true;
+  const message = {
+    notification: {
+      title,
+      body,
+    },
+    data: {
+      click_action,
+    },
+    topic,
+  };
+
+  try {
+    const response = await admin.messaging().send(message);
+    console.log("Successfully subscribed to topic:->", response);
+    return true;
+  } catch (error) {
+    console.log("Error subscribing to topic:", error);
+    return false;
+  }
 };

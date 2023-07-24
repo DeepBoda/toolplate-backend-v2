@@ -1,130 +1,78 @@
 const { Op } = require("sequelize");
 const { dateFilter } = require("./service");
-/**
- *
- * @param {String} attributes
- * @param {String | Number} value
- * @returns
- */
-exports.getOpAttributeValue = (attributes, value) => {
-  switch (attributes) {
-    case "gt":
-      return { [Op.gt]: value };
-    case "gte":
-      return { [Op.gte]: value };
-    case "lt":
-      return { [Op.lt]: value };
-    case "lte":
-      return { [Op.lte]: value };
-    case "eq":
-      return { [Op.eq]: value };
-    case "ne":
-      return { [Op.ne]: value };
-    case "notBetween": {
-      let arr = value;
-      if (typeof arr === "string") arr = JSON.parse(arr);
-      return { [Op.notBetween]: arr };
-    }
-    case "between": {
-      let arr = value;
-      if (typeof arr === "string") arr = JSON.parse(arr);
-      return { [Op.between]: arr };
-    }
-    default:
-      return null;
-  }
+
+exports.getOpAttributeValue = (attribute, value) => {
+  const operators = {
+    gt: Op.gt,
+    gte: Op.gte,
+    lt: Op.lt,
+    lte: Op.lte,
+    eq: Op.eq,
+    ne: Op.ne,
+    notBetween: Op.notBetween,
+    between: Op.between,
+    in: Op.in,
+    notIn: Op.notIn,
+  };
+
+  return operators[attribute] ? { [operators[attribute]]: value } : null;
 };
 
-/**
- *
- * @param {Object} q
- * @returns
- */
 exports.sqquery = (
   q,
-  condition = {},
-  searchQueryColumns = [],
-  excludeColumnsFromOrder = []
+  filter,
+  searchFrom = [],
+  excludeColumnsFromOrder = [],
+  excludeFields = []
 ) => {
-  const limit = q.limit * 1 || 100;
-  const page = q.page * 1 || 1;
+  const limit = parseInt(q.limit) || 10000;
+  const page = parseInt(q.page) || 1;
   const skip = (page - 1) * limit;
-  const sortBy = q.sortBy || "createdAt";
-  const sortOrder = q.sortOrder || "DESC";
-  const searchQuery = q?.searchQuery || "";
+  const sort = q.sort || "createdAt";
+  const sortBy = q.sortBy || "DESC";
+  const search = q?.search || "";
 
-  let where = { ...dateFilter(q) };
+  excludeFields.push("page", "sort", "limit", "fields", "sortBy", "search");
 
-  const excludeFileds = [
-    "page",
-    "sortBy",
-    "limit",
-    "fields",
-    "sortOrder",
-    "searchQuery",
-    "startDate",
-    "endDate",
-  ];
-  excludeFileds.forEach((el) => delete q[el]);
+  excludeFields.forEach((el) => delete q[el]);
 
-  function isJSON(str) {
-    const a = JSON.stringify(str);
-    try {
-      var json = JSON.parse(a);
-      return typeof json === "object";
-    } catch (e) {
-      return false;
-    }
-  }
+  let where = { ...filter, ...dateFilter(q) };
 
-  Object.keys(q).map((v) => {
-    if (isJSON(q[v])) {
-      Object.keys(q[v]).map((e) => {
-        let obj = this.getOpAttributeValue(e, q[v][e]);
+  Object.keys(q).forEach((v) => {
+    if (typeof q[v] === "object") {
+      Object.keys(q[v]).forEach((e) => {
+        const obj = exports.getOpAttributeValue(e, q[v][e]);
         if (obj) where[v] = obj;
       });
     } else {
       where[v] = q[v];
     }
   });
-  if (searchQuery && searchQueryColumns?.length) {
+
+  if (search && searchFrom.length) {
+    const searchData = searchFrom.map((columnName) => ({
+      [columnName]: {
+        [Op.iLike]: `%${search}%`,
+      },
+    }));
+
     if (Object.keys(where).length) {
-      where = {
-        ...where,
-        [Op.or]: searchQueryColumns?.map((columnName) => ({
-          [columnName]: {
-            [Op.like]: `%${searchQuery}%`,
-          },
-        })),
-      };
+      where = { ...where, [Op.or]: searchData };
     } else {
-      where = {
-        [Op.or]: searchQueryColumns?.map((columnName) => ({
-          [columnName]: {
-            [Op.like]: `%${searchQuery}%`,
-          },
-        })),
-      };
+      where = { [Op.or]: searchData };
     }
   }
 
-  if (
-    excludeColumnsFromOrder?.length &&
-    excludeColumnsFromOrder?.includes(sort)
-  ) {
+  if (excludeColumnsFromOrder.includes(sort)) {
     return { where, limit, offset: skip };
   }
-  where = { ...where, ...condition };
-  return { where, order: [[sortBy, sortOrder]], limit, offset: skip };
+
+  return { where, order: [[sort, sortBy]], limit, offset: skip };
 };
-/**
- *
- * @param {Object} q
- * @returns
- */
+
 exports.usersqquery = (q) => {
-  const limit = q?.limit * 1 || 200;
-  const page = q?.page * 1 || 1;
+  const limit = parseInt(q?.limit) || 10000;
+  const page = parseInt(q?.page) || 1;
   const skip = (page - 1) * limit;
   const sort = q?.sort || "createdAt";
   const sortBy = q?.sortBy || "DESC";
@@ -132,5 +80,6 @@ exports.usersqquery = (q) => {
   if (q?.limit) {
     return { order: [[sort, sortBy]], limit, offset: skip };
   }
+
   return { order: [[sort, sortBy]] };
 };

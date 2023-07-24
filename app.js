@@ -4,12 +4,13 @@ const cookieParser = require("cookie-parser");
 const createError = require("http-errors");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const compression = require("compression");
+const helmet = require("helmet");
 
-dotenv.config({ path: "./.env" });
+dotenv.config();
 
 const { responseInClientSlack } = require("./utils/slackBoat");
 const logService = require("./modules/log/service");
-
 const indexRouter = require("./routes");
 const sequelize = require("./config/db");
 
@@ -22,6 +23,10 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Configure CORS
 app.use(cors());
+// Enable compression middleware
+app.use(compression());
+// Enhance security with helmet middleware
+app.use(helmet());
 
 // Routes
 app.use("/", indexRouter);
@@ -61,9 +66,8 @@ if (force) {
 } else {
   sequelize
     .sync()
-    // .authenticate()
     .then(async (result) => {
-      console.log(`✔ Database connection successful`);
+      console.log(`✔ Database connection successful! 🎯`);
     })
     .catch((err) => {
       console.error("Error while creating tables...");
@@ -100,14 +104,9 @@ app.use((err, req, res, next) => {
     err.message = msg;
   }
 
-  // Set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
-
   res.status(err.status || 500).json({
     status: err.status || 500,
     message: err.message || "Unknown Error",
-    stack: err.stack,
   });
 
   // Logging the error
@@ -128,7 +127,6 @@ app.use((err, req, res, next) => {
     url: req.url,
     statusCode: err.status || res.statusCode,
     message: err.message || "Something went wrong!",
-    stack: err.stack,
     payload: {
       params: req.params,
       body: req.body,
@@ -137,5 +135,45 @@ app.use((err, req, res, next) => {
     userId: req?.requestor?.id,
   });
 });
+
+const port = normalizePort(process.env.PORT || "3000");
+app.set("port", port);
+
+const server = app.listen(port, () => {
+  console.log(`🧑🏻‍💻Server is listening to port ${port}`);
+});
+
+server.on("error", (error) => {
+  if (error.syscall !== "listen") {
+    throw error;
+  }
+
+  const bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
+
+  switch (error.code) {
+    case "EACCES":
+      console.error(bind + " requires elevated privileges");
+      process.exit(1);
+    case "EADDRINUSE":
+      console.error(bind + " is already in use");
+      process.exit(1);
+    default:
+      throw error;
+  }
+});
+
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    return val;
+  }
+
+  if (port >= 0) {
+    return port;
+  }
+
+  return false;
+}
 
 module.exports = app;

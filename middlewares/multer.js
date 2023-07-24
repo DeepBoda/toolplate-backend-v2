@@ -5,8 +5,8 @@ const { s3 } = require("../config/aws");
 
 const upload = multer({
   storage: multerS3({
-    s3: s3,
-    bucket: process.env.Bucket,
+    s3,
+    bucket: process.env.BUCKET,
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
@@ -16,4 +16,15 @@ const upload = multer({
   }),
 });
 
-module.exports = upload;
+const deleteFileFromS3 = (urls) => {
+  urls.map((url) => {
+    const key = url.split(`${process.env.BUCKET_URL}/`)[1];
+    console.log(key);
+    s3.deleteObject({ Bucket: process.env.BUCKET, Key: key }, (err, data) => {
+      if (err) console.log(err, err.stack);
+      else console.log("File deleted successfully", data);
+    });
+  });
+};
+
+module.exports = { upload, deleteFileFromS3 };

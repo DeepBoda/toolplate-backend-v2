@@ -1,7 +1,11 @@
 "use strict";
 
 const { Op, literal } = require("sequelize");
-const AWS = require("aws-sdk");
+const {
+  PinpointClient,
+  SendMessagesCommand,
+} = require("@aws-sdk/client-pinpoint");
+const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
 const createError = require("http-errors");
 const jwt = require("jsonwebtoken");
 const service = require("./service");

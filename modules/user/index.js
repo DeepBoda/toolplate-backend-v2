@@ -5,7 +5,7 @@ const user = require("./controller");
 const userSchema = require("./joiSchema");
 const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 const {joiValidator} = require("../../middlewares/joiValidator");
-const upload = require("../../middlewares/multer");
+const {upload,deleteFileFromS3} = require("../../middlewares/multer");
 
 
 // <=============== Public APIs ===============>

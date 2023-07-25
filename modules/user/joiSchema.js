@@ -2,16 +2,19 @@ const Joi = require("joi");
 
 module.exports = {
   signup: Joi.object().keys({
-    name: Joi.string().required(),
+    username: Joi.string().required(),
     email: Joi.string().email().required(),
-    mobile: Joi.number().min(1000000000).max(9999999999).required(),
-    dob: Joi.date().less("now").required(),
+    password: Joi.string().required(),
+    uid: Joi.string(),
     profilePic: Joi.string(),
+    FCM: Joi.string(),
   }),
   updateProfile: Joi.object().keys({
-    name: Joi.string(),
+    username: Joi.string(),
+    // email: Joi.string().email(),
+    // password: Joi.string(),
+    uid: Joi.string(),
     profilePic: Joi.string(),
-    dob: Joi.date().less("now"),
-    email: Joi.string().email(),
+    FCM: Joi.string(),
   }),
 };

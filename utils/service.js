@@ -50,7 +50,7 @@ exports.dateFilter = (query) => {
 
 exports.deleteFilesFromAwsS3Bucket = (file) => {
   s3.deleteObject(
-    { Bucket: process.env.Bucket, Key: file?.split("/").pop() },
+    { Bucket: process.env.BUCKET, Key: file?.split("/").pop() },
     (err, data) => {
       if (err) {
         console.log(err);

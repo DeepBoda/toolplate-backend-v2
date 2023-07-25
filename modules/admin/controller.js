@@ -23,11 +23,13 @@ exports.create = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
+    const { email, password } = req.body;
+
     const admin = await service.findOne({
-      where: { email: req.body.email },
+      where: { email },
     });
 
-    if (!admin || !(await bcryptjs.compare(req.body.password, admin.password)))
+    if (!admin || !(await bcryptjs.compare(password, admin.password)))
       return next(createError(401, "Incorrect email or password!"));
 
     const token = jwt.sign(
@@ -42,10 +44,9 @@ exports.login = async (req, res, next) => {
     admin.password = undefined;
     res.status(200).json({
       status: "success",
+      message: "Login successful",
       token,
-      data: {
-        admin,
-      },
+      role: "Admin",
     });
   } catch (err) {
     next(err);

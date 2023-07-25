@@ -45,24 +45,26 @@ if (force) {
     output: process.stdout,
   });
 
-  readline.question(`💀 Force true ?\n`, (input) => {
-    if (input == "y") {
-      sequelize
-        .sync({ force: true })
-        .then((result) => {
-          console.log(`✔ Database connected successfully! 🎯`);
-        })
-        .catch((err) => {
-          console.error("Error while creating tables...");
-          console.log(err);
-        });
-    } else {
-      console.log("Force true prevented, reconnect the DB.");
-      process.exit(0);
+  readline.question(
+    `💀 Are you sure? You want to force database synchronization??? (yes/y) \n`,
+    (input) => {
+      if (input.toLowerCase() === "yes" || input.toLowerCase() === "y") {
+        sequelize
+          .sync({ force: true })
+          .then((result) => {
+            console.log(`✔ Database connected successfully! 🎯`);
+            readline.close(); // Close the readline interface after the user's response
+          })
+          .catch((err) => {
+            console.error("Error while creating tables...");
+            console.log(err);
+          });
+      } else {
+        console.log("Force true prevented, reconnect the DB.");
+        process.exit(0);
+      }
     }
-
-    readline.close();
-  });
+  );
 } else {
   sequelize
     .sync()
@@ -135,45 +137,5 @@ app.use((err, req, res, next) => {
     userId: req?.requestor?.id,
   });
 });
-
-const port = normalizePort(process.env.PORT || "3000");
-app.set("port", port);
-
-const server = app.listen(port, () => {
-  console.log(`🧑🏻‍💻Server is listening to port ${port}`);
-});
-
-server.on("error", (error) => {
-  if (error.syscall !== "listen") {
-    throw error;
-  }
-
-  const bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
-
-  switch (error.code) {
-    case "EACCES":
-      console.error(bind + " requires elevated privileges");
-      process.exit(1);
-    case "EADDRINUSE":
-      console.error(bind + " is already in use");
-      process.exit(1);
-    default:
-      throw error;
-  }
-});
-
-function normalizePort(val) {
-  const port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    return val;
-  }
-
-  if (port >= 0) {
-    return port;
-  }
-
-  return false;
-}
 
 module.exports = app;

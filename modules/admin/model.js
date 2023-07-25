@@ -39,7 +39,6 @@ const Admin = sequelize.define(
     hooks: {
       beforeCreate: async (admin, options) => {
         console.log("before save/create admin");
-        // console.log(options);
         admin.password = await bcryptjs.hash(admin.password, 12);
       },
       beforeUpdate: async (admin, options) => {

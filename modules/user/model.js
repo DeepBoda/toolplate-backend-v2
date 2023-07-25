@@ -1,6 +1,7 @@
 "use strict";
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
+const bcryptjs = require("bcryptjs");
 
 const User = sequelize.define(
   "user",
@@ -11,27 +12,28 @@ const User = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    username: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
-
     email: {
       type: DataTypes.STRING,
+      allowNull: false,
+      isEmail: true,
     },
-    mobile: {
-      type: DataTypes.BIGINT,
+    password: {
+      type: DataTypes.STRING,
+      // allowNull: false,
     },
-    dob: {
-      type: DataTypes.DATE,
+    uid: {
+      type: DataTypes.STRING,
     },
-
     profilePic: {
       type: DataTypes.STRING,
     },
     FCM: {
       type: DataTypes.STRING,
     },
-
     deletedAt: {
       type: DataTypes.DATE,
       defaultValue: new Date(0),
@@ -43,21 +45,22 @@ const User = sequelize.define(
       email: {
         fields: ["email", "deletedAt"],
       },
-      mobile: {
-        fields: ["mobile", "deletedAt"],
-      },
+      // mobile: {
+      //   fields: ["mobile", "deletedAt"],
+      // },
     },
     hooks: {
-      // beforeCreate: async (User, options) => {
-      //   console.log("before save/create User");
-      //   User.password = await bcryptjs.hash(User.password, 12);
-      // },
-      // beforeUpdate: async (User, options) => {
-      //   console.log("Before update User");
-      //   User.password = await bcryptjs.hash(User.password, 12);
-      // },
+      beforeCreate: async (User, options) => {
+        console.log("before save/create User");
+        User.password = await bcryptjs.hash(User.password, 12);
+      },
+      beforeUpdate: async (User, options) => {
+        console.log("Before update User");
+        User.password = await bcryptjs.hash(User.password, 12);
+      },
     },
   }
 );
+// User.sync({ alter: true });
 
 module.exports = User;

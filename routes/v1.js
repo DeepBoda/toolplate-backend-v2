@@ -4,9 +4,9 @@ const { authMiddleware, protectRoute } = require("../middlewares/auth");
 
 router.use("/appConfig", require("../modules/appConfig"));
 router.use("/users", require("../modules/user"));
+router.use("/blog", require("../modules/blog"));
 router.use(authMiddleware);
 router.use(protectRoute(["User"]));
-router.use("/temps", require("../modules/_temp"));
-router.use("/userFeedback", require("../modules/userFeedback"));
+// router.use("/userFeedback", require("../modules/userFeedback"));
 
 module.exports = router;

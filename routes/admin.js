@@ -7,7 +7,5 @@ router.use(authMiddleware);
 router.use(protectRoute(["Admin"]));
 router.use("/users", require("../modules/user/admin"));
 router.use("/appConfig", require("../modules/appConfig/admin"));
-router.use("/userFeedback", require("../modules/userFeedback/admin"));
-router.use("/log", require("../modules/log/admin"));
-router.use("/temps", require("../modules/_temp/admin"));
+router.use("/blog", require("../modules/blog/admin"));
 module.exports = router;

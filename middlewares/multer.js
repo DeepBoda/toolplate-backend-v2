@@ -16,7 +16,7 @@ const upload = multer({
   }),
 });
 
-const deleteFileFromS3 = (urls) => {
+const deleteFilesFromS3 = (urls) => {
   urls.map((url) => {
     const key = url.split(`${process.env.BUCKET_URL}/`)[1];
     console.log(key);
@@ -27,4 +27,4 @@ const deleteFileFromS3 = (urls) => {
   });
 };
 
-module.exports = { upload, deleteFileFromS3 };
+module.exports = { upload, deleteFilesFromS3 };

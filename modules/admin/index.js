@@ -15,7 +15,7 @@ router.use(authMiddleware);
 
 // <=============== APIs for only Admins ===============>
 router.use(protectRoute(["Admin"]));
-router.get("/my/profile",admin.getMyProfile);
+router.get("/profile",admin.getMyProfile);
 
 
 

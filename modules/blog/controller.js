@@ -1,20 +1,23 @@
 "use strict";
-const createError = require("http-errors");
-const service = require("./service");
-const { sqquery } = require("../../utils/query");
 
+const service = require("./service");
+const { cl } = require("../../utils/service");
+const { usersqquery, sqquery } = require("../../utils/query");
+const { deleteFilesFromS3 } = require("../../middlewares/multer");
+
+// ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    const temp = await service.create(req.body);
+    if (req.file) req.body.image = req.file.location;
+    const data = await service.create(req.body);
 
     res.status(200).json({
       status: "success",
-      data: {
-        temp,
-      },
+      data,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    cl(err);
+    next(err);
   }
 };
 
@@ -24,7 +27,6 @@ exports.getAll = async (req, res, next) => {
 
     res.status(200).send({
       status: "success",
-
       data,
     });
   } catch (error) {
@@ -49,27 +51,46 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+// ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
+    if (req.file) {
+      req.body.image = req.file.location;
+      oldBlogData = await service.findOne({
+        where: {
+          id: req.params.id,
+        },
+      });
+    }
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
       },
     });
 
-    res.status(200).send({
+    res.status(200).json({
       status: "success",
       data: {
         affectedRows,
       },
+      // token,
     });
-  } catch (error) {
-    next(error);
+    if (req.file && oldBlogData?.image) deleteFilesFromS3([oldBlogData?.image]);
+  } catch (err) {
+    next(err);
   }
 };
 
 exports.delete = async (req, res, next) => {
   try {
+    // If a image URL is present, delete the file from S3
+    const { image } = await service.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+    if (image) deleteFilesFromS3([image]);
+
     const affectedRows = await service.delete({
       where: {
         id: req.params.id,

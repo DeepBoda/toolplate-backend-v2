@@ -47,16 +47,3 @@ exports.dateFilter = (query) => {
 
   return dateFilter;
 };
-
-exports.deleteFilesFromAwsS3Bucket = (file) => {
-  s3.deleteObject(
-    { Bucket: process.env.BUCKET, Key: file?.split("/").pop() },
-    (err, data) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(data);
-      }
-    }
-  );
-};

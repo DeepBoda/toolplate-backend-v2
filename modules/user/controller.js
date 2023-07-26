@@ -5,10 +5,10 @@ const createError = require("http-errors");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const service = require("./service");
-const { deleteFilesFromAwsS3Bucket } = require("../../utils/service");
+const { deleteFilesFromS3 } = require("../../middlewares/multer");
 
 const { cl, jwtDecoder } = require("../../utils/service");
-const { sqquery } = require("../../utils/query");
+const { usersqquery, sqquery } = require("../../utils/query");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -130,7 +130,7 @@ exports.updateProfile = async (req, res, next) => {
       // token,
     });
     if (req.file && oldUserData?.profilePic)
-      deleteFilesFromAwsS3Bucket(oldUserData?.profilePic);
+      deleteFilesFromS3([oldUserData?.profilePic]);
   } catch (err) {
     next(err);
   }
@@ -139,7 +139,7 @@ exports.updateProfile = async (req, res, next) => {
 // <=============== For Admins ===================>
 
 exports.getAll = async (req, res, next) => {
-  const users = await service.findAll({});
+  const users = await service.findAll({ ...usersqquery });
 
   res.status(200).send({
     status: "success",
@@ -161,6 +161,14 @@ exports.getById = async (req, res, next) => {
 };
 
 exports.deleteById = async (req, res, next) => {
+  // If a image URL is present, delete the file from S3
+  const { profilePic } = await service.findOne({
+    where: {
+      id: req.params.id,
+    },
+  });
+  if (profilePic) deleteFilesFromS3([profilePic]);
+
   const affectedRows = await service.delete({
     where: {
       id: req.params.id,

@@ -1,6 +1,9 @@
 "use strict";
 
 const service = require("./service");
+const viewService = require("../blogView/service");
+const sequelize = require("../../config/db");
+// const redisService = require("../../utils/redis");
 const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
@@ -29,27 +32,39 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll({
+    // let data = await redisService.get(`blogs`);
+    // if (!data)
+    const data = await service.findAll({
       ...sqquery(req.query),
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+            ),
+            "views",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+            ),
+            "likes",
+          ],
+        ],
+      },
       include: [
         {
           model: BlogCategory,
-          // attributes: ["id", "name"],
+          attributes: ["id", "blogId", "categoryId"],
           include: {
             model: Category,
-            // attributes: ["id", "name"],
-          },
-        },
-        {
-          model: BlogTag,
-          // attributes: ["id", "name"],
-          include: {
-            model: Tag,
-            // attributes: ["id", "name"],
+            attributes: ["id", "name"],
           },
         },
       ],
     });
+
+    // redisService.set(`blogs`, data);
 
     res.status(200).send({
       status: "success",
@@ -62,19 +77,81 @@ exports.getAll = async (req, res, next) => {
 
 exports.getById = async (req, res, next) => {
   try {
+    // let data = await redisService.get(`oneBlog`);
+    // if (!data)
     const data = await service.findOne({
       where: {
         id: req.params.id,
       },
-      include: {
-        model: BlogComment,
-        // attributes: ["id", "name"],
-        include: {
-          model: BlogCommentReply,
-          // attributes: ["id", "name"],
-        },
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+            ),
+            "views",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+            ),
+            "likes",
+          ],
+        ],
       },
+      include: [
+        {
+          model: BlogCategory,
+          attributes: ["id", "blogId", "categoryId"],
+          include: {
+            model: Category,
+            attributes: ["id", "name"],
+          },
+        },
+        {
+          model: BlogTag,
+          attributes: ["id", "blogId", "tagId"],
+          include: {
+            model: Tag,
+            attributes: ["id", "name"],
+          },
+        },
+
+        {
+          model: BlogComment,
+          attributes: [
+            "id",
+            "comment",
+            [
+              sequelize.literal(
+                "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogComments`.`id` = `blogCommentLikes`.`blogCommentId` )"
+              ),
+              "likes",
+            ],
+          ],
+          include: [
+            {
+              model: BlogCommentReply,
+              attributes: [
+                "id",
+                "reply",
+                // [
+                //   sequelize.literal(
+                //     "(SELECT COUNT(*) FROM `blogCommentReplyLikes` WHERE `blogCommentReplies`.`id` = `blogCommentReplyLikes`.`blogCommentReplyId`)"
+                //   ),
+                //   "likes",
+                // ],
+              ],
+            },
+          ],
+        },
+      ],
     });
+    await viewService.create({
+      blogId: req.params.id,
+      userId: req.requestor?.id ?? null,
+    });
+    // redisService.set(`oneBlog`, data);
 
     res.status(200).send({
       status: "success",

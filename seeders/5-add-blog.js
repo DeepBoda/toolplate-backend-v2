@@ -84,7 +84,7 @@ module.exports = {
             Syntex – a company which makes glitter powder had an EBITDA drop of ~4K % and
             hence, stock price was not glittery.</span></p>`,
     ];
-    for (var i = 0; i < 50; i++) {
+    for (var i = 0; i < 25; i++) {
       blogs.push({
         title: faker.word.verb(5),
         description: faker.random.words(20),

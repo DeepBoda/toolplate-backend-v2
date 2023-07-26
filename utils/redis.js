@@ -1,37 +1,32 @@
+const logger = require("./logger");
 const redisClient = require("../config/redis");
 
-/**
- *
- * @param {String} endPoint
- * @returns
- */
 exports.get = async (endPoint) => {
-  const data = await redisClient.GET(endPoint);
-  if (data) return JSON.parse(data);
-  return null;
+  try {
+    const data = await redisClient.GET(endPoint);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    logger.error(`Error in Redis GET operation: ${error}`);
+    return null;
+  }
 };
 
-/**
- *
- * @param {String} endPoint
- * @param {Array | Object | String | Number | Boolean} data
- */
 exports.set = async (endPoint, data) => {
-  await redisClient.SET(endPoint, JSON.stringify(data));
+  try {
+    await redisClient.SET(endPoint, JSON.stringify(data));
+  } catch (error) {
+    logger.error(`Error in Redis SET operation: ${error}`);
+  }
 };
 
-/**
- *
- * @param {Array} endPoint
- */
 exports.del = async (endPoint) => {
-  await redisClient.DEL(endPoint);
+  try {
+    await redisClient.DEL(endPoint);
+  } catch (error) {
+    logger.error(`Error in Redis DEL operation: ${error}`);
+  }
 };
 
-/**
- *
- * @param {String} endPoint
- */
 exports.hDel = async (endPoint) => {
   try {
     let keys = await redisClient.KEYS(endPoint);
@@ -39,7 +34,7 @@ exports.hDel = async (endPoint) => {
       await redisClient.DEL(keys);
     }
   } catch (error) {
-    console.log(error);
+    logger.error(`Error in Redis HDEL operation: ${error}`);
   }
 };
 
@@ -47,6 +42,6 @@ exports.flushAll = async () => {
   try {
     await redisClient.FLUSHALL();
   } catch (error) {
-    console.log(error);
+    logger.error(`Error in Redis FLUSHALL operation: ${error}`);
   }
 };

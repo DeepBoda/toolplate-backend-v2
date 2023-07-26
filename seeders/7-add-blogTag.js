@@ -14,7 +14,7 @@ module.exports = {
       attributes: ["id"],
     });
 
-    for (var i = 0; i < 200; i++) {
+    for (var i = 0; i < 10; i++) {
       blogTags.push({
         blogId: faker.helpers.arrayElement(blog.map((el) => el.id)),
         tagId: faker.helpers.arrayElement(tag.map((el) => el.id)),

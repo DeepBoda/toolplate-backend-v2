@@ -10,11 +10,14 @@ router.use("/blogCategory", require("../modules/blogCategory"));
 router.use("/tag", require("../modules/tag"));
 router.use("/blogTag", require("../modules/blogTag"));
 router.use("/blogView", require("../modules/blogView"));
+router.use("/blogLike", require("../modules/blogLike"));
 router.use(authMiddleware);
 router.use(protectRoute(["User"]));
 router.use("/wishlist", require("../modules/wishlist"));
 router.use("/comment", require("../modules/blogComment"));
+router.use("/commentLike", require("../modules/blogCommentLike"));
 router.use("/comments/reply", require("../modules/blogCommentReply"));
+router.use("/comments/replyLike", require("../modules/blogCommentReplyLike"));
 // router.use("/userFeedback", require("../modules/userFeedback"));
 
 module.exports = router;

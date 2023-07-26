@@ -2,24 +2,21 @@
 
 /** @type {import('sequelize-cli').Migration} */
 const { faker } = require("@faker-js/faker");
-const blogComments = require("../modules/blogComment/service");
+const blogs = require("../modules/blog/service");
 const users = require("../modules/user/service");
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const blogCommentReplies = [];
-    const blogComment = await blogComments.findAll({
+    const blogLikes = [];
+    const blog = await blogs.findAll({
       attributes: ["id"],
     });
     const user = await users.findAll({
       attributes: ["id"],
     });
 
-    for (var i = 0; i < 5000; i++) {
-      blogCommentReplies.push({
-        reply: faker.random.words(10),
-        blogCommentId: faker.helpers.arrayElement(
-          blogComment.map((el) => el.id)
-        ),
+    for (var i = 0; i < 1000; i++) {
+      blogLikes.push({
+        blogId: faker.helpers.arrayElement(blog.map((el) => el.id)),
         userId: faker.helpers.arrayElement(user.map((el) => el.id)),
         createdAt: faker.date.between(
           "2020-01-01T00:00:00.000Z",
@@ -32,7 +29,7 @@ module.exports = {
       });
     }
 
-    await queryInterface.bulkInsert("blogCommentReplies", blogCommentReplies, {
+    await queryInterface.bulkInsert("blogLikes", blogLikes, {
       ignoreDuplicates: true,
     });
   },
@@ -44,6 +41,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete("blogCommentReplies");
+    await queryInterface.bulkDelete("blogLikes");
   },
 };

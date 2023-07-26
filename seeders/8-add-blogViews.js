@@ -10,7 +10,7 @@ module.exports = {
       attributes: ["id"],
     });
 
-    for (var i = 0; i < 200; i++) {
+    for (var i = 0; i < 250; i++) {
       blogViews.push({
         blogId: faker.helpers.arrayElement(blog.map((el) => el.id)),
         userId: 1,

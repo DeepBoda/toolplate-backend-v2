@@ -13,7 +13,13 @@ router.use("/blogCategory", require("../modules/blogCategory/admin"));
 router.use("/tag", require("../modules/tag/admin"));
 router.use("/blogTag", require("../modules/blogTag/admin"));
 router.use("/blogView", require("../modules/blogView/admin"));
+router.use("/blogLike", require("../modules/blogLike/admin"));
 router.use("/wishlist", require("../modules/wishlist/admin"));
 router.use("/comment", require("../modules/blogComment/admin"));
+router.use("/commentLike", require("../modules/blogCommentLike/admin"));
 router.use("/comments/reply", require("../modules/blogCommentReply/admin"));
+router.use(
+  "/comments/replyLike",
+  require("../modules/blogCommentReplyLike/admin")
+);
 module.exports = router;

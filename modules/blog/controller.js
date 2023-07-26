@@ -54,6 +54,7 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
+    let oldBlogData;
     if (req.file) {
       req.body.image = req.file.location;
       oldBlogData = await service.findOne({
@@ -62,21 +63,26 @@ exports.update = async (req, res, next) => {
         },
       });
     }
+
+    // Update the blog data
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
       },
     });
 
+    // Send the response
     res.status(200).json({
       status: "success",
       data: {
         affectedRows,
       },
-      // token,
     });
+
+    // Handle the file deletion
     if (req.file && oldBlogData?.image) deleteFilesFromS3([oldBlogData?.image]);
   } catch (err) {
+    // Handle errors here
     next(err);
   }
 };

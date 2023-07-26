@@ -32,7 +32,7 @@ app.use(helmet());
 app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
-app.use((req, _, next) => {
+app.use((req, res, next) => {
   next(createError(404, `Can't find ${req.originalUrl} on this server!`));
 });
 
@@ -81,6 +81,7 @@ if (force) {
 app.use((err, req, res, next) => {
   // Handle Sequelize errors
   if (err.name === "SequelizeUniqueConstraintError") {
+    // Handle unique constraint errors (e.g., duplicate data)
     err.status = 409;
     let msg = "";
 
@@ -89,9 +90,8 @@ app.use((err, req, res, next) => {
     });
 
     err.message = msg;
-  }
-
-  if (err.name === "SequelizeValidationError") {
+  } else if (err.name === "SequelizeValidationError") {
+    // Handle validation errors
     err.status = 400;
     let msg = "";
 
@@ -106,6 +106,7 @@ app.use((err, req, res, next) => {
     err.message = msg;
   }
 
+  // Handle other errors
   res.status(err.status || 500).json({
     status: err.status || 500,
     message: err.message || "Unknown Error",

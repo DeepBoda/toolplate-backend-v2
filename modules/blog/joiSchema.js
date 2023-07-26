@@ -8,7 +8,7 @@ module.exports = {
     readTime: Joi.number().required(),
     overview: Joi.string().required(),
   }),
-  edit: Joi.object().keys({
+  update: Joi.object().keys({
     title: Joi.string(),
     description: Joi.string(),
     image: Joi.string(),

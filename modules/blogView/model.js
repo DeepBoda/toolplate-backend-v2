@@ -28,11 +28,9 @@ Blog.hasMany(BlogView, {
   },
 });
 BlogView.belongsTo(Blog);
-User.hasMany(BlogView, {
-  foreignKey: {
-    allowNull: false,
-  },
-});
+
+// without login blog can be accessible so userId not required
+User.hasMany(BlogView);
 BlogView.belongsTo(User);
 
 module.exports = BlogView;

@@ -1,7 +1,6 @@
 "use strict";
 
 const service = require("./service");
-const reply = require("../blogCommentReply/service");
 const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
@@ -76,11 +75,6 @@ exports.update = async (req, res, next) => {
 exports.delete = async (req, res, next) => {
   try {
     const affectedRows = await service.delete({
-      where: {
-        id: req.params.id,
-      },
-    });
-    await reply.delete({
       where: {
         id: req.params.id,
       },

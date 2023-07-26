@@ -4,6 +4,12 @@ const service = require("./service");
 const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
+const BlogComment = require("../blogComment/model");
+const BlogCommentReply = require("../blogCommentReply/model");
+const BlogCategory = require("../blogCategory/model");
+const Category = require("../category/model");
+const BlogTag = require("../blogTag/model");
+const Tag = require("../tag/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -23,7 +29,27 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query),
+      include: [
+        {
+          model: BlogCategory,
+          // attributes: ["id", "name"],
+          include: {
+            model: Category,
+            // attributes: ["id", "name"],
+          },
+        },
+        {
+          model: BlogTag,
+          // attributes: ["id", "name"],
+          include: {
+            model: Tag,
+            // attributes: ["id", "name"],
+          },
+        },
+      ],
+    });
 
     res.status(200).send({
       status: "success",
@@ -39,6 +65,14 @@ exports.getById = async (req, res, next) => {
     const data = await service.findOne({
       where: {
         id: req.params.id,
+      },
+      include: {
+        model: BlogComment,
+        // attributes: ["id", "name"],
+        include: {
+          model: BlogCommentReply,
+          // attributes: ["id", "name"],
+        },
       },
     });
 

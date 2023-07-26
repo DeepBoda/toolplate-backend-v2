@@ -1,19 +1,19 @@
 "use strict";
 
 const router = require("express").Router();
-const comment = require("./controller");
+const reply = require("./controller");
 const { authMiddleware, protectRoute } = require("../../middlewares/auth");
-const commentSchema = require("./joiSchema");
+const replySchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 
 router.use(authMiddleware,protectRoute(['User']));
 router
   .route("/")
-  .get(comment.getAll)
-  .post(joiValidator(commentSchema.create), comment.add);
+  .get(reply.getAll)
+  .post(joiValidator(replySchema.create), reply.add);
 router
   .route("/:id")
-  .get(comment.getById);
+  .get(reply.getById);
 
 
 module.exports = router;

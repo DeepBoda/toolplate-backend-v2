@@ -15,4 +15,5 @@ router.use("/blogTag", require("../modules/blogTag/admin"));
 router.use("/blogView", require("../modules/blogView/admin"));
 router.use("/wishlist", require("../modules/wishlist/admin"));
 router.use("/comment", require("../modules/blogComment/admin"));
+router.use("/comments/reply", require("../modules/blogCommentReply/admin"));
 module.exports = router;

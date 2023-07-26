@@ -8,15 +8,47 @@ module.exports = {
     const categories = [
       {
         name: "CopyWriting",
+        createdAt: faker.date.between(
+          "2020-01-01T00:00:00.000Z",
+          "2023-03-01T00:00:00.000Z"
+        ),
+        updatedAt: faker.date.between(
+          "2020-01-01T00:00:00.000Z",
+          "2023-03-01T00:00:00.000Z"
+        ),
       },
       {
         name: "Image",
+        createdAt: faker.date.between(
+          "2020-01-01T00:00:00.000Z",
+          "2023-03-01T00:00:00.000Z"
+        ),
+        updatedAt: faker.date.between(
+          "2020-01-01T00:00:00.000Z",
+          "2023-03-01T00:00:00.000Z"
+        ),
       },
       {
         name: "Video",
+        createdAt: faker.date.between(
+          "2020-01-01T00:00:00.000Z",
+          "2023-03-01T00:00:00.000Z"
+        ),
+        updatedAt: faker.date.between(
+          "2020-01-01T00:00:00.000Z",
+          "2023-03-01T00:00:00.000Z"
+        ),
       },
       {
         name: "Audio",
+        createdAt: faker.date.between(
+          "2020-01-01T00:00:00.000Z",
+          "2023-03-01T00:00:00.000Z"
+        ),
+        updatedAt: faker.date.between(
+          "2020-01-01T00:00:00.000Z",
+          "2023-03-01T00:00:00.000Z"
+        ),
       },
     ];
 

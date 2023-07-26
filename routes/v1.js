@@ -14,6 +14,7 @@ router.use(authMiddleware);
 router.use(protectRoute(["User"]));
 router.use("/wishlist", require("../modules/wishlist"));
 router.use("/comment", require("../modules/blogComment"));
+router.use("/comments/reply", require("../modules/blogCommentReply"));
 // router.use("/userFeedback", require("../modules/userFeedback"));
 
 module.exports = router;

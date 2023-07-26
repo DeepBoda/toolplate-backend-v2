@@ -10,7 +10,9 @@
     "migration:undo:all": "npx sequelize-cli db:migrate:undo:all",
     "migration:create": "npx sequelize-cli migration:generate --name",
     "seeder:create": "npx sequelize-cli seed:generate --name",
-    "seeder:run": "npx sequelize-cli db:seed --seed"
+    "seeder:run": "npx sequelize-cli db:seed --seed",
+    "seeder:all": "npx sequelize-cli db:seed:all",
+    "seeder:undo": "npx sequelize-cli db:seed:undo"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.337.0",

@@ -1,10 +1,10 @@
 "use strict";
 
 const router = require("express").Router();
-const blog = require("./controller");
+const category = require("./controller");
 
-router.route("/").get(blog.getAll);
-router.route("/:id").get(blog.getById);
+router.route("/").get(category.getAll);
+router.route("/:id").get(category.getById);
 
 
 

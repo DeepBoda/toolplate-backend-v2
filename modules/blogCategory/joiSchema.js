@@ -2,9 +2,11 @@ const Joi = require("joi");
 
 module.exports = {
   create: Joi.object().keys({
-    name: Joi.string().required(),
+    blogId: Joi.number().required(),
+    categoryId: Joi.number().required(),
   }),
   update: Joi.object().keys({
-    name: Joi.string(),
+    blogId: Joi.number(),
+    categoryId: Joi.number(),
   }),
 };

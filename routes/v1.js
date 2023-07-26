@@ -12,6 +12,8 @@ router.use("/blogTag", require("../modules/blogTag"));
 router.use("/blogView", require("../modules/blogView"));
 router.use(authMiddleware);
 router.use(protectRoute(["User"]));
+router.use("/wishlist", require("../modules/wishlist"));
+router.use("/comment", require("../modules/blogComment"));
 // router.use("/userFeedback", require("../modules/userFeedback"));
 
 module.exports = router;

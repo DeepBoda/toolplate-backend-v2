@@ -1,8 +1,8 @@
 "use strict";
 
 const router = require("express").Router();
-const blog = require("./controller");
-const blogSchema = require("./joiSchema");
+const blogCategory = require("./controller");
+const blogCategorySchema = require("./joiSchema");
 const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 const { joiValidator } = require("../../middlewares/joiValidator");
 const { upload } = require("../../middlewares/multer");
@@ -11,12 +11,12 @@ router.use(authMiddleware, protectRoute(["Admin"]));
 
 router
   .route("/")
-  .get(blog.getAll)
-  .post(joiValidator(blogSchema.create), blog.add);
+  .get(blogCategory.getAll)
+  .post(joiValidator(blogCategorySchema.create), blogCategory.add);
 router
   .route("/:id")
-  .get(blog.getById)
-  .patch(joiValidator(blogSchema.update), blog.update)
-  .delete(blog.delete);
+  .get(blogCategory.getById)
+  .patch(joiValidator(blogCategorySchema.update), blogCategory.update)
+  .delete(blogCategory.delete);
 
 module.exports = router;

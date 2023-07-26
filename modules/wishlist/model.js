@@ -3,7 +3,7 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const Blog = require("../blog/model");
 const User = require("../user/model");
-const BlogView = sequelize.define("blogView", {
+const Wishlist = sequelize.define("wishlist", {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -12,15 +12,15 @@ const BlogView = sequelize.define("blogView", {
   },
 });
 
-Blog.hasMany(BlogView, {
+Blog.hasMany(Wishlist, {
   foreignKey: {
     allowNull: false,
   },
 });
-BlogView.belongsTo(Blog);
+Wishlist.belongsTo(Blog);
 
 // without login blog can be accessible so userId not required
-User.hasMany(BlogView);
-BlogView.belongsTo(User);
+User.hasMany(Wishlist);
+Wishlist.belongsTo(User);
 
-module.exports = BlogView;
+module.exports = Wishlist;

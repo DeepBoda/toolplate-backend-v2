@@ -11,4 +11,6 @@ router.use("/blog", require("../modules/blog/admin"));
 router.use("/category", require("../modules/category/admin"));
 router.use("/blogCategory", require("../modules/blogCategory/admin"));
 router.use("/tag", require("../modules/tag/admin"));
+router.use("/blogTag", require("../modules/blogTag/admin"));
+router.use("/blogView", require("../modules/blogView/admin"));
 module.exports = router;

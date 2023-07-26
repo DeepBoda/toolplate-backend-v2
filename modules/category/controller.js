@@ -8,7 +8,6 @@ const { deleteFilesFromS3 } = require("../../middlewares/multer");
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    if (req.file) req.body.image = req.file.location;
     const data = await service.create(req.body);
 
     res.status(200).json({
@@ -54,16 +53,6 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    let oldBlogData;
-    if (req.file) {
-      req.body.image = req.file.location;
-      oldBlogData = await service.findOne({
-        where: {
-          id: req.params.id,
-        },
-      });
-    }
-
     // Update the blog data
     const [affectedRows] = await service.update(req.body, {
       where: {
@@ -78,9 +67,6 @@ exports.update = async (req, res, next) => {
         affectedRows,
       },
     });
-
-    // Handle the file deletion
-    if (req.file && oldBlogData?.image) deleteFilesFromS3([oldBlogData?.image]);
   } catch (err) {
     // Handle errors here
     next(err);
@@ -89,13 +75,6 @@ exports.update = async (req, res, next) => {
 
 exports.delete = async (req, res, next) => {
   try {
-    // If a image URL is present, delete the file from S3
-    const { image } = await service.findOne({
-      where: {
-        id: req.params.id,
-      },
-    });
-
     const affectedRows = await service.delete({
       where: {
         id: req.params.id,
@@ -108,8 +87,6 @@ exports.delete = async (req, res, next) => {
         affectedRows,
       },
     });
-    // Handle the file deletion
-    if (image) deleteFilesFromS3([image]);
   } catch (error) {
     next(error);
   }

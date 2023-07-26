@@ -9,4 +9,6 @@ router.use("/users", require("../modules/user/admin"));
 router.use("/appConfig", require("../modules/appConfig/admin"));
 router.use("/blog", require("../modules/blog/admin"));
 router.use("/category", require("../modules/category/admin"));
+router.use("/blogCategory", require("../modules/blogCategory/admin"));
+router.use("/tag", require("../modules/tag/admin"));
 module.exports = router;

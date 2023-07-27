@@ -13,14 +13,14 @@ const BlogCommentReplyLike = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-  },
-  {
-    uniqueKeys: {
-      blogCommentReplyId_userId: {
-        fields: ["blogCommentReplyId", "userId"],
-      },
-    },
   }
+  // {
+  //   uniqueKeys: {
+  //     blogCommentReplyId_userId: {
+  //       fields: ["blogCommentReplyId", "userId"],
+  //     },
+  //   },
+  // }
 );
 
 BlogCommentReply.hasMany(BlogCommentReplyLike, {
@@ -37,5 +37,7 @@ User.hasMany(BlogCommentReplyLike, {
   },
 });
 BlogCommentReplyLike.belongsTo(User);
+
+BlogCommentReplyLike.sync({ alter: true });
 
 module.exports = BlogCommentReplyLike;

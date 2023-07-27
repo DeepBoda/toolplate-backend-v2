@@ -6,7 +6,7 @@ const blogComments = require("../modules/blogComment/service");
 const users = require("../modules/user/service");
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const blogCommentReplies = [];
+    const blogCommentLikes = [];
     const blogComment = await blogComments.findAll({
       attributes: ["id"],
     });
@@ -14,9 +14,8 @@ module.exports = {
       attributes: ["id"],
     });
 
-    for (var i = 0; i < 100; i++) {
-      blogCommentReplies.push({
-        reply: faker.random.words(10),
+    for (var i = 0; i < 1000; i++) {
+      blogCommentLikes.push({
         blogCommentId: faker.helpers.arrayElement(
           blogComment.map((el) => el.id)
         ),
@@ -32,7 +31,7 @@ module.exports = {
       });
     }
 
-    await queryInterface.bulkInsert("blogCommentReplies", blogCommentReplies, {
+    await queryInterface.bulkInsert("blogCommentLikes", blogCommentLikes, {
       ignoreDuplicates: true,
     });
   },
@@ -44,6 +43,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete("blogCommentReplies");
+    await queryInterface.bulkDelete("blogCommentLikes");
   },
 };

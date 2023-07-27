@@ -45,13 +45,16 @@ exports.getAll = async (req, res, next) => {
       include: [
         {
           model: User,
-          required: false,
           attributes: ["id", "username", "profilePic"],
         },
         {
           model: BlogCommentReply,
           required: false,
-          attributes: ["id", "reply"],
+          attributes: ["id", "reply", "userId"],
+          include: {
+            model: User,
+            attributes: ["id", "username", "profilePic"],
+          },
         },
       ],
     });

@@ -46,7 +46,6 @@ exports.getAll = async (req, res, next) => {
         {
           model: User,
           required: false,
-
           attributes: ["id", "username", "profilePic"],
         },
         {

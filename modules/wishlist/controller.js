@@ -8,12 +8,24 @@ const { deleteFilesFromS3 } = require("../../middlewares/multer");
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
-    const data = await service.create(req.body);
-
-    res.status(200).json({
-      status: "success",
-      data,
+    const isAlreadyExist = await service.count({
+      where: req.body,
     });
+    if (isAlreadyExist) {
+      await service.delete({
+        where: req.body,
+      });
+      res.status(200).json({
+        status: "success",
+        message: "Blog removed from wishlist!.",
+      });
+    } else {
+      await service.create(req.body);
+      res.status(200).json({
+        status: "success",
+        message: "Blog added to wishlist!.",
+      });
+    }
   } catch (err) {
     cl(err);
     next(err);

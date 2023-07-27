@@ -31,6 +31,4 @@ User.hasMany(BlogCommentReply, {
 });
 BlogCommentReply.belongsTo(User);
 
-// BlogCommentReply.sync({ alter: true });
-
 module.exports = BlogCommentReply;

@@ -38,6 +38,4 @@ User.hasMany(BlogCommentReplyLike, {
 });
 BlogCommentReplyLike.belongsTo(User);
 
-BlogCommentReplyLike.sync({ alter: true });
-
 module.exports = BlogCommentReplyLike;

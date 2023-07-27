@@ -8,7 +8,8 @@ const { joiValidator } = require("../../middlewares/joiValidator");
 
 router
 .route("/")
-.get(comment.getAll)
+  .get(comment.getAll)
+
 router.use(authMiddleware, protectRoute(['User']));
 router
 .route("/")

@@ -7,9 +7,6 @@ const sequelize = require("../../config/db");
 const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const BlogComment = require("../blogComment/model");
-const BlogCommentReply = require("../blogCommentReply/model");
-const BlogCommentReplyLike = require("../blogCommentReplyLike/model");
 const BlogCategory = require("../blogCategory/model");
 const Category = require("../category/model");
 const BlogTag = require("../blogTag/model");
@@ -116,57 +113,6 @@ exports.getById = async (req, res, next) => {
             model: Tag,
             attributes: ["id", "name"],
           },
-        },
-
-        {
-          model: BlogComment,
-          required: false,
-          attributes: [
-            "id",
-            "comment",
-            [
-              sequelize.literal(
-                "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogComments`.`id` = `blogCommentLikes`.`blogCommentId` )"
-              ),
-              "likes",
-            ],
-          ],
-          include: [
-            {
-              model: BlogCommentReply,
-              required: false,
-              attributes: [
-                "id",
-                "reply",
-                // [fn("COUNT", col("blogCommentReplyLikes.id")), "likes"],
-                // [
-                //   sequelize.fn(
-                //     "(SELECT COUNT(*) FROM `blogCommentReplyLikes` WHERE `blogCommentReply`.`id` = `blogCommentReplyLikes`.`blogCommentReplyId`)"
-                //   ),
-                //   "likes",
-                // ],
-
-                // [
-                //   sequelize.fn(
-                //     "COUNT",
-                //     sequelize.col(`blogCommentReplyLike.id`)
-                //   ),
-                //   "likes",
-                // ],
-              ],
-              // include: {
-              //   model: BlogCommentReplyLike,
-              //   required: false,
-              //   attributes: [],
-              //   attributes: {
-              //     include: [
-              //       // [sequelize.fn("COUNT", sequelize.col(`*`)), "likes"],
-              //       "id",
-              //     ],
-              //   },
-              // },
-            },
-          ],
         },
       ],
     });

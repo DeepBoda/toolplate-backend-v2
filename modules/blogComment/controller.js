@@ -1,10 +1,14 @@
 "use strict";
-
+const sequelize = require("sequelize");
 const service = require("./service");
 const reply = require("../blogCommentReply/service");
 const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
+const BlogComment = require("./model");
+const BlogCommentReply = require("../blogCommentReply/model");
+const BlogCommentReplyLike = require("../blogCommentReplyLike/model");
+const User = require("../user/model");
 
 exports.add = async (req, res, next) => {
   try {
@@ -23,7 +27,35 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query),
+      attributes: [
+        "id",
+        "comment",
+        "createdAt",
+        "blogId",
+        "userId",
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogComment`.`id` = `blogCommentLikes`.`blogCommentId` )"
+          ),
+          "likes",
+        ],
+      ],
+      include: [
+        {
+          model: User,
+          required: false,
+
+          attributes: ["id", "username", "profilePic"],
+        },
+        {
+          model: BlogCommentReply,
+          required: false,
+          attributes: ["id", "reply"],
+        },
+      ],
+    });
 
     res.status(200).send({
       status: "success",
@@ -40,6 +72,24 @@ exports.getById = async (req, res, next) => {
       where: {
         id: req.params.id,
       },
+      attributes: [
+        "id",
+        "comment",
+        "createdAt",
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogComment`.`id` = `blogCommentLikes`.`blogCommentId` )"
+          ),
+          "likes",
+        ],
+      ],
+      include: [
+        {
+          model: BlogCommentReply,
+          required: false,
+          attributes: ["id", "reply"],
+        },
+      ],
     });
 
     res.status(200).send({

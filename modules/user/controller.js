@@ -328,6 +328,10 @@ exports.getProfile = async (req, res, next) => {
       id: userId,
     },
   });
+  // Exclude the 'password' field from the user object
+  if (user) {
+    user.password = undefined;
+  }
 
   res.status(200).send({
     status: "success",
@@ -337,6 +341,7 @@ exports.getProfile = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
   try {
+    delete req.body.password;
     let oldUserData;
     if (req.file) {
       req.body.profilePic = req.file.location;

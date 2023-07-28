@@ -9,7 +9,7 @@ const helmet = require("helmet");
 
 dotenv.config();
 
-// const { responseInClientSlack } = require("./utils/slackBoat");
+const { responseInClientSlack } = require("./utils/slackBoat");
 const logService = require("./modules/log/service");
 const indexRouter = require("./routes");
 const sequelize = require("./config/db");
@@ -111,6 +111,19 @@ app.use((err, req, res, next) => {
     status: err.status || 500,
     message: err.message || "Unknown Error",
   });
+
+  // Logging the error
+  if (err.status >= 500 || res.statusCode >= 500) {
+    responseInClientSlack({
+      attachments: [
+        {
+          title: `error`,
+          text: `\n\nstatusCode: ${err?.status} \n\nMessage : ${err?.message}\n\n stack: ${err?.stack} \n\n user:${req?.requestor?.id}`,
+          color: "#FF0000",
+        },
+      ],
+    });
+  }
 
   logService.create({
     method: req.method,

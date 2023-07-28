@@ -112,19 +112,6 @@ app.use((err, req, res, next) => {
     message: err.message || "Unknown Error",
   });
 
-  // // Logging the error
-  // if (err.status >= 500 || res.statusCode >= 500) {
-  //   responseInClientSlack({
-  //     attachments: [
-  //       {
-  //         title: `error`,
-  //         text: `\n\nstatusCode: ${err?.status} \n\nMessage : ${err?.message}\n\n stack: ${err?.stack} \n\n user:${req?.requestor?.id}`,
-  //         color: "#FF0000",
-  //       },
-  //     ],
-  //   });
-  // }
-
   logService.create({
     method: req.method,
     url: req.url,

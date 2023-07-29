@@ -32,8 +32,16 @@ exports.getAll = async (req, res, next) => {
   try {
     // let data = await redisService.get(`blogs`);
     // if (!data)
+    const { categoryId, ...query } = req.query;
+
+    const where = {};
+
+    if (categoryId) {
+      where["$blogCategories.categoryId$"] = categoryId;
+    }
+
     const data = await service.findAll({
-      ...sqquery(req.query),
+      ...sqquery(query),
       attributes: {
         include: [
           [
@@ -54,6 +62,8 @@ exports.getAll = async (req, res, next) => {
         {
           model: BlogCategory,
           attributes: ["id", "blogId", "categoryId"],
+          ...query,
+          where,
           include: {
             model: Category,
             attributes: ["id", "name"],

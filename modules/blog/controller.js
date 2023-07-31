@@ -248,6 +248,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
 
     // Select only the required attributes (image and title) for each blog
     const reducedData = mostRelatedBlogs.map((blog) => ({
+      id: blog.id,
       title: blog.title, // Replace "title" with the actual attribute name for the blog title
       image: blog.image, // Replace "image" with the actual attribute name for the image URL
     }));

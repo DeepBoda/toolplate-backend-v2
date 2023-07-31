@@ -50,7 +50,18 @@ exports.getAll = async (req, res, next) => {
         {
           model: BlogCommentReply,
           required: false,
-          attributes: ["id", "reply", "createdAt", "userId"],
+          attributes: [
+            "id",
+            "reply",
+            "createdAt",
+            "userId",
+            [
+              sequelize.literal(
+                "(SELECT COUNT(*) FROM `blogCommentReplyLikes` WHERE `blogCommentReplies`.`id` = `blogCommentReplyLikes`.`blogCommentReplyId` )"
+              ),
+              "likes",
+            ],
+          ],
           include: {
             model: User,
             attributes: ["id", "username", "profilePic"],

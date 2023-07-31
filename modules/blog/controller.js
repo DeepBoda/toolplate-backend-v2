@@ -146,6 +146,77 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+exports.getRelatedBlogs = async (req, res, next) => {
+  try {
+    // Find the details of the opened blog
+    const openedBlog = await service.findOne({
+      where: { id: req.params.id },
+      include: [
+        {
+          model: BlogCategory,
+          include: {
+            model: Category,
+          },
+        },
+        {
+          model: BlogTag,
+          include: {
+            model: Tag,
+          },
+        },
+      ],
+    });
+
+    if (!openedBlog) {
+      throw createError(404, "Blog not found");
+    }
+
+    // Find blogs that have the same category as the opened blog
+    const categoryIds = openedBlog.blogCategories.map(
+      (blogCategory) => blogCategory.categoryId
+    );
+
+    // Find blogs that have the same tags as the opened blog
+    const tagIds = openedBlog.blogTags.map((blogTag) => blogTag.tagId);
+
+    // Find blogs with the same category or tag IDs
+    const relatedBlogs = await service.findAll({
+      where: {
+        id: { [Op.ne]: req.params.id }, // Exclude the opened blog itself
+        [Op.or]: [
+          { "$blogCategories.categoryId$": { [Op.in]: categoryIds } },
+          { "$blogTags.tagId$": { [Op.in]: tagIds } },
+        ],
+      },
+      include: [
+        {
+          model: BlogCategory,
+          attributes: ["id", "blogId", "categoryId"],
+          include: {
+            model: Category,
+            attributes: ["id", "name"],
+          },
+        },
+        {
+          model: BlogTag,
+          attributes: ["id", "blogId", "tagId"],
+          include: {
+            model: Tag,
+            attributes: ["id", "name"],
+          },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: relatedBlogs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {

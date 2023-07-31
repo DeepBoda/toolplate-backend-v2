@@ -192,54 +192,69 @@ exports.getRelatedBlogs = async (req, res, next) => {
     const categoryIds = openedBlog.blogCategories.map(
       (blogCategory) => blogCategory.categoryId
     );
+
     // Find blogs that have the same tags as the opened blog
     const tagIds = openedBlog.blogTags.map((blogTag) => blogTag.tagId);
 
-    const where = {};
-    where["id"] = {
-      [Op.ne]: req.params.id,
-    };
-    where["$blogCategories.categoryId$"] = {
-      [Op.in]: categoryIds,
-    };
-    where["$blogTags.categoryId$"] = {
-      [Op.in]: tagIds,
-    };
-
     // Find blogs with the same category or tag IDs
     const relatedBlogs = await service.findAll({
-      ...sqquery(req.query),
-      // where: {
-      //   id: { [Op.ne]: req.params.id },
-      //   [Op.or]: [
-      //     { "$blogCategories.categoryId$": { [Op.in]: categoryIds } },
-      //     { "$blogTags.tagId$": { [Op.in]: tagIds } },
-      //   ],
-      // },
+      // ...sqquery(req.query),
+      where: {
+        id: { [Op.ne]: req.params.id },
+        [Op.or]: [
+          { "$blogCategories.categoryId$": { [Op.in]: categoryIds } },
+          { "$blogTags.tagId$": { [Op.in]: tagIds } },
+        ],
+      },
       include: [
         {
           model: BlogCategory,
           attributes: ["id", "blogId", "categoryId"],
-          include: {
-            model: Category,
-            attributes: ["id", "name"],
-          },
         },
         {
           model: BlogTag,
           attributes: ["id", "blogId", "tagId"],
-          include: {
-            model: Tag,
-            attributes: ["id", "name"],
-          },
         },
       ],
     });
-    console.log(where);
+
+    // Calculate matching percentage for each blog
+    relatedBlogs.forEach((blog) => {
+      const commonCategories = blog.blogCategories.filter((blogCategory) =>
+        categoryIds.includes(blogCategory.categoryId)
+      );
+      const commonTags = blog.blogTags.filter((blogTag) =>
+        tagIds.includes(blogTag.tagId)
+      );
+      const totalCategories = categoryIds.length;
+      const totalTags = tagIds.length;
+      const matchingCategories = commonCategories.length;
+      const matchingTags = commonTags.length;
+
+      // Calculate matching percentage
+      blog.dataValues.matchingPercentage =
+        ((matchingCategories + matchingTags) / (totalCategories + totalTags)) *
+        100;
+    });
+
+    // Sort blogs based on matching percentage in descending order
+    relatedBlogs.sort(
+      (a, b) =>
+        b.dataValues.matchingPercentage - a.dataValues.matchingPercentage
+    );
+
+    // Limit the result to the top 3 most related blogs
+    const mostRelatedBlogs = relatedBlogs.slice(0, 3);
+
+    // Select only the required attributes (image and title) for each blog
+    const reducedData = mostRelatedBlogs.map((blog) => ({
+      title: blog.title, // Replace "title" with the actual attribute name for the blog title
+      image: blog.image, // Replace "image" with the actual attribute name for the image URL
+    }));
 
     res.status(200).json({
       status: "success",
-      data: relatedBlogs,
+      data: reducedData,
     });
   } catch (error) {
     next(error);

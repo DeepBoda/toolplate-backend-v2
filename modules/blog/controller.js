@@ -47,7 +47,6 @@ exports.getAll = async (req, res, next) => {
       };
     }
     const userId = req.requestor ? req.requestor.id : null;
-    console.log(userId);
 
     const data = await service.findAll({
       ...sqquery(query),
@@ -102,6 +101,8 @@ exports.getById = async (req, res, next) => {
   try {
     // let data = await redisService.get(`oneBlog`);
     // if (!data)
+    const userId = req.requestor ? req.requestor.id : null;
+
     const data = await service.findOne({
       where: {
         id: req.params.id,
@@ -119,6 +120,12 @@ exports.getById = async (req, res, next) => {
               "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
             ),
             "likes",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
           ],
         ],
       },

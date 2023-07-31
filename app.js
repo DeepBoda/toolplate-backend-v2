@@ -10,7 +10,7 @@ const helmet = require("helmet");
 dotenv.config();
 
 // const { responseInClientSlack } = require("./utils/slackBoat");
-const logService = require("./modules/log/service");
+// const logService = require("./modules/log/service");
 const indexRouter = require("./routes");
 const sequelize = require("./config/db");
 

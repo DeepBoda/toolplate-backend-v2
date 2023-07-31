@@ -18,13 +18,13 @@ exports.add = async (req, res, next) => {
       });
       res.status(200).json({
         status: "success",
-        message: "You liked the comment!.",
+        message: "You removed like!.",
       });
     } else {
       await service.create(req.body);
       res.status(200).json({
         status: "success",
-        message: "You removed like!.",
+        message: "You liked the comment!.",
       });
     }
   } catch (err) {

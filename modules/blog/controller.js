@@ -1,5 +1,5 @@
 "use strict";
-const { fn, col } = require("sequelize");
+const { Op } = require("sequelize");
 const service = require("./service");
 const viewService = require("../blogView/service");
 const sequelize = require("../../config/db");
@@ -32,14 +32,19 @@ exports.getAll = async (req, res, next) => {
   try {
     // let data = await redisService.get(`blogs`);
     // if (!data)
-    const { categoryId, ...query } = req.query;
+    const { categoryIds, ...query } = req.query;
 
     const where = {};
 
-    if (categoryId) {
-      where["$blogCategories.categoryId$"] = categoryId;
-    }
+    if (categoryIds) {
+      // Split the comma-separated categoryIds into an array
+      const categoryIdArray = categoryIds.split(",").map(Number);
 
+      // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
+      where["$blogCategories.categoryId$"] = {
+        [Op.in]: categoryIdArray,
+      };
+    }
     const data = await service.findAll({
       ...sqquery(query),
       attributes: {

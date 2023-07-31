@@ -9,16 +9,13 @@ const {upload,deleteFilesFromS3} = require("../../middlewares/multer");
 
 
 // <=============== Public APIs ===============>
-
 router.post("/signup", joiValidator(userSchema.signup), user.signup); 
 router.post("/google",  user.socialAuth); 
 router.post("/login", user.login); 
 
 // <=============== Authorized APIs ===============>
-router.use(authMiddleware);
-
+router.use(authMiddleware,protectRoute(['User']));
 // <=============== APIs only for Users ===============>
-router.use(protectRoute(['User']))
 router.get("/profile", user.getProfile);
 router.patch("/profile", upload.single('profilePic') ,joiValidator(userSchema.updateProfile), user.updateProfile);
 

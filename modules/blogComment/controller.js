@@ -5,9 +5,7 @@ const reply = require("../blogCommentReply/service");
 const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const BlogComment = require("./model");
 const BlogCommentReply = require("../blogCommentReply/model");
-const BlogCommentReplyLike = require("../blogCommentReplyLike/model");
 const User = require("../user/model");
 
 exports.add = async (req, res, next) => {
@@ -27,6 +25,8 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
+    // Check if req.requestor is defined before using it
+    const userId = req.requestor ? req.requestor.id : null;
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
       attributes: [
@@ -41,6 +41,12 @@ exports.getAll = async (req, res, next) => {
           ),
           "likes",
         ],
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogCommentId` = `blogComment`.`id` AND `blogCommentLikes`.`userId` = :UserId)"
+          ),
+          "isLiked",
+        ],
       ],
       include: [
         {
@@ -49,6 +55,7 @@ exports.getAll = async (req, res, next) => {
         },
         {
           model: BlogCommentReply,
+
           required: false,
           attributes: [
             "id",
@@ -61,6 +68,12 @@ exports.getAll = async (req, res, next) => {
               ),
               "likes",
             ],
+            [
+              sequelize.literal(
+                "(SELECT COUNT(*) FROM `blogCommentReplyLikes` WHERE `blogCommentReplyId` = `blogCommentReplies`.`id` AND `blogCommentReplyLikes`.`userId` = :UserId)"
+              ),
+              "isLiked",
+            ],
           ],
           include: {
             model: User,
@@ -68,6 +81,7 @@ exports.getAll = async (req, res, next) => {
           },
         },
       ],
+      replacements: { UserId: userId },
     });
 
     res.status(200).send({

@@ -6,11 +6,12 @@ const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 const { joiValidator } = require("../../middlewares/joiValidator");
 const like = require("./controller");
 
+router.use(authMiddleware,)
 router
   .route("/")
     .get(like.getAll)
 
-router.use(authMiddleware, protectRoute(["User"]));
+router.use( protectRoute(["User"]));
 
 router.route("/").post(joiValidator(likeSchema.create),like.add);
 router.route("/").delete(like.delete);

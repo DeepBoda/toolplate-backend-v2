@@ -1,5 +1,5 @@
 "use strict";
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const service = require("./service");
 const viewService = require("../blogView/service");
 const sequelize = require("../../config/db");
@@ -11,6 +11,7 @@ const BlogCategory = require("../blogCategory/model");
 const Category = require("../category/model");
 const BlogTag = require("../blogTag/model");
 const Tag = require("../tag/model");
+const { use } = require("../admin");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -45,6 +46,9 @@ exports.getAll = async (req, res, next) => {
         [Op.in]: categoryIdArray,
       };
     }
+    const userId = req.requestor ? req.requestor.id : null;
+    console.log(userId);
+
     const data = await service.findAll({
       ...sqquery(query),
       attributes: {
@@ -60,6 +64,12 @@ exports.getAll = async (req, res, next) => {
               "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
             ),
             "likes",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
           ],
         ],
       },
@@ -175,19 +185,30 @@ exports.getRelatedBlogs = async (req, res, next) => {
     const categoryIds = openedBlog.blogCategories.map(
       (blogCategory) => blogCategory.categoryId
     );
-
     // Find blogs that have the same tags as the opened blog
     const tagIds = openedBlog.blogTags.map((blogTag) => blogTag.tagId);
 
+    const where = {};
+    where["id"] = {
+      [Op.ne]: req.params.id,
+    };
+    where["$blogCategories.categoryId$"] = {
+      [Op.in]: categoryIds,
+    };
+    where["$blogTags.categoryId$"] = {
+      [Op.in]: tagIds,
+    };
+
     // Find blogs with the same category or tag IDs
     const relatedBlogs = await service.findAll({
-      where: {
-        id: { [Op.ne]: req.params.id }, // Exclude the opened blog itself
-        [Op.or]: [
-          { "$blogCategories.categoryId$": { [Op.in]: categoryIds } },
-          { "$blogTags.tagId$": { [Op.in]: tagIds } },
-        ],
-      },
+      ...sqquery(req.query),
+      // where: {
+      //   id: { [Op.ne]: req.params.id },
+      //   [Op.or]: [
+      //     { "$blogCategories.categoryId$": { [Op.in]: categoryIds } },
+      //     { "$blogTags.tagId$": { [Op.in]: tagIds } },
+      //   ],
+      // },
       include: [
         {
           model: BlogCategory,
@@ -207,6 +228,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
         },
       ],
     });
+    console.log(where);
 
     res.status(200).json({
       status: "success",

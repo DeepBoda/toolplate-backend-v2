@@ -26,44 +26,41 @@ exports.authMiddleware = async (req, res, next) => {
     token = req.headers.authorization.split(" ")[1];
   }
 
-  if (!token) {
-    return res.status(401).json({
-      status: 401,
-      message: "Token not passed",
-    });
-  }
-
   try {
-    const jwtUser = jwt.verify(token, process.env.JWT_SECRET);
-    let requestor;
-    let role;
+    let requestor = null;
+    let role = null;
 
-    if (jwtUser.role === "Admin") {
-      requestor = await adminService.findOne({
-        where: {
-          id: jwtUser.id,
-        },
-      });
-      role = "Admin";
-    } else if (jwtUser.role === "User") {
-      requestor = await userService.findOne({
-        where: {
-          id: jwtUser.id,
-        },
-      });
-      role = "User";
+    if (token) {
+      const jwtUser = jwt.verify(token, process.env.JWT_SECRET);
+
+      if (jwtUser.role === "Admin") {
+        requestor = await adminService.findOne({
+          where: {
+            id: jwtUser.id,
+          },
+        });
+        role = "Admin";
+      } else if (jwtUser.role === "User") {
+        requestor = await userService.findOne({
+          where: {
+            id: jwtUser.id,
+          },
+        });
+        role = "User";
+      }
     }
 
-    if (!requestor) {
-      res.status(401).json({
-        status: 401,
-        message: "Access Denied",
-      });
-    } else {
+    if (requestor) {
       requestor.dataValues.role = role;
       req.requestor = requestor.toJSON();
-      next();
+    } else {
+      // If requestor is not found, set it to null
+      req.requestor = null;
+    }
 
+    next();
+
+    if (requestor) {
       cl("API Call--->", {
         API: req.method + " " + req.originalUrl,
         body: req.body,

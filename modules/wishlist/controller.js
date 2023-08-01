@@ -4,6 +4,9 @@ const service = require("./service");
 const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
+const Blog = require("../blog/model");
+const BlogCategory = require("../blogCategory/model");
+const Category = require("../category/model");
 
 exports.add = async (req, res, next) => {
   try {
@@ -35,10 +38,31 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
-      where: {
-        id: req.requestor.id,
+      ...sqquery(req.query, {
+        userId: req.requestor.id,
+      }),
+      // where: {
+      //   userId: req.requestor.id,
+      // },
+      include: {
+        model: Blog,
+        attributes: [
+          "id",
+          "title",
+          "image",
+          "description",
+          "readTime",
+          "createdAt",
+        ],
+        include: {
+          model: BlogCategory,
+          attributes: ["id", "blogId", "categoryId"],
+          include: {
+            model: Category,
+            attributes: ["id", "name"],
+          },
+        },
       },
-      ...sqquery(req.query),
     });
 
     res.status(200).send({

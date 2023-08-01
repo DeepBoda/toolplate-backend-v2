@@ -67,7 +67,8 @@ if (force) {
   );
 } else {
   sequelize
-    .sync()
+    // .sync()
+    .authenticate()
     .then(async (result) => {
       console.log(`✔ Database connection successful! 🎯`);
     })

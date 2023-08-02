@@ -49,7 +49,7 @@ exports.getAll = async (req, res, next) => {
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAll({
-      ...sqquery(query),
+      ...sqquery(query, {}, ["title"]),
       attributes: {
         include: [
           [

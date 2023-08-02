@@ -52,7 +52,7 @@ exports.sqquery = (
   if (search && searchFrom.length) {
     const searchData = searchFrom.map((columnName) => ({
       [columnName]: {
-        [Op.iLike]: `%${search}%`,
+        [Op.like]: `%${search}%`,
       },
     }));
 

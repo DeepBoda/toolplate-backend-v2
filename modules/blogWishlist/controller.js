@@ -7,6 +7,7 @@ const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const Blog = require("../blog/model");
 const BlogCategory = require("../blogCategory/model");
 const Category = require("../category/model");
+const User = require("../user/model");
 
 exports.add = async (req, res, next) => {
   try {
@@ -76,7 +77,17 @@ exports.getAll = async (req, res, next) => {
 
 exports.getByUser = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query),
+      include: [
+        // {
+        //   model: User,
+        // },
+        {
+          model: Blog,
+        },
+      ],
+    });
 
     res.status(200).send({
       status: "success",

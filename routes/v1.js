@@ -14,7 +14,7 @@ router.use("/blogLike", require("../modules/blogLike"));
 router.use("/comment", require("../modules/blogComment"));
 router.use(authMiddleware);
 router.use(protectRoute(["User"]));
-router.use("/wishlist", require("../modules/wishlist"));
+router.use("/blogWishlist", require("../modules/blogWishlist"));
 router.use("/commentLike", require("../modules/blogCommentLike"));
 router.use("/comments/reply", require("../modules/blogCommentReply"));
 router.use("/comments/replyLike", require("../modules/blogCommentReplyLike"));

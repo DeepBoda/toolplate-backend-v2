@@ -5,52 +5,22 @@ const { faker } = require("@faker-js/faker");
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const categories = [
-      {
-        name: "CopyWriting",
-        createdAt: faker.date.between(
-          "2020-01-01T00:00:00.000Z",
-          "2023-03-01T00:00:00.000Z"
-        ),
-        updatedAt: faker.date.between(
-          "2020-01-01T00:00:00.000Z",
-          "2023-03-01T00:00:00.000Z"
-        ),
-      },
-      {
-        name: "Image",
-        createdAt: faker.date.between(
-          "2020-01-01T00:00:00.000Z",
-          "2023-03-01T00:00:00.000Z"
-        ),
-        updatedAt: faker.date.between(
-          "2020-01-01T00:00:00.000Z",
-          "2023-03-01T00:00:00.000Z"
-        ),
-      },
-      {
-        name: "Video",
-        createdAt: faker.date.between(
-          "2020-01-01T00:00:00.000Z",
-          "2023-03-01T00:00:00.000Z"
-        ),
-        updatedAt: faker.date.between(
-          "2020-01-01T00:00:00.000Z",
-          "2023-03-01T00:00:00.000Z"
-        ),
-      },
-      {
-        name: "Audio",
-        createdAt: faker.date.between(
-          "2020-01-01T00:00:00.000Z",
-          "2023-03-01T00:00:00.000Z"
-        ),
-        updatedAt: faker.date.between(
-          "2020-01-01T00:00:00.000Z",
-          "2023-03-01T00:00:00.000Z"
-        ),
-      },
-    ];
+    const startDate = "2020-01-01T00:00:00.000Z";
+    const endDate = "2023-03-01T00:00:00.000Z";
+
+    const categories = [];
+
+    for (let i = 0; i < 100; i++) {
+      const name = faker.random.word(); // Generate a random category name
+      const createdAt = faker.date.between(startDate, endDate);
+      const updatedAt = faker.date.between(startDate, endDate);
+
+      categories.push({
+        name,
+        createdAt,
+        updatedAt,
+      });
+    }
 
     await queryInterface.bulkInsert("categories", categories, {
       ignoreDuplicates: true,

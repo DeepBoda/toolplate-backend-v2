@@ -5,8 +5,7 @@ const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 
-// ------------- Only Admin can Create --------------
-exports.add = async (req, res, next) => {
+exports.likeBlog = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
     const isAlreadyExist = await service.count({

@@ -13,8 +13,7 @@ router
 
 router.use( protectRoute(["User"]));
 
-router.route("/").post(joiValidator(likeSchema.create),like.add);
-router.route("/").delete(like.delete);
+router.route("/").post(joiValidator(likeSchema.create),like.likeBlog);
 
 
 

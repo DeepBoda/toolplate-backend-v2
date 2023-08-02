@@ -12,7 +12,7 @@ router.use(authMiddleware, protectRoute(["Admin"]));
 router
   .route("/")
   .get(like.getAll)
-  .post(joiValidator(likeSchema.create), like.add);
+  .post(joiValidator(likeSchema.create), like.likeBlog);
 router
   .route("/:id")
   .get(like.getById)

@@ -206,10 +206,23 @@ exports.getRelatedBlogs = async (req, res, next) => {
           { "$blogTags.tagId$": { [Op.in]: tagIds } },
         ],
       },
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+            ),
+            "views",
+          ],
+        ],
+      },
       include: [
         {
           model: BlogCategory,
           attributes: ["id", "blogId", "categoryId"],
+          include: {
+            model: Category,
+          },
         },
         {
           model: BlogTag,
@@ -245,13 +258,24 @@ exports.getRelatedBlogs = async (req, res, next) => {
 
     // Limit the result to the top 3 most related blogs
     const mostRelatedBlogs = relatedBlogs.slice(0, 3);
+    // console.log(mostRelatedBlogs);
 
     // Select only the required attributes (image and title) for each blog
-    const reducedData = mostRelatedBlogs.map((blog) => ({
-      id: blog.id,
-      title: blog.title, // Replace "title" with the actual attribute name for the blog title
-      image: blog.image, // Replace "image" with the actual attribute name for the image URL
-    }));
+    const reducedData = mostRelatedBlogs.map(
+      (blog) => (
+        (blog = blog.toJSON()),
+        {
+          id: blog.id,
+          title: blog.title,
+          description: blog.description,
+          image: blog.image,
+          category: blog.blogCategories.map(
+            (category) => category.category.name
+          ),
+          views: blog.views,
+        }
+      )
+    );
 
     res.status(200).json({
       status: "success",

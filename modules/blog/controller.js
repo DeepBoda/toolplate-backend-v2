@@ -66,6 +66,12 @@ exports.getAll = async (req, res, next) => {
           ],
           [
             sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+            ),
+            "wishlists",
+          ],
+          [
+            sequelize.literal(
               `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
             ),
             "isLiked",
@@ -126,6 +132,12 @@ exports.getById = async (req, res, next) => {
               "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
             ),
             "likes",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+            ),
+            "wishlists",
           ],
           [
             sequelize.literal(

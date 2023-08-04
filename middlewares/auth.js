@@ -9,8 +9,9 @@ const createHttpError = require("http-errors");
 exports.protectRoute = (roles) => async (req, res, next) => {
   try {
     const jwtUser = await jwtDecoder(req);
-    if (!roles.includes(jwtUser.role))
-      return next(new Error("Access denied", 401));
+    if (!roles.includes(jwtUser.role)) {
+      return next(createHttpError(401, "Access denied"));
+    }
 
     req.requestor = jwtUser;
     next();
@@ -56,6 +57,7 @@ exports.authMiddleware = async (req, res, next) => {
     } else {
       // If requestor is not found, set it to null
       req.requestor = null;
+      return next(createHttpError(401, "Invalid Jwt Token"));
     }
 
     next();

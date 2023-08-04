@@ -16,6 +16,6 @@ router.use("/blogWishlist", require("../modules/blogWishlist"));
 router.use("/commentLike", require("../modules/blogCommentLike"));
 router.use("/comments/reply", require("../modules/blogCommentReply"));
 router.use("/comments/replyLike", require("../modules/blogCommentReplyLike"));
-// router.use("/userFeedback", require("../modules/userFeedback"));
+// router.use("/temp", require("../modules/temp"));
 
 module.exports = router;

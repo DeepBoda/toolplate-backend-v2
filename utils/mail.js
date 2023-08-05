@@ -4,19 +4,19 @@ const nodemailer = require("nodemailer");
 // Create the transport object outside the function
 const transport = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_FOR_CLIENT,
     pass: process.env.EMAIL_GENERATED_PASSWORD,
   },
-  // // Additional options:
-  // tls: {
-  //   rejectUnauthorized: true,
-  // },
-  // pool: true, // Enable connection pooling for reusing connections (improves performance)
-  // maxConnections: 25, // Maximum number of parallel connections to the server
-  // maxMessages: 1000, // Maximum number of messages to send per connection
+  // Additional options:
+  tls: {
+    rejectUnauthorized: true,
+  },
+  pool: true, // Enable connection pooling for reusing connections (improves performance)
+  maxConnections: 25, // Maximum number of parallel connections to the server
+  maxMessages: 1000, // Maximum number of messages to send per connection
 });
 
 // Inside the function, use the transport object to send emails

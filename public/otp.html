@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>OTP Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #fff;
+        }
+
+        .header {
+            background-color: #1E1E1E;
+            padding: 10px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+            color: #fff;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logo {
+            width: 300px;
+            /* Adjust the width of the logo as needed */
+        }
+
+        .title {
+            font-size: 24px;
+            margin: 0;
+            text-align: center;
+        }
+
+        .otp-code-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .copy-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #1E1E1E;
+            color: #fff;
+            border: solid #1E1E1E;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .copy-button:hover {
+            background-color: #fff;
+            color: #1E1E1E;
+            border: solid #1E1E1E;
+        }
+
+        .copy-icon {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .footer a {
+            color: 007bff;
+            text-decoration: none;
+        }
+
+        /* Media Queries for Mobile Devices */
+        @media (max-width: 600px) {
+            .logo {
+                width: 200px;
+            }
+
+            .header {
+                height: 80px;
+            }
+
+            .title {
+                font-size: 20px;
+            }
+
+            .copy-button {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img class="logo" src="https://planet-k.s3.ap-south-1.amazonaws.com/logo.png" alt="Toolplate Logo">
+        </div>
+        <h2 class="title">Hello, <strong>{{name}}</strong>!</h2>
+        <p>Your OTP for verification is:</p>
+        <div class="otp-code-container">
+            <button class="copy-button" onclick="copyOtp()" id="copyButton">{{otp}}<span
+                    class="copy-icon">📋</span></button>
+        </div>
+        <script>
+            function copyOtp() {
+                const otpCodeElement = document.getElementById('copyButton');
+                const otp = otpCodeElement.innerText;
+                const textarea = document.createElement('textarea');
+                textarea.value = otp;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('OTP copied to clipboard: ' + otp);
+            }
+        </script>
+        <p>Please use this OTP to complete your verification process.</p>
+        <p>If you did not request this OTP, please ignore this email.</p>
+    </div>
+    <div class="footer">
+        <p>© 2023 Toolplate. All rights reserved.</p>
+        <p style="font-weight: bold;"><a href="https://toolplate.ai">toolplate.ai</a></p>
+    </div>
+</body>
+
+</html>

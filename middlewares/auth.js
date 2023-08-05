@@ -16,7 +16,7 @@ exports.protectRoute = (roles) => async (req, res, next) => {
     req.requestor = jwtUser;
     next();
   } catch (err) {
-    next(err);
+    return next(createHttpError(401, "Invalid Jwt Token"));
   }
 };
 
@@ -57,7 +57,6 @@ exports.authMiddleware = async (req, res, next) => {
     } else {
       // If requestor is not found, set it to null
       req.requestor = null;
-      return next(createHttpError(401, "Invalid Jwt Token"));
     }
 
     next();

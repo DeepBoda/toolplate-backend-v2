@@ -5,73 +5,40 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const service = require("./service");
 const admin = require("../../config/firebaseConfig"); // Firebase Admin SDK instance
+const otpGenerator = require("otp-generator");
 const { generateProfilePic } = require("../../middlewares/generateProfile");
+const { sendOTP } = require("../../utils/mail");
 
 // Signup route
 exports.signup = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
-    // Check if the email already exists in Firebase Authentication
-    let firebaseUser;
-    try {
-      firebaseUser = await admin.auth().getUserByEmail(email);
-    } catch (error) {
-      // Ignore the error, assume email doesn't exist in Firebase
-      firebaseUser = null;
-    }
-
-    // Check if the email already exists in the local database
-    const existingUser = await service.findOne({ where: { email } });
-
-    if (firebaseUser || existingUser) {
-      throw createError(400, `Email ${email} already registered`);
-    }
-
-    // Generate the profile picture URL using the username
-    let profilePicUrl;
-    try {
-      profilePicUrl = await generateProfilePic(username);
-    } catch (error) {
-      // Handle error during profile picture generation (optional)
-      console.error("Error generating profile picture:", error);
-      // You can provide a default profile picture URL or handle the error gracefully
-      profilePicUrl = "YOUR_DEFAULT_PROFILE_PIC_URL";
-    }
-
-    // Create the user in Firebase Authentication
-    const userRecord = await admin.auth().createUser({
-      email,
-      password,
-      displayName: username,
-    });
-
-    // Get the user's UUID from Firebase
-    const uidFromFirebase = userRecord.uid;
-
-    // Create the user in your local database and store the FCM token and profilePicUrl
-    const user = await service.create({
-      username,
-      email,
-      password,
-      uid: uidFromFirebase,
-      profilePic: profilePicUrl, // Store the generated profile picture URL in your local database
+    // Generate a 6-digit OTP
+    const OTP = otpGenerator.generate(6, {
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
     });
 
     // Generate JWT token and send response
     const token = jwt.sign(
       {
-        id: user.id,
-        role: "User",
+        username,
+        email,
+        OTP,
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIREIN }
     );
 
+    // Send the email with the OTP
+    await sendOTP({ email, username, OTP });
+
     res.status(200).json({
       status: "success",
-      message: "Signup successful",
-      data: user,
+      OTP,
+      message: `OTP sent to ${email}`,
       token,
     });
   } catch (error) {
@@ -418,7 +385,7 @@ exports.deleteById = async (req, res, next) => {
     },
   });
   if (profilePic) deleteFilesFromS3([profilePic]);
-
+  s;
   const affectedRows = await service.delete({
     where: {
       id: req.params.id,

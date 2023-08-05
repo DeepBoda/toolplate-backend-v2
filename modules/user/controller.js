@@ -345,13 +345,13 @@ exports.login = async (req, res, next) => {
 
     // If the user doesn't exist, return error
     if (!user) {
-      throw createError(500, "Invalid email or password");
+      throw createError(400, "Invalid email or password");
     }
 
     // Check if the provided password matches the hashed password in the database
     const correctPassword = await bcryptjs.compare(password, user.password);
     if (!correctPassword) {
-      throw createError(500, "Invalid email or password");
+      throw createError(400, "Invalid email or password");
     }
 
     // Generate JWT token and send response

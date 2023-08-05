@@ -1,18 +1,29 @@
 "use strict";
 
-const createError = require("http-errors");
 const bcryptjs = require("bcryptjs");
+const crypto = require("crypto");
+const createError = require("http-errors");
 const jwt = require("jsonwebtoken");
 const service = require("./service");
 const admin = require("../../config/firebaseConfig"); // Firebase Admin SDK instance
 const otpGenerator = require("otp-generator");
 const { generateProfilePic } = require("../../middlewares/generateProfile");
 const { sendOTP } = require("../../utils/mail");
+const { cl } = require("../../utils/service");
 
 // Signup route
 exports.signup = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
+
+    // Check if the email already exists in the local database
+    const existingUser = await service.findOne({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw createError(400, `${email} already registered`);
+    }
 
     // Generate a 6-digit OTP
     const OTP = otpGenerator.generate(6, {
@@ -24,8 +35,7 @@ exports.signup = async (req, res, next) => {
     // Generate JWT token and send response
     const token = jwt.sign(
       {
-        username,
-        email,
+        ...req.body,
         OTP,
       },
       process.env.JWT_SECRET,
@@ -37,12 +47,89 @@ exports.signup = async (req, res, next) => {
 
     res.status(200).json({
       status: "success",
-      OTP,
       message: `OTP sent to ${email}`,
       token,
     });
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+};
+
+// OTP verification route
+exports.verifyOTP = async (req, res, next) => {
+  try {
+    const { otp } = req.body;
+
+    const decodedToken = jwt.decode(req.body.token);
+    cl(decodedToken, "token");
+    if (
+      !decodedToken ||
+      !decodedToken.username ||
+      !decodedToken.email ||
+      !decodedToken.OTP
+    ) {
+      throw createError(400, "Invalid token or missing data");
+    }
+
+    // Compare the entered OTP with the OTP from the token
+    const isOTPValid = crypto.timingSafeEqual(
+      Buffer.from(otp),
+      Buffer.from(decodedToken.OTP)
+    );
+
+    if (!isOTPValid) {
+      throw createError(400, "Invalid OTP");
+    }
+
+    // Generate the profile picture URL using the username
+    let profilePicUrl;
+    try {
+      profilePicUrl = await generateProfilePic(decodedToken.username);
+    } catch (error) {
+      // Handle error during profile picture generation (optional)
+      console.error("Error generating profile picture:", error);
+      // You can provide a default profile picture URL or handle the error gracefully
+      profilePicUrl =
+        "https://planet-k.s3.ap-south-1.amazonaws.com/toolplate-logo.png";
+    }
+
+    // Create the user in Firebase Authentication
+    const userRecord = await admin.auth().createUser({
+      email: decodedToken.email,
+      password: decodedToken.password,
+      displayName: decodedToken.username,
+    });
+
+    // Get the user's UUID from Firebase
+    const uidFromFirebase = userRecord.uid;
+
+    // Create the user in your local database and store the FCM token and profilePicUrl
+    const user = await service.create({
+      username: decodedToken.username,
+      email: decodedToken.email,
+      password: decodedToken.password,
+      uid: uidFromFirebase,
+      profilePic: profilePicUrl, // Store the generated profile picture URL in your local database
+    });
+
+    // Generate JWT token and send response
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: "User",
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIREIN }
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: "Signup successful",
+      token,
+      role: "User",
+    });
+  } catch (error) {
     next(error);
   }
 };
@@ -116,7 +203,6 @@ exports.socialAuth = async (req, res, next) => {
   }
 };
 
-// Google login route
 // exports.socialAuth = async (req, res, next) => {
 //   try {
 //     // Check if the request contains a firebase_token

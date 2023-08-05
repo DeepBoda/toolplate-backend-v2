@@ -9,6 +9,7 @@ const {upload,deleteFilesFromS3} = require("../../middlewares/multer");
 
 
 // <=============== Public APIs ===============>
+router.post("/verify",  user.verifyOTP); 
 router.post("/signup", joiValidator(userSchema.signup), user.signup); 
 router.post("/google",  user.socialAuth); 
 router.post("/login", user.login); 

@@ -31,7 +31,7 @@ exports.signup = async (req, res, next) => {
       upperCaseAlphabets: false,
       specialChars: false,
     });
-    // console.log("OTP: ", OTP);
+    console.log("OTP: ", OTP);
 
     // Generate JWT token and send response
     const token = jwt.sign(
@@ -129,6 +129,7 @@ exports.verifyOTP = async (req, res, next) => {
       message: "Signup successful",
       token,
       role: "User",
+      user,
     });
   } catch (error) {
     next(error);
@@ -204,137 +205,6 @@ exports.socialAuth = async (req, res, next) => {
   }
 };
 
-// exports.socialAuth = async (req, res, next) => {
-//   try {
-//     // Check if the request contains a firebase_token
-//     if (req.body.firebase_token) {
-//       // Handle Firebase authentication
-//       const firebaseUser = await admin
-//         .auth()
-//         .verifyIdToken(req.body.firebase_token);
-
-//       // Check if the email is verified
-//       if (!firebaseUser.email_verified) {
-//         throw createError(
-//           401,
-//           "Email is not verified, Try with another email."
-//         );
-//       }
-
-//       // Check if the email already exists in the local database
-//       let user = await service.findOne({
-//         where: { email: firebaseUser.email },
-//       });
-
-//       // If the user doesn't exist, create a new user
-//       if (!user) {
-//         user = await service.create({
-//           email: firebaseUser.email,
-//           name: firebaseUser.name,
-//         });
-//       }
-
-//       // Sign a JWT Token as Login Token
-//       const token = jwt.sign(
-//         {
-//           id: user.id,
-//           email: user.email,
-//           role: "user",
-//         },
-//         process.env.JWT_SECRET
-//       );
-
-//       res.status(200).json({
-//         status: 200,
-//         token,
-//       });
-//     } else if (req.body.googleToken) {
-//       // Handle Google authentication
-//       const { googleToken } = req.body;
-
-//       // Verify the Google token using Firebase Authentication
-//       const firebaseUser = await admin.auth().verifyIdToken(googleToken);
-
-//       // Check if the email is verified
-//       if (!firebaseUser.email_verified) {
-//         throw createError(
-//           401,
-//           "Email is not verified, Try with another email."
-//         );
-//       }
-
-//       // Check if the email already exists in the local database
-//       let user = await service.findOne({
-//         where: { email: firebaseUser.email },
-//       });
-
-//       // If the user exists, generate JWT token and send response
-//       if (user) {
-//         const token = jwt.sign(
-//           {
-//             id: user.id,
-//             role: "User",
-//           },
-//           process.env.JWT_SECRET,
-//           { expiresIn: process.env.JWT_EXPIREIN }
-//         );
-
-//         res.status(200).json({
-//           status: "success",
-//           message: "Login successful",
-//           token,
-//           role: "User",
-//         });
-//       } else {
-//         // If the user doesn't exist in the local database, create a new user
-//         const username = firebaseUser.name;
-//         const email = firebaseUser.email;
-
-//         // Generate the profile picture URL using the username
-//         let profilePicUrl;
-//         try {
-//           profilePicUrl = await generateProfilePic(username);
-//         } catch (error) {
-//           console.error("Error generating profile picture:", error);
-//           // You can provide a default profile picture URL or handle the error gracefully
-//           profilePicUrl = `${process.env.BUCKET_URL}/Profile.png`;
-//         }
-
-//         // Create the user in the local database
-//         const newUser = await service.create({
-//           username,
-//           email,
-//           uid: firebaseUser.uid,
-//           profilePic: profilePicUrl, // Store the generated profile picture URL in your local database
-//         });
-
-//         // Generate JWT token and send response
-//         const token = jwt.sign(
-//           {
-//             id: newUser.id,
-//             role: "User",
-//           },
-//           process.env.JWT_SECRET,
-//           { expiresIn: process.env.JWT_EXPIREIN }
-//         );
-
-//         res.status(200).json({
-//           status: "success",
-//           message: "Signup successful",
-//           data: newUser,
-//           token,
-//         });
-//       }
-//     } else {
-//       // If neither firebase_token nor googleToken is provided in the request body
-//       throw createError(400, "Invalid request");
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     next(error);
-//   }
-// };
-
 // Login route
 exports.login = async (req, res, next) => {
   try {
@@ -369,6 +239,7 @@ exports.login = async (req, res, next) => {
       message: "Login successful",
       token,
       role: "User",
+      user,
     });
   } catch (error) {
     next(error);

@@ -31,6 +31,7 @@ exports.signup = async (req, res, next) => {
       upperCaseAlphabets: false,
       specialChars: false,
     });
+    // console.log("OTP: ", OTP);
 
     // Generate JWT token and send response
     const token = jwt.sign(

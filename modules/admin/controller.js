@@ -4,7 +4,6 @@ const createError = require("http-errors");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const service = require("./service");
-const { cl } = require("../../utils/service");
 
 exports.create = async (req, res, next) => {
   try {
@@ -47,6 +46,7 @@ exports.login = async (req, res, next) => {
       message: "Login successful",
       token,
       role: "Admin",
+      admin,
     });
   } catch (err) {
     next(err);

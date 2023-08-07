@@ -3,11 +3,7 @@
 const router = require("express").Router();
 const blogCategory = require("./controller");
 const blogCategorySchema = require("./joiSchema");
-const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 const { joiValidator } = require("../../middlewares/joiValidator");
-const { upload } = require("../../middlewares/multer");
-
-router.use(authMiddleware, protectRoute(["Admin"]));
 
 router
   .route("/")

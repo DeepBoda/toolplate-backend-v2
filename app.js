@@ -126,18 +126,20 @@ app.use((err, req, res, next) => {
   //   });
   // }
 
-  logService.create({
-    method: req.method,
-    url: req.url,
-    statusCode: err.status || res.statusCode,
-    message: err.message || "Something went wrong!",
-    payload: {
-      params: req.params,
-      body: req.body,
-      query: req.query,
-    },
-    userId: req?.requestor?.id,
+  // Logging error and handling
+  app.use((err, req, res, next) => {
+    logService.create({
+      method: req.method,
+      url: req.url,
+      statusCode: err.status || res.statusCode,
+      message: err.message || "Something went wrong!",
+      payload: {
+        params: req.params,
+        body: req.body,
+        query: req.query,
+      },
+      userId: req?.requestor?.id,
+    });
   });
 });
-
 module.exports = app;

@@ -8,20 +8,46 @@ const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const BlogCategory = require("../blogCategory/model");
+const blogCategoryService = require("../blogCategory/service");
 const Category = require("../category/model");
 const BlogTag = require("../blogTag/model");
+const blogTagService = require("../blogTag/service");
 const Tag = require("../tag/model");
-const { use } = require("../admin");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    const { categories, tags, ...body } = req.body;
     if (req.file) req.body.image = req.file.location;
-    const data = await service.create(req.body);
+
+    // Step 1: Create the new blog entry in the `blog` table
+    const blog = await service.create(body);
+
+    // Step 2: Get the comma-separated `categories` and `tags` IDs
+    const categoryIds = categories
+      .split(",")
+      .map((categoryId) => parseInt(categoryId));
+    const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
+
+    // Step 3: Add entries in the `blogCategory` table
+    for (const categoryId of categoryIds) {
+      await blogCategoryService.create({
+        blogId: blog.id,
+        categoryId,
+      });
+    }
+
+    // Step 4: Add entries in the `blogTag` table
+    for (const tagId of tagIds) {
+      await blogTagService.create({
+        blogId: blog.id,
+        tagId,
+      });
+    }
 
     res.status(200).json({
       status: "success",
-      data,
+      data: blog,
     });
   } catch (err) {
     cl(err);

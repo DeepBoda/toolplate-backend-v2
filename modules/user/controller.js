@@ -96,21 +96,21 @@ exports.verifyOTP = async (req, res, next) => {
     }
 
     // Create the user in Firebase Authentication
-    const userRecord = await admin.auth().createUser({
+    const firebaseUser = await admin.auth().createUser({
       email: decodedToken.email,
       password: decodedToken.password,
       displayName: decodedToken.username,
     });
-
+    console.log("firebaseUser: ", firebaseUser);
     // Get the user's UUID from Firebase
-    const uidFromFirebase = userRecord.uid;
+    const uid = firebaseUser.uid;
 
     // Create the user in your local database and store the FCM token and profilePicUrl
     const user = await service.create({
       username: decodedToken.username,
       email: decodedToken.email,
       password: decodedToken.password,
-      uid: uidFromFirebase,
+      uid,
       profilePic: profilePicUrl, // Store the generated profile picture URL in your local database
     });
 
@@ -247,21 +247,26 @@ exports.login = async (req, res, next) => {
 };
 
 exports.getProfile = async (req, res, next) => {
-  const userId = req.requestor.id;
-  const user = await service.findOne({
-    where: {
-      id: userId,
-    },
-  });
-  // Exclude the 'password' field from the user object
-  if (user) {
-    user.password = undefined;
-  }
+  try {
+    const userId = req.requestor.id;
+    const user = await service.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    // Exclude the 'password' field from the user object
+    if (user) {
+      user.password = undefined;
+    }
 
-  res.status(200).send({
-    status: "success",
-    data: user,
-  });
+    res.status(200).send({
+      status: "success",
+      data: user,
+    });
+  } catch (err) {
+    cl(err);
+    next(err);
+  }
 };
 
 exports.updateProfile = async (req, res, next) => {
@@ -289,14 +294,6 @@ exports.updateProfile = async (req, res, next) => {
       },
     });
 
-    // const token = jwt.sign(
-    //   {
-    //     ...user.toJSON(),
-    //     role: "User",
-    //   },
-    //   process.env.JWT_SECRET
-    // );
-
     res.status(200).json({
       status: "success",
       data: {
@@ -314,47 +311,61 @@ exports.updateProfile = async (req, res, next) => {
 // <=============== For Admins ===================>
 
 exports.getAll = async (req, res, next) => {
-  const users = await service.findAll({ ...usersqquery });
+  try {
+    const users = await service.findAll({ ...usersqquery });
 
-  res.status(200).send({
-    status: "success",
-    data: users,
-  });
+    res.status(200).send({
+      status: "success",
+      data: users,
+    });
+  } catch (err) {
+    cl(err);
+    next(err);
+  }
 };
 
 exports.getById = async (req, res, next) => {
-  const user = await service.findOne({
-    where: {
-      id: req.params.id,
-    },
-  });
+  try {
+    const user = await service.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
 
-  res.status(200).send({
-    status: "success",
-    data: user,
-  });
+    res.status(200).send({
+      status: "success",
+      data: user,
+    });
+  } catch (err) {
+    cl(err);
+    next(err);
+  }
 };
 
 exports.deleteById = async (req, res, next) => {
-  // If a image URL is present, delete the file from S3
-  const { profilePic } = await service.findOne({
-    where: {
-      id: req.params.id,
-    },
-  });
-  if (profilePic) deleteFilesFromS3([profilePic]);
-  s;
-  const affectedRows = await service.delete({
-    where: {
-      id: req.params.id,
-    },
-  });
+  try {
+    // If a profilePic URL is present, delete the file from S3
+    const { profilePic } = await service.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+    if (profilePic) deleteFilesFromS3([profilePic]);
+    const affectedRows = await service.delete({
+      where: {
+        id: req.params.id,
+      },
+    });
 
-  res.status(200).json({
-    status: "success",
-    message: "delete user successfully",
-    data: {
-      affectedRows,
-    },
-  });
+    res.status(200).json({
+      status: "success",
+      message: "delete user successfully",
+      data: {
+        affectedRows,
+      },
+    });
+  } catch (err) {
+    cl(err);
+    next(err);
+  }
 };

@@ -11,10 +11,8 @@ router.post("/login", admin.login);
 router.post("/",joiValidator(joiSchema.create), admin.create); //TODO: Protect the api
 
 // <=============== Authorized APIs ===============>
-router.use(authMiddleware);
+router.use(authMiddleware,protectRoute(["Admin"]));
 
-// <=============== APIs for only Admins ===============>
-router.use(protectRoute(["Admin"]));
 router.get("/profile",admin.getMyProfile);
 
 

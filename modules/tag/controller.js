@@ -22,7 +22,9 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query, {}, ["name"]),
+    });
 
     res.status(200).send({
       status: "success",

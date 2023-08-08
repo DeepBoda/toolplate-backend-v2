@@ -92,6 +92,16 @@ exports.getAll = async (req, res, next) => {
           ],
           [
             sequelize.literal(
+              `(SELECT COUNT(*) FROM (
+              SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
+              UNION ALL
+              SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
+            ) AS commentAndReplyCounts)`
+            ),
+            "comments",
+          ],
+          [
+            sequelize.literal(
               "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
             ),
             "wishlists",

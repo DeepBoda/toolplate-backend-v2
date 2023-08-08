@@ -330,7 +330,7 @@ exports.updateProfile = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     const users = await service.findAndCountAll({
-      ...sqquery(req.query, {}, ["username", "email"], [], [], "createdAt"),
+      ...sqquery(req.query, {}, ["username", "email"]),
     });
 
     res.status(200).send({

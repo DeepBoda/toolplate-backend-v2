@@ -3,6 +3,7 @@
 
 <head>
     <title>OTP Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,7 +24,7 @@
         }
 
         .header {
-            height: 80px;
+            height: 100px;
             background-color: #1E1E1E;
             padding: 10px;
             border-radius: 10px 10px 0 0;
@@ -35,7 +36,7 @@
         }
 
         .logo {
-            max-width: 200px;
+            max-width: 60%;
             height: auto;
         }
 
@@ -46,13 +47,11 @@
         }
 
         .otp-code-container {
-
             margin-top: 20px;
         }
 
         .copy-button {
             display: block;
-
             padding: 10px;
             text-align: center;
             background-color: #1E1E1E;
@@ -79,12 +78,19 @@
 
         /* Media Queries for Mobile Devices */
         @media (max-width: 600px) {
-            .logo {
-                max-width: 200px;
+            .container {
+                padding: 10px;
+                border-radius: 0;
             }
 
             .header {
-                height: 80px;
+                height: auto;
+                background-color: transparent;
+            }
+
+            .logo {
+                max-width: 200px;
+                margin: 0 auto;
             }
 
             .title {

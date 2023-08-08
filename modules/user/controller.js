@@ -362,25 +362,32 @@ exports.getById = async (req, res, next) => {
 };
 exports.blockUser = async (req, res, next) => {
   try {
+    const isBlocked = req.body.isBlocked;
+
+    // Update the user's isBlocked status
     const [affectedRows] = await service.update(
-      { isBlocked: sequelize.literal("NOT isBlocked") },
+      { isBlocked },
       {
         where: {
-          id: req.query.id,
+          id: req.params.id,
         },
       }
     );
 
+    // Generate success message based on isBlocked value
+    const message = isBlocked
+      ? "User blocked successfully!"
+      : "User unblocked successfully!";
+
     res.status(200).json({
       status: "success",
-      data: {
-        affectedRows,
-      },
+      message,
     });
   } catch (error) {
     next(error);
   }
 };
+
 exports.deleteById = async (req, res, next) => {
   try {
     const user = await service.findOne({

@@ -12,7 +12,7 @@ router
   .post(upload.single("image"), joiValidator(blogSchema.create), blog.add);
 router
   .route("/:id")
-  .get(blog.getById)
+  .get(blog.getForAdmin)
   .patch(upload.single("image"), joiValidator(blogSchema.update), blog.update)
   .delete(blog.delete);
 

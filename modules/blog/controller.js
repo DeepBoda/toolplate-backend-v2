@@ -223,6 +223,71 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+exports.getForAdmin = async (req, res, next) => {
+  try {
+    // let data = await redisService.get(`oneBlog`);
+    // if (!data)
+
+    const data = await service.findOne({
+      where: {
+        id: req.params.id,
+      },
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+            ),
+            "views",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+            ),
+            "likes",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+            ),
+            "wishlists",
+          ],
+        ],
+      },
+      include: [
+        {
+          model: BlogCategory,
+          attributes: ["id", "blogId", "categoryId"],
+          include: {
+            model: Category,
+            attributes: ["id", "name"],
+          },
+        },
+        {
+          model: BlogTag,
+          attributes: ["id", "blogId", "tagId"],
+          include: {
+            model: Tag,
+            attributes: ["id", "name"],
+          },
+        },
+      ],
+    });
+    await viewService.create({
+      blogId: req.params.id,
+      userId: null,
+    });
+    // redisService.set(`oneBlog`, data);
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getRelatedBlogs = async (req, res, next) => {
   try {
     // Find the details of the opened blog

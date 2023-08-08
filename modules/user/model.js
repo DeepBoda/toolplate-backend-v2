@@ -34,6 +34,10 @@ const User = sequelize.define(
     FCM: {
       type: DataTypes.STRING,
     },
+    isBlocked: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     deletedAt: {
       type: DataTypes.DATE,
       defaultValue: new Date(0),
@@ -45,9 +49,6 @@ const User = sequelize.define(
       email: {
         fields: ["email", "deletedAt"],
       },
-      // mobile: {
-      //   fields: ["mobile", "deletedAt"],
-      // },
     },
     hooks: {
       beforeCreate: async (user, options) => {

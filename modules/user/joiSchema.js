@@ -15,6 +15,7 @@ module.exports = {
     // password: Joi.string(),
     uid: Joi.string(),
     profilePic: Joi.string(),
+    isBlocked: Joi.boolean(),
     FCM: Joi.string(),
   }),
 };

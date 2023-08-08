@@ -185,6 +185,13 @@ exports.socialAuth = async (req, res, next) => {
       });
     }
 
+    // Check if the user is blocked or not
+    if (user.isBlocked == true)
+      return res.status(401).json({
+        status: "Permission Denied",
+        message: "You'are Blocked by Admin",
+      });
+
     // Sign a JWT Token as Login Token
     const token = jwt.sign(
       {
@@ -225,6 +232,13 @@ exports.login = async (req, res, next) => {
     if (!correctPassword) {
       throw createError(400, "Invalid email or password");
     }
+
+    // Check if the user is blocked or not
+    if (user.isBlocked == true)
+      return res.status(401).json({
+        status: "Permission Denied",
+        message: "You'are Blocked by Admin",
+      });
 
     // Generate JWT token and send response
     const token = jwt.sign(

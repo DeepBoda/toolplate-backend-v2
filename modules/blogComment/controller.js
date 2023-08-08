@@ -27,6 +27,7 @@ exports.getAll = async (req, res, next) => {
   try {
     // Check if req.requestor is defined before using it
     const userId = req.requestor ? req.requestor.id : null;
+
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
       attributes: [
@@ -55,7 +56,6 @@ exports.getAll = async (req, res, next) => {
         },
         {
           model: BlogCommentReply,
-
           required: false,
           attributes: [
             "id",

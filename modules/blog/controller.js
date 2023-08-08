@@ -75,8 +75,9 @@ exports.getAll = async (req, res, next) => {
     }
     const userId = req.requestor ? req.requestor.id : null;
 
-    const data = await service.findAll({
+    const data = await service.findAndCountAll({
       ...sqquery(query, {}, ["title"]),
+      distinct: true, // Add this option to ensure accurate counts
       attributes: {
         include: [
           [

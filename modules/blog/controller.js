@@ -1,8 +1,8 @@
 "use strict";
 const { Op, where } = require("sequelize");
+const sequelize = require("../../config/db");
 const service = require("./service");
 const viewService = require("../blogView/service");
-const sequelize = require("../../config/db");
 // const redisService = require("../../utils/redis");
 const { cl } = require("../../utils/service");
 const { usersqquery, sqquery } = require("../../utils/query");

@@ -1,5 +1,5 @@
 "use strict";
-
+const sequelize = require("../../config/db");
 const bcryptjs = require("bcryptjs");
 const crypto = require("crypto");
 const createError = require("http-errors");
@@ -11,8 +11,6 @@ const admin = require("../../config/firebaseConfig"); // Firebase Admin SDK inst
 const otpGenerator = require("otp-generator");
 const { generateProfilePic } = require("../../middlewares/generateProfile");
 const { sendOTP } = require("../../utils/mail");
-const { cl } = require("../../utils/service");
-const { Sequelize } = require("sequelize");
 
 // Signup route
 exports.signup = async (req, res, next) => {
@@ -288,6 +286,7 @@ exports.getProfile = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
   try {
+    req.params.id = req.requestor.id;
     delete req.body.password;
     let oldUserData;
     if (req.file) {
@@ -331,7 +330,7 @@ exports.updateProfile = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     const users = await service.findAndCountAll({
-      ...sqquery(req.query, {}, ["username", "email"]),
+      ...sqquery(req.query, {}, ["username", "email"], [], [], "createdAt"),
     });
 
     res.status(200).send({
@@ -361,7 +360,27 @@ exports.getById = async (req, res, next) => {
     next(error);
   }
 };
+exports.blockUser = async (req, res, next) => {
+  try {
+    const [affectedRows] = await service.update(
+      { isBlocked: sequelize.literal("NOT isBlocked") },
+      {
+        where: {
+          id: req.query.id,
+        },
+      }
+    );
 
+    res.status(200).json({
+      status: "success",
+      data: {
+        affectedRows,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 exports.deleteById = async (req, res, next) => {
   try {
     const user = await service.findOne({

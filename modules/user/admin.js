@@ -4,6 +4,7 @@ const router = require("express").Router();
 const user = require("./controller");
 
 router.get("/", user.getAll);
+router.route("/block").patch(user.blockUser);
 router.route("/:id").get(user.getById).delete(user.deleteById);
 
 module.exports = router;

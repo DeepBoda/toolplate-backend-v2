@@ -36,7 +36,7 @@ exports.sqquery = (
 
   excludeFields.forEach((el) => delete q[el]);
 
-  let where = { ...filter };
+  let where = { ...filter, ...dateFilter() };
 
   Object.keys(q).forEach((v) => {
     if (typeof q[v] === "object") {

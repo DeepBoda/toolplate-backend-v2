@@ -34,11 +34,11 @@ exports.getJwtToken = (data) => {
   });
 };
 
-exports.dateFilter = (query) => {
+exports.dateFilter = (query, dateColumn = "createdAt") => {
   const dateFilter = {};
   const { startDate, endDate } = query;
   if (startDate) {
-    dateFilter.createdAt = {
+    dateFilter[dateColumn] = {
       [Op.gte]: new Date(startDate),
       [Op.lt]: endDate
         ? new Date(moment(endDate).add(1, "days"))

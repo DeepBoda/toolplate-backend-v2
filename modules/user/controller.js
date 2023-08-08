@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const createError = require("http-errors");
 const jwt = require("jsonwebtoken");
 const service = require("./service");
+const { usersqquery, sqquery } = require("../../utils/query");
 const admin = require("../../config/firebaseConfig"); // Firebase Admin SDK instance
 const otpGenerator = require("otp-generator");
 const { generateProfilePic } = require("../../middlewares/generateProfile");

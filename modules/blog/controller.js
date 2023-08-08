@@ -17,8 +17,9 @@ const Tag = require("../tag/model");
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    const { categories, tags, ...body } = req.body;
     if (req.file) req.body.image = req.file.location;
+    const { categories, tags, ...body } = req.body;
+    console.log("body: ", body);
 
     // Step 1: Create the new blog entry in the `blog` table
     const blog = await service.create(body);

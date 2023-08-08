@@ -131,6 +131,14 @@ exports.getAll = async (req, res, next) => {
             attributes: ["id", "name"],
           },
         },
+        {
+          model: BlogTag,
+          attributes: ["id", "blogId", "tagId"],
+          include: {
+            model: Tag,
+            attributes: ["id", "name"],
+          },
+        },
       ],
     });
 

@@ -10,8 +10,8 @@ const connectToRedis = async () => {
   try {
     await redisClient.connect();
     console.log("Redis connected successfully");
-  } catch (err) {
-    console.error("Error in Redis Connection", err);
+  } catch (error) {
+    console.error("Error in Redis Connection:\n", error);
   }
 };
 

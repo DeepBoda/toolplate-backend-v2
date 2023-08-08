@@ -29,7 +29,7 @@ exports.pushNotificationTo = async (to, title, body, click_action, userId) => {
       // });
     })
     .catch(function (error) {
-      console.log("Error sending message:", error);
+      console.error("Error sending message:\n", error);
     });
 
   return true;
@@ -61,7 +61,7 @@ exports.pushNotificationToBulk = async (to, title, body, click_action) => {
       // });
     })
     .catch(function (error) {
-      console.log(error);
+      console.error(error);
     });
 
   return true;
@@ -84,7 +84,7 @@ exports.pushNotificationTopic = async (topic, title, body, click_action) => {
     console.log("Successfully subscribed to topic:->", response);
     return true;
   } catch (error) {
-    console.log("Error subscribing to topic:", error);
+    console.error("Error subscribing to topic:\n", error);
     return false;
   }
 };

@@ -48,8 +48,8 @@ exports.login = async (req, res, next) => {
       role: "Admin",
       admin,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 };
 

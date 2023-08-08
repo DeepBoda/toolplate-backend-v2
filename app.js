@@ -55,9 +55,8 @@ if (force) {
             console.log(`✔ Database connected successfully! 🎯`);
             readline.close(); // Close the readline interface after the user's response
           })
-          .catch((err) => {
-            console.error("Error while creating tables...");
-            console.log(err);
+          .catch((error) => {
+            console.error("Error while creating tables...\n", error);
           });
       } else {
         console.log("Force true prevented, reconnect the DB.");
@@ -72,9 +71,8 @@ if (force) {
     .then(async (result) => {
       console.log(`✔ Database connection successful! 🎯`);
     })
-    .catch((err) => {
-      console.error("Error while creating tables...");
-      console.log(err);
+    .catch((error) => {
+      console.error("Error while creating tables...\n", error);
     });
 }
 

@@ -6,7 +6,7 @@ exports.get = async (endPoint) => {
     const data = await redisClient.GET(endPoint);
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    logger.error(`Error in Redis GET operation: ${error}`);
+    logger.error(`Error in Redis GET operation:\n ${error}`);
     return null;
   }
 };
@@ -15,7 +15,7 @@ exports.set = async (endPoint, data) => {
   try {
     await redisClient.SET(endPoint, JSON.stringify(data));
   } catch (error) {
-    logger.error(`Error in Redis SET operation: ${error}`);
+    logger.error(`Error in Redis SET operation:\n ${error}`);
   }
 };
 
@@ -23,7 +23,7 @@ exports.del = async (endPoint) => {
   try {
     await redisClient.DEL(endPoint);
   } catch (error) {
-    logger.error(`Error in Redis DEL operation: ${error}`);
+    logger.error(`Error in Redis DEL operation:\n ${error}`);
   }
 };
 
@@ -34,7 +34,7 @@ exports.hDel = async (endPoint) => {
       await redisClient.DEL(keys);
     }
   } catch (error) {
-    logger.error(`Error in Redis HDEL operation: ${error}`);
+    logger.error(`Error in Redis HDEL operation:\n ${error}`);
   }
 };
 
@@ -42,6 +42,6 @@ exports.flushAll = async () => {
   try {
     await redisClient.FLUSHALL();
   } catch (error) {
-    logger.error(`Error in Redis FLUSHALL operation: ${error}`);
+    logger.error(`Error in Redis FLUSHALL operation:\n ${error}`);
   }
 };

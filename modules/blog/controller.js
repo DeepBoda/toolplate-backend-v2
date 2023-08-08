@@ -50,9 +50,9 @@ exports.add = async (req, res, next) => {
       status: "success",
       data: blog,
     });
-  } catch (err) {
-    cl(err);
-    next(err);
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 
@@ -451,9 +451,9 @@ exports.update = async (req, res, next) => {
 
     // Handle the file deletion
     if (req.file && oldBlogData?.image) deleteFilesFromS3([oldBlogData?.image]);
-  } catch (err) {
+  } catch (error) {
     // Handle errors here
-    next(err);
+    next(error);
   }
 };
 

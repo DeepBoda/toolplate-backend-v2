@@ -6,6 +6,6 @@ exports.responseInClientSlack = async (body) => {
       body
     );
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };

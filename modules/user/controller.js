@@ -12,6 +12,7 @@ const otpGenerator = require("otp-generator");
 const { generateProfilePic } = require("../../middlewares/generateProfile");
 const { sendOTP } = require("../../utils/mail");
 const { cl } = require("../../utils/service");
+const { Sequelize } = require("sequelize");
 
 // Signup route
 exports.signup = async (req, res, next) => {
@@ -54,7 +55,7 @@ exports.signup = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     next(error);
   }
 };
@@ -65,7 +66,7 @@ exports.verifyOTP = async (req, res, next) => {
     const { otp } = req.body;
 
     const decodedToken = jwt.decode(req.body.token);
-    cl(decodedToken, "token");
+    console.log("token: ", decodedToken);
     if (
       !decodedToken ||
       !decodedToken.username ||
@@ -209,7 +210,7 @@ exports.socialAuth = async (req, res, next) => {
       role: "User",
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     next(error);
   }
 };
@@ -279,9 +280,9 @@ exports.getProfile = async (req, res, next) => {
       status: "success",
       data: user,
     });
-  } catch (err) {
-    cl(err);
-    next(err);
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 
@@ -319,8 +320,9 @@ exports.updateProfile = async (req, res, next) => {
     });
     if (req.file && oldUserData?.profilePic)
       deleteFilesFromS3([oldUserData?.profilePic]);
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    // console.error(error);
+    next(error);
   }
 };
 
@@ -328,15 +330,17 @@ exports.updateProfile = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const users = await service.findAll({ ...usersqquery });
+    const users = await service.findAndCountAll({
+      ...sqquery(req.query, {}, ["username", "email"]),
+    });
 
     res.status(200).send({
       status: "success",
       data: users,
     });
-  } catch (err) {
-    cl(err);
-    next(err);
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 
@@ -352,21 +356,30 @@ exports.getById = async (req, res, next) => {
       status: "success",
       data: user,
     });
-  } catch (err) {
-    cl(err);
-    next(err);
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 
 exports.deleteById = async (req, res, next) => {
   try {
-    // If a profilePic URL is present, delete the file from S3
-    const { profilePic } = await service.findOne({
+    const user = await service.findOne({
       where: {
         id: req.params.id,
       },
     });
-    if (profilePic) deleteFilesFromS3([profilePic]);
+
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found!",
+      });
+    }
+
+    // Call function to delete profilePic from S3
+    if (user.profilePic) deleteFilesFromS3([user.profilePic]);
+
     const affectedRows = await service.delete({
       where: {
         id: req.params.id,
@@ -375,13 +388,13 @@ exports.deleteById = async (req, res, next) => {
 
     res.status(200).json({
       status: "success",
-      message: "delete user successfully",
+      message: "User deleted successfully!",
       data: {
         affectedRows,
       },
     });
-  } catch (err) {
-    cl(err);
-    next(err);
+  } catch (error) {
+    console.error("Error deleting User: ", error);
+    next(error);
   }
 };

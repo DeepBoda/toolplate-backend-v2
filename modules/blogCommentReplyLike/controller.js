@@ -27,9 +27,9 @@ exports.add = async (req, res, next) => {
         message: "You liked the comment!.",
       });
     }
-  } catch (err) {
-    cl(err);
-    next(err);
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 exports.getAll = async (req, res, next) => {
@@ -79,9 +79,9 @@ exports.update = async (req, res, next) => {
         affectedRows,
       },
     });
-  } catch (err) {
-    // Handle errors here
-    next(err);
+  } catch (error) {
+    // console.error(error);
+    next(error);
   }
 };
 

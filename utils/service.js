@@ -5,8 +5,15 @@ const { Op } = require("sequelize");
 const moment = require("moment");
 const { s3 } = require("../config/aws");
 
-exports.cl = (tag, message = "") => {
-  if (process.env.log == 1) console.log("👀 ", tag, message);
+exports.cl = (tag, message = "", level = "info") => {
+  if (process.env.log == 1) {
+    const types = {
+      debug: console.debug,
+      error: console.error,
+    };
+    const logFunction = types[level] || console.log;
+    logFunction(tag, message);
+  }
 };
 
 exports.jwtDecoder = async (req) => {
@@ -25,12 +32,6 @@ exports.getJwtToken = (data) => {
   return jwt.sign(data, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIREIN,
   });
-};
-
-exports.generateOTP = () => {
-  const OTP = Math.floor(100000 + Math.random() * 900000);
-  this.cl("OTP", OTP);
-  return OTP;
 };
 
 exports.dateFilter = (query) => {

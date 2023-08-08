@@ -30,9 +30,9 @@ exports.add = async (req, res, next) => {
         message: "Blog added to wishlist!.",
       });
     }
-  } catch (err) {
-    cl(err);
-    next(err);
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 
@@ -131,9 +131,9 @@ exports.update = async (req, res, next) => {
         affectedRows,
       },
     });
-  } catch (err) {
-    // Handle errors here
-    next(err);
+  } catch (error) {
+    // console.error(error);
+    next(error);
   }
 };
 

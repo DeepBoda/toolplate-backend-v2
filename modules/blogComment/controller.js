@@ -17,9 +17,9 @@ exports.add = async (req, res, next) => {
       status: "success",
       data,
     });
-  } catch (err) {
-    cl(err);
-    next(err);
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 
@@ -144,9 +144,9 @@ exports.update = async (req, res, next) => {
         affectedRows,
       },
     });
-  } catch (err) {
+  } catch (error) {
     // Handle errors here
-    next(err);
+    next(error);
   }
 };
 

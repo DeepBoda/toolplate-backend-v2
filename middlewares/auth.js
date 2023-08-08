@@ -15,7 +15,7 @@ exports.protectRoute = (roles) => async (req, res, next) => {
 
     req.requestor = jwtUser;
     next();
-  } catch (err) {
+  } catch (error) {
     return next(createHttpError(401, "Invalid Jwt Token"));
   }
 };
@@ -62,15 +62,15 @@ exports.authMiddleware = async (req, res, next) => {
     next();
 
     if (requestor) {
-      cl("API Call--->", {
+      cl("🧑🏻‍💻 API Call --->", {
         API: req.method + " " + req.originalUrl,
         body: req.body,
         // query: req.query,
         requestor: requestor.toJSON(),
       });
     }
-  } catch (err) {
-    cl("Error in authMiddleware", err);
-    next(err);
+  } catch (error) {
+    console.error("Error in authMiddleware:\n", error);
+    next(error);
   }
 };

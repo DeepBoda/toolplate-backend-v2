@@ -42,9 +42,6 @@ exports.getAll = async (req, res, next) => {
       ...sqquery(req.query, {
         userId: req.requestor.id,
       }),
-      // where: {
-      //   userId: req.requestor.id,
-      // },
       include: {
         model: Tool,
         attributes: [
@@ -52,7 +49,7 @@ exports.getAll = async (req, res, next) => {
           "title",
           "image",
           "description",
-          "readTime",
+          "price",
           "createdAt",
         ],
         include: {

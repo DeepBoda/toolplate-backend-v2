@@ -46,7 +46,7 @@ exports.add = async (req, res, next) => {
       .map((categoryId) => parseInt(categoryId));
     const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
 
-    // Step 3: Add entries in the `blogCategory` table
+    // Step 3: Add entries in the `toolCategory` table
     for (const categoryId of categoryIds) {
       await toolCategoryService.create({
         toolId: tool.id,
@@ -54,7 +54,7 @@ exports.add = async (req, res, next) => {
       });
     }
 
-    // Step 4: Add entries in the `blogTag` table
+    // Step 4: Add entries in the `toolTag` table
     for (const tagId of tagIds) {
       await toolTagService.create({
         toolId: tool.id,
@@ -163,7 +163,7 @@ exports.getAll = async (req, res, next) => {
 
 exports.getById = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`oneBlog`);
+    // let data = await redisService.get(`oneTool`);
     // if (!data)
     const userId = req.requestor ? req.requestor.id : null;
 
@@ -228,7 +228,7 @@ exports.getById = async (req, res, next) => {
       toolId: req.params.id,
       userId: req.requestor?.id ?? null,
     });
-    // redisService.set(`oneBlog`, data);
+    // redisService.set(`oneTool`, data);
 
     res.status(200).send({
       status: "success",
@@ -241,7 +241,7 @@ exports.getById = async (req, res, next) => {
 
 exports.getForAdmin = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`oneBlog`);
+    // let data = await redisService.get(`oneTool`);
     // if (!data)
 
     const data = await service.findOne({
@@ -293,7 +293,7 @@ exports.getForAdmin = async (req, res, next) => {
       toolId: req.params.id,
       userId: null,
     });
-    // redisService.set(`oneBlog`, data);
+    // redisService.set(`oneTool`, data);
 
     res.status(200).send({
       status: "success",
@@ -331,14 +331,14 @@ exports.getRelatedTools = async (req, res, next) => {
 
     // Find tools that have the same category as the opened tool
     const categoryIds = openedTool.toolCategories.map(
-      (blogCategory) => blogCategory.categoryId
+      (toolCategory) => toolCategory.categoryId
     );
 
     // Find tools that have the same tags as the opened tool
-    const tagIds = openedTool.toolTags.map((blogTag) => blogTag.tagId);
+    const tagIds = openedTool.toolTags.map((toolTag) => toolTag.tagId);
 
     // Find tools with the same category or tag IDs
-    const relatedBlogs = await service.findAll({
+    const relatedTools = await service.findAll({
       // ...sqquery(req.query),
       where: {
         id: { [Op.ne]: req.params.id },
@@ -359,26 +359,26 @@ exports.getRelatedTools = async (req, res, next) => {
       },
       include: [
         {
-          model: BlogCategory,
+          model: ToolCategory,
           attributes: ["id", "toolId", "categoryId"],
           include: {
             model: Category,
           },
         },
         {
-          model: BlogTag,
+          model: ToolTag,
           attributes: ["id", "toolId", "tagId"],
         },
       ],
     });
 
     // Calculate matching percentage for each tool
-    relatedBlogs.forEach((tool) => {
-      const commonCategories = tool.toolCategories.filter((blogCategory) =>
-        categoryIds.includes(blogCategory.categoryId)
+    relatedTools.forEach((tool) => {
+      const commonCategories = tool.toolCategories.filter((toolCategory) =>
+        categoryIds.includes(toolCategory.categoryId)
       );
-      const commonTags = tool.toolTags.filter((blogTag) =>
-        tagIds.includes(blogTag.tagId)
+      const commonTags = tool.toolTags.filter((toolTag) =>
+        tagIds.includes(toolTag.tagId)
       );
       const totalCategories = categoryIds.length;
       const totalTags = tagIds.length;
@@ -392,17 +392,17 @@ exports.getRelatedTools = async (req, res, next) => {
     });
 
     // Sort tools based on matching percentage in descending order
-    relatedBlogs.sort(
+    relatedTools.sort(
       (a, b) =>
         b.dataValues.matchingPercentage - a.dataValues.matchingPercentage
     );
 
     // Limit the result to the top 3 most related tools
-    const mostRelatedBlogs = relatedBlogs.slice(0, 3);
-    // console.log(mostRelatedBlogs);
+    const mostRelatedTools = relatedTools.slice(0, 3);
+    // console.log(mostRelatedTools);
 
     // Select only the required attributes (image and title) for each tool
-    const reducedData = mostRelatedBlogs.map(
+    const reducedData = mostRelatedTools.map(
       (tool) => (
         (tool = tool.toJSON()),
         {

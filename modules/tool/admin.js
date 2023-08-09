@@ -1,0 +1,27 @@
+"use strict";
+
+const router = require("express").Router();
+const tool = require("./controller");
+const toolSchema = require("./joiSchema");
+const { joiValidator } = require("../../middlewares/joiValidator");
+const { upload } = require("../../middlewares/multer");
+
+router
+  .route("/")
+  .get(tool.getAll)
+  .post(
+    upload.fields([
+      { name: "image", maxCount: 1 },
+      { name: "previews", maxCount: 5 },
+      { name: "videos", maxCount: 5 },
+    ]),
+    joiValidator(toolSchema.create),
+    tool.add
+  );
+router
+  .route("/:id")
+  .get(tool.getForAdmin)
+  .patch(upload.single("image"), joiValidator(toolSchema.update), tool.update)
+  .delete(tool.delete);
+
+module.exports = router;

@@ -4,8 +4,11 @@ const service = require("./service");
 
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
+const Tool = require("../tool/model");
+const ToolCategory = require("../toolCategory/model");
+const Category = require("../category/model");
+const User = require("../user/model");
 
-// ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
@@ -18,13 +21,13 @@ exports.add = async (req, res, next) => {
       });
       res.status(200).json({
         status: "success",
-        message: "You removed like!.",
+        message: "Tool removed from wishlist!.",
       });
     } else {
       await service.create(req.body);
       res.status(200).json({
         status: "success",
-        message: "You liked the comment!.",
+        message: "Tool added to wishlist!.",
       });
     }
   } catch (error) {
@@ -35,7 +38,56 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query, {
+        userId: req.requestor.id,
+      }),
+      // where: {
+      //   userId: req.requestor.id,
+      // },
+      include: {
+        model: Tool,
+        attributes: [
+          "id",
+          "title",
+          "image",
+          "description",
+          "readTime",
+          "createdAt",
+        ],
+        include: {
+          model: ToolCategory,
+          attributes: ["id", "toolId", "categoryId"],
+          include: {
+            model: Category,
+            attributes: ["id", "name"],
+          },
+        },
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getByUser = async (req, res, next) => {
+  try {
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query),
+      include: [
+        // {
+        //   model: User,
+        // },
+        {
+          model: Tool,
+        },
+      ],
+    });
 
     res.status(200).send({
       status: "success",
@@ -63,10 +115,9 @@ exports.getById = async (req, res, next) => {
   }
 };
 
-// ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    // Update the blog data
+    // Update the Tool data
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
@@ -90,7 +141,7 @@ exports.delete = async (req, res, next) => {
   try {
     const affectedRows = await service.delete({
       where: {
-        userId: req.requestor.id,
+        id: req.params.id,
       },
     });
 

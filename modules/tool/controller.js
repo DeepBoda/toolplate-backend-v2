@@ -2,27 +2,43 @@
 const { Op, where } = require("sequelize");
 const sequelize = require("../../config/db");
 const service = require("./service");
-const viewService = require("../blogView/service");
+const viewService = require("../toolView/service");
 // const redisService = require("../../utils/redis");
 
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const BlogCategory = require("../blogCategory/model");
-const blogCategoryService = require("../blogCategory/service");
+const ToolCategory = require("../toolCategory/model");
+const toolCategoryService = require("../toolCategory/service");
 const Category = require("../category/model");
-const BlogTag = require("../blogTag/model");
-const blogTagService = require("../blogTag/service");
+const ToolTag = require("../toolTag/model");
+const toolTagService = require("../toolTag/service");
 const Tag = require("../tag/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    if (req.file) req.body.image = req.file.location;
+    if (req.files) {
+      // Check if Image (logo) uploaded and if got URL
+      if (req.files.image) {
+        req.body.image = req.files.image[0].location;
+      }
+      // Check if Previews uploaded and if got URLs
+      if (req.files.previews) {
+        const previews = req.files.previews.map((el) => el.location);
+        req.body.previews = previews;
+      }
+      // Check if Videos uploaded and if got URLs
+      if (req.files.videos) {
+        const videos = req.files.videos.map((el) => el.location);
+        req.body.videos = videos;
+      }
+    }
+
     const { categories, tags, ...body } = req.body;
     console.log("body: ", body);
 
-    // Step 1: Create the new blog entry in the `blog` table
-    const blog = await service.create(body);
+    // Step 1: Create the new tool entry in the `tool` table
+    const tool = await service.create(body);
 
     // Step 2: Get the comma-separated `categories` and `tags` IDs
     const categoryIds = categories
@@ -32,23 +48,23 @@ exports.add = async (req, res, next) => {
 
     // Step 3: Add entries in the `blogCategory` table
     for (const categoryId of categoryIds) {
-      await blogCategoryService.create({
-        blogId: blog.id,
+      await toolCategoryService.create({
+        toolId: tool.id,
         categoryId,
       });
     }
 
     // Step 4: Add entries in the `blogTag` table
     for (const tagId of tagIds) {
-      await blogTagService.create({
-        blogId: blog.id,
+      await toolTagService.create({
+        toolId: tool.id,
         tagId,
       });
     }
 
     res.status(200).json({
       status: "success",
-      data: blog,
+      data: tool,
     });
   } catch (error) {
     console.error(error);
@@ -58,7 +74,7 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`blogs`);
+    // let data = await redisService.get(`tools`);
     // if (!data)
     const { categoryIds, ...query } = req.query;
 
@@ -68,8 +84,8 @@ exports.getAll = async (req, res, next) => {
       // Split the comma-separated categoryIds into an array
       const categoryIdArray = categoryIds.split(",").map(Number);
 
-      // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
-      where["$blogCategories.categoryId$"] = {
+      // Use the `Op.in` operator to find tools that match any of the specified categoryIds
+      where["$toolCategories.categoryId$"] = {
         [Op.in]: categoryIdArray,
       };
     }
@@ -82,41 +98,31 @@ exports.getAll = async (req, res, next) => {
         include: [
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
             ),
             "views",
           ],
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
             ),
             "likes",
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM (
-              SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
-              UNION ALL
-              SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
-            ) AS commentAndReplyCounts)`
-            ),
-            "comments",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
             ),
             "wishlists",
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
             ),
             "isLiked",
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
             ),
             "isWishlisted",
           ],
@@ -124,8 +130,8 @@ exports.getAll = async (req, res, next) => {
       },
       include: [
         {
-          model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          model: ToolCategory,
+          attributes: ["id", "toolId", "categoryId"],
           ...query,
           where,
           include: {
@@ -134,8 +140,8 @@ exports.getAll = async (req, res, next) => {
           },
         },
         {
-          model: BlogTag,
-          attributes: ["id", "blogId", "tagId"],
+          model: ToolTag,
+          attributes: ["id", "toolId", "tagId"],
           include: {
             model: Tag,
             attributes: ["id", "name"],
@@ -144,7 +150,7 @@ exports.getAll = async (req, res, next) => {
       ],
     });
 
-    // redisService.set(`blogs`, data);
+    // redisService.set(`tools`, data);
 
     res.status(200).send({
       status: "success",
@@ -169,31 +175,31 @@ exports.getById = async (req, res, next) => {
         include: [
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
             ),
             "views",
           ],
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
             ),
             "likes",
           ],
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
             ),
             "wishlists",
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
             ),
             "isLiked",
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
             ),
             "isWishlisted",
           ],
@@ -201,16 +207,16 @@ exports.getById = async (req, res, next) => {
       },
       include: [
         {
-          model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          model: ToolCategory,
+          attributes: ["id", "toolId", "categoryId"],
           include: {
             model: Category,
             attributes: ["id", "name"],
           },
         },
         {
-          model: BlogTag,
-          attributes: ["id", "blogId", "tagId"],
+          model: ToolTag,
+          attributes: ["id", "toolId", "tagId"],
           include: {
             model: Tag,
             attributes: ["id", "name"],
@@ -219,7 +225,7 @@ exports.getById = async (req, res, next) => {
       ],
     });
     await viewService.create({
-      blogId: req.params.id,
+      toolId: req.params.id,
       userId: req.requestor?.id ?? null,
     });
     // redisService.set(`oneBlog`, data);
@@ -246,19 +252,19 @@ exports.getForAdmin = async (req, res, next) => {
         include: [
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
             ),
             "views",
           ],
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
             ),
             "likes",
           ],
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
             ),
             "wishlists",
           ],
@@ -266,16 +272,16 @@ exports.getForAdmin = async (req, res, next) => {
       },
       include: [
         {
-          model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          model: ToolCategory,
+          attributes: ["id", "toolId", "categoryId"],
           include: {
             model: Category,
             attributes: ["id", "name"],
           },
         },
         {
-          model: BlogTag,
-          attributes: ["id", "blogId", "tagId"],
+          model: ToolTag,
+          attributes: ["id", "toolId", "tagId"],
           include: {
             model: Tag,
             attributes: ["id", "name"],
@@ -284,7 +290,7 @@ exports.getForAdmin = async (req, res, next) => {
       ],
     });
     await viewService.create({
-      blogId: req.params.id,
+      toolId: req.params.id,
       userId: null,
     });
     // redisService.set(`oneBlog`, data);
@@ -298,20 +304,20 @@ exports.getForAdmin = async (req, res, next) => {
   }
 };
 
-exports.getRelatedBlogs = async (req, res, next) => {
+exports.getRelatedTools = async (req, res, next) => {
   try {
-    // Find the details of the opened blog
-    const openedBlog = await service.findOne({
+    // Find the details of the opened tool
+    const openedTool = await service.findOne({
       where: { id: req.params.id },
       include: [
         {
-          model: BlogCategory,
+          model: ToolCategory,
           include: {
             model: Category,
           },
         },
         {
-          model: BlogTag,
+          model: ToolTag,
           include: {
             model: Tag,
           },
@@ -319,33 +325,33 @@ exports.getRelatedBlogs = async (req, res, next) => {
       ],
     });
 
-    if (!openedBlog) {
-      throw createError(404, "Blog not found");
+    if (!openedTool) {
+      throw createError(404, "Tool not found");
     }
 
-    // Find blogs that have the same category as the opened blog
-    const categoryIds = openedBlog.blogCategories.map(
+    // Find tools that have the same category as the opened tool
+    const categoryIds = openedTool.toolCategories.map(
       (blogCategory) => blogCategory.categoryId
     );
 
-    // Find blogs that have the same tags as the opened blog
-    const tagIds = openedBlog.blogTags.map((blogTag) => blogTag.tagId);
+    // Find tools that have the same tags as the opened tool
+    const tagIds = openedTool.toolTags.map((blogTag) => blogTag.tagId);
 
-    // Find blogs with the same category or tag IDs
+    // Find tools with the same category or tag IDs
     const relatedBlogs = await service.findAll({
       // ...sqquery(req.query),
       where: {
         id: { [Op.ne]: req.params.id },
         [Op.or]: [
-          { "$blogCategories.categoryId$": { [Op.in]: categoryIds } },
-          { "$blogTags.tagId$": { [Op.in]: tagIds } },
+          { "$toolCategories.categoryId$": { [Op.in]: categoryIds } },
+          { "$toolTags.tagId$": { [Op.in]: tagIds } },
         ],
       },
       attributes: {
         include: [
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
             ),
             "views",
           ],
@@ -354,24 +360,24 @@ exports.getRelatedBlogs = async (req, res, next) => {
       include: [
         {
           model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          attributes: ["id", "toolId", "categoryId"],
           include: {
             model: Category,
           },
         },
         {
           model: BlogTag,
-          attributes: ["id", "blogId", "tagId"],
+          attributes: ["id", "toolId", "tagId"],
         },
       ],
     });
 
-    // Calculate matching percentage for each blog
-    relatedBlogs.forEach((blog) => {
-      const commonCategories = blog.blogCategories.filter((blogCategory) =>
+    // Calculate matching percentage for each tool
+    relatedBlogs.forEach((tool) => {
+      const commonCategories = tool.toolCategories.filter((blogCategory) =>
         categoryIds.includes(blogCategory.categoryId)
       );
-      const commonTags = blog.blogTags.filter((blogTag) =>
+      const commonTags = tool.toolTags.filter((blogTag) =>
         tagIds.includes(blogTag.tagId)
       );
       const totalCategories = categoryIds.length;
@@ -380,34 +386,34 @@ exports.getRelatedBlogs = async (req, res, next) => {
       const matchingTags = commonTags.length;
 
       // Calculate matching percentage
-      blog.dataValues.matchingPercentage =
+      tool.dataValues.matchingPercentage =
         ((matchingCategories + matchingTags) / (totalCategories + totalTags)) *
         100;
     });
 
-    // Sort blogs based on matching percentage in descending order
+    // Sort tools based on matching percentage in descending order
     relatedBlogs.sort(
       (a, b) =>
         b.dataValues.matchingPercentage - a.dataValues.matchingPercentage
     );
 
-    // Limit the result to the top 3 most related blogs
+    // Limit the result to the top 3 most related tools
     const mostRelatedBlogs = relatedBlogs.slice(0, 3);
     // console.log(mostRelatedBlogs);
 
-    // Select only the required attributes (image and title) for each blog
+    // Select only the required attributes (image and title) for each tool
     const reducedData = mostRelatedBlogs.map(
-      (blog) => (
-        (blog = blog.toJSON()),
+      (tool) => (
+        (tool = tool.toJSON()),
         {
-          id: blog.id,
-          title: blog.title,
-          description: blog.description,
-          image: blog.image,
-          category: blog.blogCategories.map(
+          id: tool.id,
+          title: tool.title,
+          description: tool.description,
+          image: tool.image,
+          category: tool.toolCategories.map(
             (category) => category.category.name
           ),
-          views: blog.views,
+          views: tool.views,
         }
       )
     );
@@ -424,17 +430,17 @@ exports.getRelatedBlogs = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    let oldBlogData;
+    let oldToolData;
     if (req.file) {
       req.body.image = req.file.location;
-      oldBlogData = await service.findOne({
+      oldToolData = await service.findOne({
         where: {
           id: req.params.id,
         },
       });
     }
 
-    // Update the blog data
+    // Update the tool data
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
@@ -450,7 +456,7 @@ exports.update = async (req, res, next) => {
     });
 
     // Handle the file deletion
-    if (req.file && oldBlogData?.image) deleteFilesFromS3([oldBlogData?.image]);
+    if (req.file && oldToolData?.image) deleteFilesFromS3([oldToolData?.image]);
   } catch (error) {
     // Handle errors here
     next(error);

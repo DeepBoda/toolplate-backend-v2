@@ -2,7 +2,7 @@
 const sequelize = require("sequelize");
 const service = require("./service");
 const reply = require("../blogCommentReply/service");
-const { cl } = require("../../utils/service");
+
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const BlogCommentReply = require("../blogCommentReply/model");

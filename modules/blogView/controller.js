@@ -1,9 +1,8 @@
 "use strict";
 
 const service = require("./service");
-const { cl } = require("../../utils/service");
+
 const { usersqquery, sqquery } = require("../../utils/query");
-const { deleteFilesFromS3 } = require("../../middlewares/multer");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {

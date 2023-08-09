@@ -4,6 +4,12 @@ const { authMiddleware, protectRoute } = require("../middlewares/auth");
 
 router.use("/appConfig", require("../modules/appConfig"));
 router.use("/users", require("../modules/user"));
+router.use("/tool", require("../modules/tool"));
+router.use("/toolTag", require("../modules/toolTag"));
+router.use("/toolView", require("../modules/toolView"));
+router.use("/toolLike", require("../modules/toolLike"));
+router.use("/toolWishlist", require("../modules/toolWishlist"));
+router.use("/toolCategory", require("../modules/toolCategory"));
 router.use("/blog", require("../modules/blog"));
 router.use("/category", require("../modules/category"));
 router.use("/blogCategory", require("../modules/blogCategory"));

@@ -409,6 +409,7 @@ exports.getRelatedTools = async (req, res, next) => {
           id: tool.id,
           title: tool.title,
           description: tool.description,
+          price: tool.price,
           image: tool.image,
           category: tool.toolCategories.map(
             (category) => category.category.name

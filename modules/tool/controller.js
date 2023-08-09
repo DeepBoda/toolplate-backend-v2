@@ -224,6 +224,7 @@ exports.getById = async (req, res, next) => {
         },
       ],
     });
+    //When opens tool, this creates entry for view
     await viewService.create({
       toolId: req.params.id,
       userId: req.requestor?.id ?? null,
@@ -289,6 +290,7 @@ exports.getForAdmin = async (req, res, next) => {
         },
       ],
     });
+    //When opens tool, this creates entry for view
     await viewService.create({
       toolId: req.params.id,
       userId: null,

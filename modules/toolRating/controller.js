@@ -1,9 +1,8 @@
 "use strict";
 
+const sequelize = require("../../config/db");
 const service = require("./service");
-
 const { usersqquery, sqquery } = require("../../utils/query");
-const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const Tool = require("../tool/model");
 const ToolCategory = require("../toolCategory/model");
 const Category = require("../category/model");
@@ -26,19 +25,36 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
+    const id = req.params.toolId;
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {
         userId: req.requestor.id,
       }),
-      include: {
-        model: User,
-        attributes: ["id", "username", "profilePic"],
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = id)`
+            ),
+            "averageRating",
+          ],
+        ],
       },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "username", "profilePic"],
+        },
+      ],
     });
 
     res.status(200).send({
       status: "success",
-      data,
+      data: {
+        count: data.count,
+        ratings: data.rows[0].dataValues.averageRating,
+        rows: data.rows.map((row) => row.toJSON()),
+      },
     });
   } catch (error) {
     next(error);

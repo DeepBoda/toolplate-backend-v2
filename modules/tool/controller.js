@@ -4,7 +4,6 @@ const sequelize = require("../../config/db");
 const service = require("./service");
 const viewService = require("../toolView/service");
 // const redisService = require("../../utils/redis");
-
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const ToolCategory = require("../toolCategory/model");

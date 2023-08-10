@@ -2,22 +2,26 @@
 
 /** @type {import('sequelize-cli').Migration} */
 const { faker } = require("@faker-js/faker");
-const blogs = require("../modules/blog/service");
-const tags = require("../modules/tag/service");
+const tools = require("../modules/tool/service");
+const users = require("../modules/user/service");
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const blogTags = [];
-    const blog = await blogs.findAll({
+    const toolRatings = [];
+    const tool = await tools.findAll({
       attributes: ["id"],
     });
-    const tag = await tags.findAll({
+    const user = await users.findAll({
       attributes: ["id"],
     });
+    const ratings = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 
-    for (var i = 0; i < 100; i++) {
-      blogTags.push({
-        blogId: faker.helpers.arrayElement(blog.map((el) => el.id)),
-        tagId: faker.helpers.arrayElement(tag.map((el) => el.id)),
+    for (var i = 0; i < 250; i++) {
+      toolRatings.push({
+        title: faker.random.words(5),
+        review: faker.random.words(20),
+        rating: faker.helpers.arrayElement(ratings),
+        toolId: faker.helpers.arrayElement(tool.map((el) => el.id)),
+        userId: faker.helpers.arrayElement(user.map((el) => el.id)),
         createdAt: faker.date.between(
           "2020-01-01T00:00:00.000Z",
           "2023-03-01T00:00:00.000Z"
@@ -29,7 +33,7 @@ module.exports = {
       });
     }
 
-    await queryInterface.bulkInsert("blogTags", blogTags, {
+    await queryInterface.bulkInsert("toolRatings", toolRatings, {
       ignoreDuplicates: true,
     });
   },
@@ -41,6 +45,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete("blogTags");
+    await queryInterface.bulkDelete("toolRatings");
   },
 };

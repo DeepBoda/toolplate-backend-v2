@@ -5,7 +5,7 @@ const { faker } = require("@faker-js/faker");
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const blogs = [];
+    const tools = [];
     const overviews = [
       `
     <p><span style="font-size: 18px;">We've all seen the familiar bottle of water in every store. That water bottle satisfied our thirst while we were drenched in sweat in the midst of the day. The water bottle has a name. Bisleri.</span></p><p><span style="font-size: 24px;"><strong>Buzz:</strong></span></p><p><span style="font-size: 18px;">Tata wants to acquire Bisleri. This will give Tata a foot in India's 110 Billion dollar FMCG Market. </span></p><p><span style="font-size: 18px;">But the deal is still on-off because Tata is haggling, offering less price than what Bisleri asked for. </span></p><p><span style="font-size: 18px;">India is the 12th largest consumer of bottled water by value and the industry grew by 27% in 3 years. But the scale of bottled water penetration in India is still 88.57% less than the USA.&nbsp;</span></p><p><span style="font-size: 18px;">Buy an existing brand &amp; Enter a market if you have capital has been</span> <span style="font-size: 18px;">Reliance's mantra in the recent past.</span></p><p><span style="font-size: 18px;">Taking a leaf from Reliance's roadshow, Tata wants to acquire Bisleri, a name that is synonymous to mineral water in the Desi household parlance and holds 32% market share in the bottled water industry. </span></p><p><span style="font-size: 18px;">Around 60% of the bottled water market is dominated by unorganized brands. Even though Tata's own bottled water company Tata Copper made a revenue of 400+ Crores this year, acquiring Bisleri would give Tata an edge in the mineral water market. </span></p><p><span style="font-size: 18px;">Tata and Bisleri are the only two major brands in India that are made in India. The other two major players Kinley and Acquafina are owned by Kinley and Pepsico. </span></p><p><span style="font-size: 18px;">If Tata drops the deal, what does Tata stand to lose? Can Tata compete with Bisleri? Only time will tell.</span></p><p><span style="font-size: 18px;">&nbsp;Meanwhile, Bisleri is also on the cusp of a leadership change where the current owner's daughter Jayanti Chauhan is stepping forward to take ownership of the company. </span></p><p><span style="font-size: 18px;">We elaborate on the legacy of Bisleri below.</span></p><p><span style="font-size: 24px;"><strong>Bisleri - A Legacy:</strong></span></p><h2><span style="font-size: 18px;">Bisleri - Many individuals are unaware of the history of this life-changing investment. Let us investigate it and learn about its history.&nbsp;</span></h2>
@@ -84,13 +84,25 @@ module.exports = {
             Syntex – a company which makes glitter powder had an EBITDA drop of ~4K % and
             hence, stock price was not glittery.</span></p>`,
     ];
-    for (var i = 0; i < 50; i++) {
-      blogs.push({
-        title: faker.word.verb(5),
-        description: faker.random.words(20),
-        image: faker.image.transport(400, 240, true),
-        readTime: faker.random.numeric(2),
+    const prices = ["Free", "Premium", "Freemium"];
+    const previewsArray = Array.from({ length: 3 }, () =>
+      faker.image.transport(600, 360, true)
+    );
+    const videoLinks = [
+      "https://planet-k.s3.ap-south-1.amazonaws.com/1691570965410-324478366.MOV",
+      "https://planet-k.s3.ap-south-1.amazonaws.com/1691570968205-282854852.MOV",
+      "https://planet-k.s3.ap-south-1.amazonaws.com/1691570970688-664214694.MOV",
+    ];
+    for (var i = 0; i < 25; i++) {
+      tools.push({
+        title: faker.random.words(2),
+        description: faker.random.words(25),
+        image: faker.image.transport(500, 500, true),
+        previews: JSON.stringify(previewsArray),
+        price: faker.helpers.arrayElement(prices),
         overview: faker.helpers.arrayElement(overviews),
+        link: faker.internet.url(),
+        videos: JSON.stringify(videoLinks),
 
         createdAt: faker.date.between(
           "2020-01-01T00:00:00.000Z",
@@ -103,7 +115,7 @@ module.exports = {
       });
     }
 
-    await queryInterface.bulkInsert("blogs", blogs, {
+    await queryInterface.bulkInsert("tools", tools, {
       ignoreDuplicates: true,
     });
   },
@@ -115,6 +127,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete("blogs");
+    await queryInterface.bulkDelete("tools");
   },
 };

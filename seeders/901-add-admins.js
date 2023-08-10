@@ -8,7 +8,7 @@ module.exports = {
     const admins = [];
     admins.push({
       name: "toolplate Admin",
-      email: "admin@gmail.com",
+      email: "admin@toolplate.in",
       password: "$2a$12$TF3tOp2.nD6.IFL8FW6YQeEA6LTZpAa.i0lqJYl/2GqstDRY0YTS6",
       createdAt: new Date(),
       updatedAt: new Date(),

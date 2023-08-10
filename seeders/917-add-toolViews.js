@@ -2,17 +2,17 @@
 
 /** @type {import('sequelize-cli').Migration} */
 const { faker } = require("@faker-js/faker");
-const blogs = require("../modules/blog/service");
+const tools = require("../modules/tool/service");
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const blogViews = [];
-    const blog = await blogs.findAll({
+    const toolViews = [];
+    const tool = await tools.findAll({
       attributes: ["id"],
     });
 
     for (var i = 0; i < 1000; i++) {
-      blogViews.push({
-        blogId: faker.helpers.arrayElement(blog.map((el) => el.id)),
+      toolViews.push({
+        toolId: faker.helpers.arrayElement(tool.map((el) => el.id)),
         userId: 1,
         createdAt: faker.date.between(
           "2020-01-01T00:00:00.000Z",
@@ -25,7 +25,7 @@ module.exports = {
       });
     }
 
-    await queryInterface.bulkInsert("blogViews", blogViews, {
+    await queryInterface.bulkInsert("toolViews", toolViews, {
       ignoreDuplicates: true,
     });
   },
@@ -37,6 +37,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete("blogViews");
+    await queryInterface.bulkDelete("toolViews");
   },
 };

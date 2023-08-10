@@ -10,7 +10,7 @@ module.exports = {
 
     const categories = [];
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 20; i++) {
       const name = faker.random.word(); // Generate a random category name
       const createdAt = faker.date.between(startDate, endDate);
       const updatedAt = faker.date.between(startDate, endDate);

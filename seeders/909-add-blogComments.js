@@ -14,7 +14,7 @@ module.exports = {
       attributes: ["id"],
     });
 
-    for (var i = 0; i < 50; i++) {
+    for (var i = 0; i < 250; i++) {
       blogComments.push({
         comment: faker.random.words(10),
         blogId: faker.helpers.arrayElement(blog.map((el) => el.id)),

@@ -25,7 +25,6 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const id = req.params.toolId;
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {
         userId: req.requestor.id,

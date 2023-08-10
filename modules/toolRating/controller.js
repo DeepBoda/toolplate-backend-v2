@@ -24,16 +24,18 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
-      ...sqquery(req.query, {
-        userId: req.requestor.id,
-      }),
+      ...sqquery(req.query),
       attributes: {
         include: [
           [
-            sequelize.literal(
-              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = id)`
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              ),
+              1
             ),
-            "ratings",
+            "ratingsAverage",
           ],
         ],
       },
@@ -42,17 +44,28 @@ exports.getAll = async (req, res, next) => {
           model: User,
           attributes: ["id", "username", "profilePic"],
         },
+        {
+          model: Tool,
+          attributes: ["id", "title", "image", "price", "link"],
+        },
       ],
     });
 
-    res.status(200).send({
+    const responseData = {
       status: "success",
       data: {
-        ratingsAverage: data.rows[0].dataValues.ratings,
+        ratingsAverage: 0, // Default value in case no rows are returned
         totalRatings: data.count,
-        rows: data.rows.map((row) => row.toJSON()),
+        rows: [],
       },
-    });
+    };
+
+    if (data.rows.length > 0) {
+      responseData.data.ratingsAverage = data.rows[0].dataValues.ratingsAverage;
+      responseData.data.rows = data.rows;
+    }
+
+    res.status(200).send(responseData);
   } catch (error) {
     next(error);
   }

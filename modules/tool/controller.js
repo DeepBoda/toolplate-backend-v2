@@ -126,8 +126,12 @@ exports.getAll = async (req, res, next) => {
             "isWishlisted",
           ],
           [
-            sequelize.literal(
-              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              ),
+              1
             ),
             "ratingsAverage",
           ],
@@ -215,8 +219,12 @@ exports.getById = async (req, res, next) => {
             "isWishlisted",
           ],
           [
-            sequelize.literal(
-              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              ),
+              1
             ),
             "ratingsAverage",
           ],
@@ -291,6 +299,16 @@ exports.getForAdmin = async (req, res, next) => {
               "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
             ),
             "wishlists",
+          ],
+          [
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              ),
+              1
+            ),
+            "ratingsAverage",
           ],
         ],
       },
@@ -395,8 +413,12 @@ exports.getRelatedTools = async (req, res, next) => {
             "isLiked",
           ],
           [
-            sequelize.literal(
-              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              ),
+              1
             ),
             "ratingsAverage",
           ],

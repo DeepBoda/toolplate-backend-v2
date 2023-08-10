@@ -50,8 +50,12 @@ exports.getAll = async (req, res, next) => {
           "price",
           "createdAt",
           [
-            sequelize.literal(
-              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              ),
+              1
             ),
             "ratingsAverage",
           ],

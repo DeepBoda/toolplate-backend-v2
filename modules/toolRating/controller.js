@@ -4,8 +4,6 @@ const sequelize = require("../../config/db");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const Tool = require("../tool/model");
-const ToolCategory = require("../toolCategory/model");
-const Category = require("../category/model");
 const User = require("../user/model");
 
 exports.add = async (req, res, next) => {
@@ -35,7 +33,7 @@ exports.getAll = async (req, res, next) => {
             sequelize.literal(
               `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = id)`
             ),
-            "averageRating",
+            "ratings",
           ],
         ],
       },
@@ -50,8 +48,8 @@ exports.getAll = async (req, res, next) => {
     res.status(200).send({
       status: "success",
       data: {
-        count: data.count,
-        ratings: data.rows[0].dataValues.averageRating,
+        ratingsAverage: data.rows[0].dataValues.ratings,
+        totalRatings: data.count,
         rows: data.rows.map((row) => row.toJSON()),
       },
     });

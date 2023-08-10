@@ -1,13 +1,10 @@
 "use strict";
 
 const service = require("./service");
-
 const { usersqquery, sqquery } = require("../../utils/query");
-const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const Blog = require("../blog/model");
 const BlogCategory = require("../blogCategory/model");
 const Category = require("../category/model");
-const User = require("../user/model");
 
 exports.add = async (req, res, next) => {
   try {
@@ -42,9 +39,6 @@ exports.getAll = async (req, res, next) => {
       ...sqquery(req.query, {
         userId: req.requestor.id,
       }),
-      // where: {
-      //   userId: req.requestor.id,
-      // },
       include: {
         model: Blog,
         attributes: [

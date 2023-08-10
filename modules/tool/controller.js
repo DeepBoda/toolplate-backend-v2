@@ -125,6 +125,18 @@ exports.getAll = async (req, res, next) => {
             ),
             "isWishlisted",
           ],
+          [
+            sequelize.literal(
+              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "ratingsAverage",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "totalRatings",
+          ],
         ],
       },
       include: [
@@ -201,6 +213,18 @@ exports.getById = async (req, res, next) => {
               `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
             ),
             "isWishlisted",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "ratingsAverage",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "totalRatings",
           ],
         ],
       },
@@ -369,6 +393,18 @@ exports.getRelatedTools = async (req, res, next) => {
               `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
             ),
             "isLiked",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "ratingsAverage",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "totalRatings",
           ],
         ],
       },

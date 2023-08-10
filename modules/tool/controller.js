@@ -110,15 +110,15 @@ exports.getAll = async (req, res, next) => {
           ],
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
-            ),
-            "wishlists",
-          ],
-          [
-            sequelize.literal(
               `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
             ),
             "isLiked",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
+            ),
+            "wishlists",
           ],
           [
             sequelize.literal(
@@ -339,6 +339,8 @@ exports.getRelatedTools = async (req, res, next) => {
     // Find tools that have the same tags as the opened tool
     const tagIds = openedTool.toolTags.map((toolTag) => toolTag.tagId);
 
+    const userId = req.requestor ? req.requestor.id : null;
+
     // Find tools with the same category or tag IDs
     const relatedTools = await service.findAll({
       // ...sqquery(req.query),
@@ -356,6 +358,18 @@ exports.getRelatedTools = async (req, res, next) => {
               "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
             ),
             "views",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
+            ),
+            "likes",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
           ],
         ],
       },
@@ -401,29 +415,10 @@ exports.getRelatedTools = async (req, res, next) => {
 
     // Limit the result to the top 3 most related tools
     const mostRelatedTools = relatedTools.slice(0, 3);
-    // console.log(mostRelatedTools);
-
-    // Select only the required attributes (image and title) for each tool
-    const reducedData = mostRelatedTools.map(
-      (tool) => (
-        (tool = tool.toJSON()),
-        {
-          id: tool.id,
-          title: tool.title,
-          description: tool.description,
-          price: tool.price,
-          image: tool.image,
-          category: tool.toolCategories.map(
-            (category) => category.category.name
-          ),
-          views: tool.views,
-        }
-      )
-    );
 
     res.status(200).json({
       status: "success",
-      data: reducedData,
+      data: mostRelatedTools,
     });
   } catch (error) {
     next(error);

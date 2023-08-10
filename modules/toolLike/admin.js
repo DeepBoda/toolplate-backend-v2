@@ -8,7 +8,7 @@ const { joiValidator } = require("../../middlewares/joiValidator");
 router
   .route("/")
   .get(like.getAll)
-  .post(joiValidator(likeSchema.create), like.likeBlog);
+  .post(joiValidator(likeSchema.create), like.likeTool);
 router
   .route("/:id")
   .get(like.getById)

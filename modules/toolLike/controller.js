@@ -4,7 +4,7 @@ const service = require("./service");
 
 const { usersqquery, sqquery } = require("../../utils/query");
 
-exports.likeBlog = async (req, res, next) => {
+exports.likeTool = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
     const isAlreadyExist = await service.count({
@@ -22,7 +22,7 @@ exports.likeBlog = async (req, res, next) => {
       await service.create(req.body);
       res.status(200).json({
         status: "success",
-        message: "Liked blog 🫣!.",
+        message: "Liked tool 🫣!.",
       });
     }
   } catch (error) {
@@ -64,7 +64,7 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    // Update the blog data
+    // Update the tool data
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,

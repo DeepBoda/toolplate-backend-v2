@@ -1,13 +1,11 @@
 "use strict";
 
+const sequelize = require("../../config/db");
 const service = require("./service");
-
 const { usersqquery, sqquery } = require("../../utils/query");
-const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const Tool = require("../tool/model");
 const ToolCategory = require("../toolCategory/model");
 const Category = require("../category/model");
-const User = require("../user/model");
 
 exports.add = async (req, res, next) => {
   try {
@@ -51,6 +49,18 @@ exports.getAll = async (req, res, next) => {
           "description",
           "price",
           "createdAt",
+          [
+            sequelize.literal(
+              `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "ratingsAverage",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "totalRatings",
+          ],
         ],
         include: {
           model: ToolCategory,

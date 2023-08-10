@@ -76,11 +76,50 @@ exports.getByUser = async (req, res, next) => {
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
       include: [
-        // {
-        //   model: User,
-        // },
+        {
+          model: User,
+          attributes: ["id", "username", "profilePic"],
+        },
         {
           model: Tool,
+          attributes: {
+            include: [
+              [
+                sequelize.literal(
+                  "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
+                ),
+                "views",
+              ],
+              [
+                sequelize.literal(
+                  "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
+                ),
+                "likes",
+              ],
+              [
+                sequelize.literal(
+                  "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
+                ),
+                "wishlists",
+              ],
+              [
+                sequelize.fn(
+                  "ROUND",
+                  sequelize.literal(
+                    `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+                  ),
+                  1
+                ),
+                "ratingsAverage",
+              ],
+              [
+                sequelize.literal(
+                  `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+                ),
+                "totalRatings",
+              ],
+            ],
+          },
         },
       ],
     });

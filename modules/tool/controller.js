@@ -284,12 +284,6 @@ exports.getForAdmin = async (req, res, next) => {
         include: [
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
               "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
             ),
             "likes",
@@ -309,6 +303,12 @@ exports.getForAdmin = async (req, res, next) => {
               1
             ),
             "ratingsAverage",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "totalRatings",
           ],
         ],
       },
@@ -511,7 +511,7 @@ exports.update = async (req, res, next) => {
     });
 
     // Handle the file deletion
-    if (req.file && oldToolData?.image) deleteFilesFromS3([oldToolData?.image]);
+    if (req.file && oldToolData?.image) deleteFilesFromS3(oldToolData?.image);
   } catch (error) {
     // Handle errors here
     next(error);
@@ -521,7 +521,7 @@ exports.update = async (req, res, next) => {
 exports.delete = async (req, res, next) => {
   try {
     // If a image URL is present, delete the file from S3
-    const { image } = await service.findOne({
+    const { image, previews, videos } = await service.findOne({
       where: {
         id: req.params.id,
       },
@@ -540,7 +540,27 @@ exports.delete = async (req, res, next) => {
       },
     });
     // Handle the file deletion
-    if (image) deleteFilesFromS3([image]);
+    if (
+      image ||
+      (previews && previews.length > 0) ||
+      (videos && videos.length > 0)
+    ) {
+      const filesToDelete = [];
+
+      if (image) {
+        filesToDelete.push(image);
+      }
+
+      if (previews && previews.length > 0) {
+        filesToDelete.push(...previews);
+      }
+
+      if (videos && videos.length > 0) {
+        filesToDelete.push(...videos);
+      }
+
+      deleteFilesFromS3(filesToDelete);
+    }
   } catch (error) {
     next(error);
   }

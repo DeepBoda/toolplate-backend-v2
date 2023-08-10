@@ -11,10 +11,5 @@ router
   .route("/")
   .get(wishlist.getAll)
   .post(joiValidator(wishlistSchema.create), wishlist.add);
-router
-  .route("/:id")
-  .get(wishlist.getById)
-  .delete(wishlist.delete);
-
 
 module.exports = router;

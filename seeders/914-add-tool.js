@@ -89,9 +89,12 @@ module.exports = {
       faker.image.transport(600, 360, true)
     );
     const videoLinks = [
-      "https://planet-k.s3.ap-south-1.amazonaws.com/1691570965410-324478366.MOV",
-      "https://planet-k.s3.ap-south-1.amazonaws.com/1691570968205-282854852.MOV",
-      "https://planet-k.s3.ap-south-1.amazonaws.com/1691570970688-664214694.MOV",
+      "https://planet-k.s3.ap-south-1.amazonaws.com/1.mp4",
+      "https://planet-k.s3.ap-south-1.amazonaws.com/2.mp4",
+      "https://planet-k.s3.ap-south-1.amazonaws.com/3.mp4",
+      "https://planet-k.s3.ap-south-1.amazonaws.com/4.mp4",
+      "https://planet-k.s3.ap-south-1.amazonaws.com/5.mp4",
+      "https://planet-k.s3.ap-south-1.amazonaws.com/6.mp4",
     ];
     for (var i = 0; i < 25; i++) {
       tools.push({

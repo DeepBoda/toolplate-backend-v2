@@ -58,7 +58,7 @@ exports.getAll = async (req, res, next) => {
             sequelize.fn(
               "ROUND",
               sequelize.literal(
-                `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
               ),
               1
             ),
@@ -125,7 +125,7 @@ exports.getByUser = async (req, res, next) => {
                 sequelize.fn(
                   "ROUND",
                   sequelize.literal(
-                    `(SELECT AVG(rating) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+                    `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
                   ),
                   1
                 ),

@@ -12,8 +12,8 @@ router
   .post(
     upload.fields([
       { name: "image", maxCount: 1 },
-      { name: "previews", maxCount: 5 },
-      { name: "videos", maxCount: 5 },
+      { name: "previews", maxCount: 10 },
+      { name: "videos", maxCount: 10 },
     ]),
     joiValidator(toolSchema.create),
     tool.add

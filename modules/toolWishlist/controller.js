@@ -37,11 +37,16 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
-      ...sqquery(req.query, {
-        userId: req.requestor.id,
-      }),
+      ...sqquery(
+        req.query,
+        {
+          userId: req.requestor.id,
+        },
+        ["$tools.title$"]
+      ),
       include: {
         model: Tool,
+        as: "tool",
         attributes: [
           "id",
           "title",

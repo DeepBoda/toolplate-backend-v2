@@ -35,10 +35,20 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll({
-      ...sqquery(req.query, {
+    const queryOptions = sqquery(
+      req.query,
+      {
         userId: req.requestor.id,
-      }),
+      }
+      // ["$blogs.title$"]
+    );
+
+    console.log("++++++++ ", JSON.stringify(queryOptions)); //
+    // console.log("++++++++ ", JSON.stringify(queryOptions.order)); //
+
+    // return;
+    const data = await service.findAndCountAll({
+      ...queryOptions,
       include: {
         model: Blog,
         attributes: [
@@ -59,6 +69,7 @@ exports.getAll = async (req, res, next) => {
         },
       },
     });
+    console.log(data);
 
     res.status(200).send({
       status: "success",

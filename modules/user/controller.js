@@ -318,7 +318,7 @@ exports.updateProfile = async (req, res, next) => {
       // token,
     });
     if (req.file && oldUserData?.profilePic)
-      deleteFilesFromS3(oldUserData?.profilePic);
+      deleteFilesFromS3([oldUserData?.profilePic]);
   } catch (error) {
     // console.error(error);
     next(error);
@@ -404,7 +404,7 @@ exports.deleteById = async (req, res, next) => {
     }
 
     // Call function to delete profilePic from S3
-    if (user.profilePic) deleteFilesFromS3(user.profilePic);
+    if (user.profilePic) deleteFilesFromS3([user.profilePic]);
 
     const affectedRows = await service.delete({
       where: {

@@ -511,7 +511,7 @@ exports.update = async (req, res, next) => {
     });
 
     // Handle the file deletion
-    if (req.file && oldToolData?.image) deleteFilesFromS3(oldToolData?.image);
+    if (req.file && oldToolData?.image) deleteFilesFromS3([oldToolData?.image]);
   } catch (error) {
     // Handle errors here
     next(error);
@@ -559,7 +559,7 @@ exports.delete = async (req, res, next) => {
         filesToDelete.push(...videos);
       }
 
-      deleteFilesFromS3(filesToDelete);
+      deleteFilesFromS3([filesToDelete]);
     }
   } catch (error) {
     next(error);

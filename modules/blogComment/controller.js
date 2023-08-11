@@ -4,7 +4,6 @@ const service = require("./service");
 const reply = require("../blogCommentReply/service");
 
 const { usersqquery, sqquery } = require("../../utils/query");
-const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const BlogCommentReply = require("../blogCommentReply/model");
 const User = require("../user/model");
 

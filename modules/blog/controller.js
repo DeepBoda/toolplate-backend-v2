@@ -459,7 +459,7 @@ exports.update = async (req, res, next) => {
     });
 
     // Handle the file deletion
-    if (req.file && oldBlogData?.image) deleteFilesFromS3(oldBlogData?.image);
+    if (req.file && oldBlogData?.image) deleteFilesFromS3([oldBlogData?.image]);
   } catch (error) {
     // Handle errors here
     next(error);
@@ -488,7 +488,7 @@ exports.delete = async (req, res, next) => {
       },
     });
     // Handle the file deletion
-    if (image) deleteFilesFromS3(image);
+    if (image) deleteFilesFromS3([image]);
   } catch (error) {
     next(error);
   }

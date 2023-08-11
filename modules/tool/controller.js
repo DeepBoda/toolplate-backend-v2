@@ -526,7 +526,6 @@ exports.delete = async (req, res, next) => {
         id: req.params.id,
       },
     });
-
     const affectedRows = await service.delete({
       where: {
         id: req.params.id,
@@ -540,26 +539,16 @@ exports.delete = async (req, res, next) => {
       },
     });
     // Handle the file deletion
-    if (
-      image ||
-      (previews && previews.length > 0) ||
-      (videos && videos.length > 0)
-    ) {
-      const filesToDelete = [];
+    if (image) {
+      deleteFilesFromS3([image]);
+    }
 
-      if (image) {
-        filesToDelete.push(image);
-      }
+    if (previews) {
+      deleteFilesFromS3(previews);
+    }
 
-      if (previews && previews.length > 0) {
-        filesToDelete.push(...previews);
-      }
-
-      if (videos && videos.length > 0) {
-        filesToDelete.push(...videos);
-      }
-
-      deleteFilesFromS3([filesToDelete]);
+    if (videos) {
+      deleteFilesFromS3(videos);
     }
   } catch (error) {
     next(error);

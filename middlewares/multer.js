@@ -20,21 +20,28 @@ const upload = multer({
 });
 
 const deleteFilesFromS3 = (urls) => {
-  const keys = urls.map((url) => url.split(`${process.env.BUCKET_URL}/`)[1]);
-  const payload = {
-    Bucket: process.env.BUCKET,
-    Delete: {
-      Objects: keys.map((Key) => ({ Key })),
-      Quiet: true,
-    },
-  };
-  s3.deleteObjects(payload, (err, data) => {
-    if (err) {
-      console.error("Error deleting objects:", err);
-    } else {
-      console.log("Files deleted successfully", data.Deleted);
+  try {
+    const keys = urls.map((url) => url.split(`${process.env.BUCKET_URL}/`)[1]);
+    if (keys.length === 0) {
+      return; // No files to delete, return early
     }
-  });
+    const payload = {
+      Bucket: process.env.BUCKET,
+      Delete: {
+        Objects: keys.map((Key) => ({ Key })),
+        Quiet: true,
+      },
+    };
+    s3.deleteObjects(payload, (err, data) => {
+      if (err) {
+        console.error("Error deleting objects:", err);
+      } else {
+        console.log("Files deleted successfully", data.Deleted);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 };
-
 module.exports = { upload, deleteFilesFromS3 };

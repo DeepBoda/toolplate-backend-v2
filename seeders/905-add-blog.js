@@ -86,7 +86,7 @@ module.exports = {
     ];
     for (var i = 0; i < 50; i++) {
       blogs.push({
-        title: faker.word.words(5),
+        title: faker.random.words(5),
         description: faker.random.words(20),
         image: faker.image.transport(400, 240, true),
         readTime: faker.random.numeric(2),

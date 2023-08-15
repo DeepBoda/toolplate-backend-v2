@@ -442,13 +442,42 @@ exports.update = async (req, res, next) => {
         },
       });
     }
+    const { categories, tags, ...body } = req.body;
 
     // Update the blog data
-    const [affectedRows] = await service.update(req.body, {
+    const [affectedRows] = await service.update(body, {
       where: {
         id: req.params.id,
       },
     });
+
+    // Handle categories and tags updates
+
+    // Step 1: Delete existing associations with categories and tags
+    await blogCategoryService.delete({ where: { blogId: req.params.id } });
+    await blogTagService.delete({ where: { blogId: req.params.id } });
+
+    // Step 2: Get the comma-separated `categories` and `tags` IDs
+    const categoryIds = categories
+      .split(",")
+      .map((categoryId) => parseInt(categoryId));
+    const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
+
+    // Step 3: Add updated entries in the `blogCategory` table
+    for (const categoryId of categoryIds) {
+      await blogCategoryService.create({
+        blogId: req.params.id,
+        categoryId,
+      });
+    }
+
+    // Step 4: Add updated entries in the `blogTag` table
+    for (const tagId of tagIds) {
+      await blogTagService.create({
+        blogId: req.params.id,
+        tagId,
+      });
+    }
 
     // Send the response
     res.status(200).json({
@@ -461,35 +490,52 @@ exports.update = async (req, res, next) => {
     // Handle the file deletion
     if (req.file && oldBlogData?.image) deleteFilesFromS3([oldBlogData?.image]);
   } catch (error) {
-    // Handle errors here
+    console.error(error);
     next(error);
   }
 };
 
 exports.delete = async (req, res, next) => {
   try {
-    // If a image URL is present, delete the file from S3
+    // Find the blog to get the image URL
     const { image } = await service.findOne({
       where: {
         id: req.params.id,
       },
     });
 
+    // Delete the blog entry
     const affectedRows = await service.delete({
       where: {
         id: req.params.id,
       },
     });
 
+    // Delete the file from S3 if an image URL is present
+    if (image) deleteFilesFromS3([image]);
+
+    // Delete associated categories and tags
+    await blogCategoryService.delete({
+      where: {
+        blogId: req.params.id,
+      },
+    });
+
+    await blogTagService.delete({
+      where: {
+        blogId: req.params.id,
+      },
+    });
+
+    // Send the response
     res.status(200).send({
       status: "success",
       data: {
         affectedRows,
       },
     });
-    // Handle the file deletion
-    if (image) deleteFilesFromS3([image]);
   } catch (error) {
+    console.error(error);
     next(error);
   }
 };

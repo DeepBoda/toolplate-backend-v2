@@ -21,7 +21,15 @@ router
 router
   .route("/:id")
   .get(tool.getForAdmin)
-  .patch(upload.single("image"), joiValidator(toolSchema.update), tool.update)
+  .patch(
+    upload.fields([
+      { name: "image", maxCount: 1 },
+      { name: "previews", maxCount: 10 },
+      { name: "videos", maxCount: 10 },
+    ]),
+    joiValidator(toolSchema.update),
+    tool.update
+  )
   .delete(tool.delete);
 
 module.exports = router;

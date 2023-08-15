@@ -486,17 +486,34 @@ exports.getRelatedTools = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     let oldToolData;
-    if (req.file) {
-      req.body.image = req.file.location;
-      oldToolData = await service.findOne({
-        where: {
-          id: req.params.id,
-        },
-      });
+
+    // Check if any files were uploaded
+    if (req.files) {
+      // Check if Image (logo) uploaded and if got URL
+      if (req.files.image) {
+        req.body.image = req.files.image[0].location;
+        oldToolData = await service.findOne({
+          where: {
+            id: req.params.id,
+          },
+        });
+      }
+      // Check if Previews uploaded and if got URLs
+      if (req.files.previews) {
+        const previews = req.files.previews.map((el) => el.location);
+        req.body.previews = previews;
+      }
+      // Check if Videos uploaded and if got URLs
+      if (req.files.videos) {
+        const videos = req.files.videos.map((el) => el.location);
+        req.body.videos = videos;
+      }
     }
 
+    const { categories, tags, ...body } = req.body;
+
     // Update the tool data
-    const [affectedRows] = await service.update(req.body, {
+    const [affectedRows] = await service.update(body, {
       where: {
         id: req.params.id,
       },
@@ -511,46 +528,102 @@ exports.update = async (req, res, next) => {
     });
 
     // Handle the file deletion
-    if (req.file && oldToolData?.image) deleteFilesFromS3([oldToolData?.image]);
+    if (req.files && oldToolData?.image) {
+      const filesToDelete = [oldToolData?.image];
+      if (oldToolData?.previews) {
+        filesToDelete.push(...oldToolData?.previews);
+      }
+      if (oldToolData?.videos) {
+        filesToDelete.push(...oldToolData?.videos);
+      }
+      deleteFilesFromS3(filesToDelete);
+    }
+
+    // Update categories and tags
+    const categoryIds = categories
+      .split(",")
+      .map((categoryId) => parseInt(categoryId));
+    const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
+
+    // Delete old associations
+    await toolCategoryService.delete({
+      where: {
+        toolId: req.params.id,
+      },
+    });
+
+    await toolTagService.delete({
+      where: {
+        toolId: req.params.id,
+      },
+    });
+
+    // Create new associations
+    for (const categoryId of categoryIds) {
+      await toolCategoryService.create({
+        toolId: req.params.id,
+        categoryId,
+      });
+    }
+
+    for (const tagId of tagIds) {
+      await toolTagService.create({
+        toolId: req.params.id,
+        tagId,
+      });
+    }
   } catch (error) {
-    // Handle errors here
+    console.error(error);
     next(error);
   }
 };
 
 exports.delete = async (req, res, next) => {
   try {
-    // If a image URL is present, delete the file from S3
-    const { image, previews, videos } = await service.findOne({
+    // Find the tool to get the file URLs
+    const { id, image, previews, videos } = await service.findOne({
       where: {
         id: req.params.id,
       },
     });
+
+    // Delete the tool entry
     const affectedRows = await service.delete({
       where: {
         id: req.params.id,
       },
     });
 
+    // Delete files from S3 if URLs are present
+    const filesToDelete = [];
+    if (image) filesToDelete.push(image);
+    if (previews) filesToDelete.push(...previews);
+    if (videos) filesToDelete.push(...videos);
+
+    if (filesToDelete.length > 0) deleteFilesFromS3(filesToDelete);
+
+    // Delete associated categories and tags
+    await toolCategoryService.delete({
+      where: {
+        toolId: req.params.id,
+      },
+    });
+    await toolTagService.delete({
+      where: {
+        toolId: req.params.id,
+      },
+    });
+
+    // Send the response
     res.status(200).send({
       status: "success",
       data: {
         affectedRows,
       },
     });
-    // Handle the file deletion
-    if (image) {
-      deleteFilesFromS3([image]);
-    }
-
-    if (previews) {
-      deleteFilesFromS3(previews);
-    }
-
-    if (videos) {
-      deleteFilesFromS3(videos);
-    }
   } catch (error) {
+    // Handle errors here
+    console.error(error);
     next(error);
   }
 };

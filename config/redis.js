@@ -5,17 +5,14 @@ const redisClient = createClient({
   database: process.env.REDIS_DATABASE || 0,
 });
 
-// Async function to connect to Redis client
-const connectToRedis = async () => {
-  try {
-    await redisClient.connect();
-    console.log("Redis connected successfully");
-  } catch (error) {
-    console.error("Error in Redis Connection:\n", error);
-  }
-};
+// Listen for Redis client connection event
+redisClient.on("connect", () => {
+  console.log("Redis connected successfully");
+});
 
-// Call the async function to connect to Redis
-connectToRedis();
+// Listen for Redis client error event
+redisClient.on("error", (error) => {
+  console.error("Error in Redis Connection:\n", error);
+});
 
 module.exports = redisClient;

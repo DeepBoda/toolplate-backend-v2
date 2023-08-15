@@ -44,6 +44,8 @@ exports.getAll = async (req, res, next) => {
         },
         ["$tools.title$"]
       ),
+      distinct: true, // Add this option to ensure accurate counts
+
       include: {
         model: Tool,
         as: "tool",
@@ -95,6 +97,7 @@ exports.getByUser = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
+      distinct: true, // Add this option to ensure accurate counts
       include: [
         // {
         //   model: User,

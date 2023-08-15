@@ -83,6 +83,7 @@ exports.getByUser = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
+      distinct: true, // Add this option to ensure accurate counts
       include: [
         // {
         //   model: User,

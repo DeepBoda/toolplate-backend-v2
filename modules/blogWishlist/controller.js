@@ -1,5 +1,6 @@
 "use strict";
 
+const sequelize = require("../../config/db");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const Blog = require("../blog/model");
@@ -35,20 +36,18 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const queryOptions = sqquery(
-      req.query,
-      {
-        userId: req.requestor.id,
-      }
-      // ["$blogs.title$"]
-    );
-
     console.log("++++++++ ", JSON.stringify(queryOptions)); //
     // console.log("++++++++ ", JSON.stringify(queryOptions.order)); //
 
     // return;
     const data = await service.findAndCountAll({
-      ...queryOptions,
+      ...sqquery(
+        req.query,
+        {
+          userId: req.requestor.id,
+        }
+        // ["$blogs.title$"]
+      ),
       include: {
         model: Blog,
         attributes: [
@@ -90,6 +89,40 @@ exports.getByUser = async (req, res, next) => {
         // },
         {
           model: Blog,
+          attributes: [
+            "id",
+            "title",
+            "image",
+            "description",
+            "readTime",
+            "createdAt",
+            [
+              sequelize.literal(
+                "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+              ),
+              "views",
+            ],
+            [
+              sequelize.literal(
+                "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+              ),
+              "likes",
+            ],
+            [
+              sequelize.literal(
+                "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+              ),
+              "wishlists",
+            ],
+          ],
+          include: {
+            model: BlogCategory,
+            attributes: ["id", "blogId", "categoryId"],
+            include: {
+              model: Category,
+              attributes: ["id", "name"],
+            },
+          },
         },
       ],
     });

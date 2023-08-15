@@ -75,6 +75,26 @@ exports.getByUser = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
+      attributes: {
+        include: [
+          [
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              ),
+              1
+            ),
+            "ratingsAverage",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+            ),
+            "totalRatings",
+          ],
+        ],
+      },
       include: [
         {
           model: User,
@@ -102,22 +122,22 @@ exports.getByUser = async (req, res, next) => {
                 ),
                 "wishlists",
               ],
-              [
-                sequelize.fn(
-                  "ROUND",
-                  sequelize.literal(
-                    `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
-                  ),
-                  1
-                ),
-                "ratingsAverage",
-              ],
-              [
-                sequelize.literal(
-                  `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
-                ),
-                "totalRatings",
-              ],
+              // [
+              //   sequelize.fn(
+              //     "ROUND",
+              //     sequelize.literal(
+              //       `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              //     ),
+              //     1
+              //   ),
+              //   "ratingsAverage",
+              // ],
+              // [
+              //   sequelize.literal(
+              //     `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              //   ),
+              //   "totalRatings",
+              // ],
             ],
           },
         },

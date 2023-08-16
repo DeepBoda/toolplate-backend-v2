@@ -36,10 +36,6 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    console.log("++++++++ ", JSON.stringify(queryOptions)); //
-    // console.log("++++++++ ", JSON.stringify(queryOptions.order)); //
-
-    // return;
     const data = await service.findAndCountAll({
       ...sqquery(
         req.query,

@@ -108,7 +108,7 @@ exports.getByUser = async (req, res, next) => {
             include: [
               [
                 sequelize.literal(
-                  "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
+                  "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` AND `deletedAt` is null )"
                 ),
                 "views",
               ],

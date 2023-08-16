@@ -489,14 +489,14 @@ exports.update = async (req, res, next) => {
 
     // Check if any files were uploaded
     if (req.files) {
+      oldToolData = await service.findOne({
+        where: {
+          id: req.params.id,
+        },
+      });
       // Check if Image (logo) uploaded and if got URL
       if (req.files.image) {
         req.body.image = req.files.image[0].location;
-        oldToolData = await service.findOne({
-          where: {
-            id: req.params.id,
-          },
-        });
       }
       // Check if Previews uploaded and if got URLs
       if (req.files.previews) {
@@ -528,12 +528,12 @@ exports.update = async (req, res, next) => {
     });
 
     // Handle the file deletion
-    if (req.files && oldToolData?.image) {
+    if (req.files.image && oldToolData?.image) {
       const filesToDelete = [oldToolData?.image];
-      if (oldToolData?.previews) {
+      if (req.files.previews && oldToolData?.previews) {
         filesToDelete.push(...oldToolData?.previews);
       }
-      if (oldToolData?.videos) {
+      if (req.files.videos && oldToolData?.videos) {
         filesToDelete.push(...oldToolData?.videos);
       }
       deleteFilesFromS3(filesToDelete);

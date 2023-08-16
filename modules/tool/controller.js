@@ -581,7 +581,7 @@ exports.update = async (req, res, next) => {
 exports.delete = async (req, res, next) => {
   try {
     // Find the tool to get the file URLs
-    const { id, image, previews, videos } = await service.findOne({
+    const { image, previews, videos } = await service.findOne({
       where: {
         id: req.params.id,
       },

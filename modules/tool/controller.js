@@ -129,7 +129,7 @@ exports.getAll = async (req, res, next) => {
             sequelize.fn(
               "ROUND",
               sequelize.literal(
-                `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+                `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
               ),
               1
             ),
@@ -137,7 +137,7 @@ exports.getAll = async (req, res, next) => {
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
             ),
             "totalRatings",
           ],
@@ -222,7 +222,7 @@ exports.getById = async (req, res, next) => {
             sequelize.fn(
               "ROUND",
               sequelize.literal(
-                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
               ),
               1
             ),
@@ -230,7 +230,7 @@ exports.getById = async (req, res, next) => {
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
             ),
             "totalRatings",
           ],
@@ -298,7 +298,7 @@ exports.getForAdmin = async (req, res, next) => {
             sequelize.fn(
               "ROUND",
               sequelize.literal(
-                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
               ),
               1
             ),
@@ -306,7 +306,7 @@ exports.getForAdmin = async (req, res, next) => {
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
             ),
             "totalRatings",
           ],
@@ -416,7 +416,7 @@ exports.getRelatedTools = async (req, res, next) => {
             sequelize.fn(
               "ROUND",
               sequelize.literal(
-                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
               ),
               1
             ),
@@ -424,7 +424,7 @@ exports.getRelatedTools = async (req, res, next) => {
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
             ),
             "totalRatings",
           ],

@@ -1,5 +1,5 @@
 "use strict";
-const { Op, where } = require("sequelize");
+const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
 const service = require("./service");
 const viewService = require("../blogView/service");

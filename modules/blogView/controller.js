@@ -1,8 +1,9 @@
 "use strict";
 
+const { Op } = require("sequelize");
 const service = require("./service");
-
 const { usersqquery, sqquery } = require("../../utils/query");
+const User = require("../user/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -21,7 +22,18 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query, {
+        userId: {
+          [Op.ne]: null, // Filter out rows where userId is null
+        },
+      }),
+      distinct: true, // Add this option to ensure accurate counts
+      include: {
+        model: User,
+        attributes: ["id", "username", "email", "profilePic"],
+      },
+    });
 
     res.status(200).send({
       status: "success",

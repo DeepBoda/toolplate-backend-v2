@@ -284,6 +284,12 @@ exports.getForAdmin = async (req, res, next) => {
         include: [
           [
             sequelize.literal(
+              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
+            ),
+            "views",
+          ],
+          [
+            sequelize.literal(
               "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
             ),
             "likes",

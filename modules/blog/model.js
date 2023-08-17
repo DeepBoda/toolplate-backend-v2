@@ -26,7 +26,7 @@ const Blog = sequelize.define(
       allowNull: false,
     },
     overview: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT("medium"),
       allowNull: false,
     },
   },
@@ -34,5 +34,7 @@ const Blog = sequelize.define(
     paranoid: true,
   }
 );
+
+// Blog.sync({ alter: true });
 
 module.exports = Blog;

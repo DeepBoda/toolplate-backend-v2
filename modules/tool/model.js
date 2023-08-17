@@ -37,7 +37,7 @@ const Tool = sequelize.define(
       },
     },
     overview: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT("long"),
       allowNull: false,
     },
     link: {

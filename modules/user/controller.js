@@ -93,7 +93,7 @@ exports.verifyOTP = async (req, res, next) => {
       console.error("Error generating profile picture:", error);
       // You can provide a default profile picture URL or handle the error gracefully
       profilePicUrl =
-        "https://planet-k.s3.ap-south-1.amazonaws.com/toolplate-logo.png";
+        "https://tool-plate.s3.ap-south-1.amazonaws.com/logo/ai_profile.png";
     }
 
     // Create the user in Firebase Authentication

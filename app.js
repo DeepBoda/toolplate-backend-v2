@@ -103,6 +103,13 @@ app.use((err, req, res, next) => {
     });
 
     err.message = msg;
+  } else if (
+    err.name === "JsonWebTokenError" &&
+    err.message === "jwt malformed"
+  ) {
+    return res
+      .status(401)
+      .json({ status: 401, message: "Unauthorized attempt, login again!" });
   }
 
   // Handle other errors

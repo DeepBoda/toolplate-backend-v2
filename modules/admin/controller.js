@@ -29,7 +29,7 @@ exports.login = async (req, res, next) => {
     });
 
     if (!admin || !(await bcryptjs.compare(password, admin.password)))
-      return next(createError(401, "Incorrect email or password!"));
+      return next(createError(400, "Incorrect email or password!"));
 
     const token = jwt.sign(
       {

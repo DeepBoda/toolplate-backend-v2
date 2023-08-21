@@ -107,13 +107,11 @@ app.use((err, req, res, next) => {
     err.name === "JsonWebTokenError" &&
     err.message === "jwt malformed"
   ) {
-    return res
-      .status(401)
-      .json({
-        status: 401,
-        message: "Unauthorized attempt, login again!",
-        token: req.header("Authorization"),
-      });
+    return res.status(401).json({
+      status: 401,
+      message: "Unauthorized attempt, login again!",
+      // token: req.header("Authorization"),
+    });
   }
 
   // Handle other errors

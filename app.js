@@ -109,7 +109,11 @@ app.use((err, req, res, next) => {
   ) {
     return res
       .status(401)
-      .json({ status: 401, message: "Unauthorized attempt, login again!" });
+      .json({
+        status: 401,
+        message: "Unauthorized attempt, login again!",
+        token: req.header("Authorization"),
+      });
   }
 
   // Handle other errors

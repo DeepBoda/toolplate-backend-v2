@@ -9,7 +9,7 @@ module.exports = {
     previews: Joi.array(),
     overview: Joi.string(),
     link: Joi.string().required(),
-    videos: Joi.array(),
+    videos: Joi.array().allow(null),
     categories: Joi.string().required(),
     tags: Joi.string().required(),
   }),

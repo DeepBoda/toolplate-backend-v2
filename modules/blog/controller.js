@@ -358,6 +358,12 @@ exports.getRelatedBlogs = async (req, res, next) => {
             ),
             "views",
           ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
+          ],
         ],
       },
       include: [

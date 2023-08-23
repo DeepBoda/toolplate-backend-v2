@@ -340,6 +340,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
     // Find blogs that have the same tags as the opened blog
     const tagIds = openedBlog.blogTags.map((blogTag) => blogTag.tagId);
 
+    const userId = req.requestor ? req.requestor.id : null;
     // Find blogs with the same category or tag IDs
     const relatedBlogs = await service.findAll({
       // ...sqquery(req.query),

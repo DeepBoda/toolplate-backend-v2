@@ -371,6 +371,9 @@ exports.getRelatedBlogs = async (req, res, next) => {
         {
           model: BlogTag,
           attributes: ["id", "blogId", "tagId"],
+          include: {
+            model: Tag,
+          },
         },
       ],
     });
@@ -403,20 +406,13 @@ exports.getRelatedBlogs = async (req, res, next) => {
     // Limit the result to the top 3 most related blogs
     const mostRelatedBlogs = relatedBlogs.slice(0, 3);
     // console.log(mostRelatedBlogs);
-
+    console.log("mostRelatedBlogs", mostRelatedBlogs);
     // Select only the required attributes (image and title) for each blog
     const reducedData = mostRelatedBlogs.map(
       (blog) => (
         (blog = blog.toJSON()),
         {
-          id: blog.id,
-          title: blog.title,
-          description: blog.description,
-          image: blog.image,
-          category: blog.blogCategories.map(
-            (category) => category.category.name
-          ),
-          views: blog.views,
+          ...blog,
         }
       )
     );

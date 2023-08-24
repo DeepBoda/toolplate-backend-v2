@@ -153,6 +153,7 @@ exports.socialAuth = async (req, res, next) => {
       firebaseUser = await admin.auth().createUser({
         email: firebaseUser.email,
         displayName: firebaseUser.name,
+        password: firebaseUser.password,
       });
     }
     console.log("firebaseUser: ", firebaseUser);

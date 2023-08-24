@@ -144,11 +144,18 @@ exports.socialAuth = async (req, res, next) => {
     if (!req.body.firebase_token) {
       throw createError(400, "Invalid request. Missing firebase_token.");
     }
-
+    let firebaseUser;
     // Handle Firebase authentication
-    const firebaseUser = await admin
-      .auth()
-      .verifyIdToken(req.body.firebase_token);
+    firebaseUser = await admin.auth().verifyIdToken(req.body.firebase_token);
+
+    // Create the user in Firebase Authentication
+    if (!firebaseUser) {
+      firebaseUser = await admin.auth().createUser({
+        email: firebaseUser.email,
+        displayName: firebaseUser.name,
+      });
+    }
+    console.log("firebaseUser: ", firebaseUser);
 
     // Check if the email is verified
     if (!firebaseUser.email_verified) {

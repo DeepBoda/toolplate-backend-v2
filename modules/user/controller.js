@@ -144,6 +144,9 @@ exports.socialAuth = async (req, res, next) => {
     }
 
     const firebaseUser = await admin.auth().verifyIdToken(firebase_token);
+    if (!firebaseUser || !firebaseUser.email) {
+      throw createError(400, "Invalid firebase_token or missing email.");
+    }
 
     const { email, name, uid } = firebaseUser;
 

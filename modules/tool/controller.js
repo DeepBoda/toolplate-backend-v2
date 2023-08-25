@@ -35,7 +35,12 @@ exports.add = async (req, res, next) => {
 
     const { categories, tags, ...body } = req.body;
     console.log("body: ", body);
-
+    let slug = req.body.title
+      .trim()
+      .toLowerCase()
+      .replaceAll(/[?!]/g, "")
+      .replaceAll(" ", "-");
+    req.body.slug = slug;
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(body);
 
@@ -184,7 +189,7 @@ exports.getById = async (req, res, next) => {
 
     const data = await service.findOne({
       where: {
-        id: req.params.id,
+        slug: req.params.slug,
       },
       attributes: {
         include: [
@@ -517,7 +522,14 @@ exports.update = async (req, res, next) => {
     }
 
     const { categories, tags, ...body } = req.body;
-
+    if (req.body.title) {
+      let slug = req.body.title
+        .trim()
+        .toLowerCase()
+        .replaceAll(/[?!]/g, "")
+        .replaceAll(" ", "-");
+      req.body.slug = slug;
+    }
     // Update the tool data
     const [affectedRows] = await service.update(body, {
       where: {
@@ -631,5 +643,25 @@ exports.delete = async (req, res, next) => {
     // Handle errors here
     console.error(error);
     next(error);
+  }
+};
+
+const makeSLug = async (req, res, next) => {
+  try {
+    const allBlog = await service.findAll({
+      attributes: ["id", "title"],
+    });
+
+    for (let i in allBlog) {
+      let slug = allBlog[i].title
+        .trim()
+        .toLowerCase()
+        .replaceAll(/[?!]/g, "")
+        .replaceAll(" ", "-");
+      allBlog[i].slug = slug;
+      allBlog[i].save();
+    }
+  } catch (error) {
+    console.log(error);
   }
 };

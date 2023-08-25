@@ -29,6 +29,9 @@ const Blog = sequelize.define(
       type: DataTypes.TEXT("long"),
       allowNull: false,
     },
+    slug: {
+      type: DataTypes.STRING,
+    },
   },
   {
     paranoid: true,

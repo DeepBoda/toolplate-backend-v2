@@ -55,6 +55,9 @@ const Tool = sequelize.define(
         return this.setDataValue("videos", JSON.stringify(data));
       },
     },
+    slug: {
+      type: DataTypes.STRING,
+    },
   },
   {
     paranoid: true,

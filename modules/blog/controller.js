@@ -21,6 +21,12 @@ exports.add = async (req, res, next) => {
     console.log("body: ", body);
 
     // Step 1: Create the new blog entry in the `blog` table
+    let slug = req.body.title
+      .trim()
+      .toLowerCase()
+      .replaceAll(/[?!]/g, "")
+      .replaceAll(" ", "-");
+    req.body.slug = slug;
     const blog = await service.create(body);
 
     // Step 2: Get the comma-separated `categories` and `tags` IDs
@@ -162,7 +168,7 @@ exports.getById = async (req, res, next) => {
 
     const data = await service.findOne({
       where: {
-        id: req.params.id,
+        slug: req.params.slug,
       },
       attributes: {
         include: [
@@ -445,6 +451,15 @@ exports.update = async (req, res, next) => {
         },
       });
     }
+
+    if (req.body.title) {
+      let slug = req.body.title
+        .trim()
+        .toLowerCase()
+        .replaceAll(/[?!]/g, "")
+        .replaceAll(" ", "-");
+      req.body.slug = slug;
+    }
     const { categories, tags, ...body } = req.body;
 
     // Update the blog data
@@ -540,5 +555,25 @@ exports.delete = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     next(error);
+  }
+};
+
+const makeSLug = async (req, res, next) => {
+  try {
+    const allBlog = await service.findAll({
+      attributes: ["id", "title"],
+    });
+
+    for (let i in allBlog) {
+      let slug = allBlog[i].title
+        .trim()
+        .toLowerCase()
+        .replaceAll(/[?!]/g, "")
+        .replaceAll(" ", "-");
+      allBlog[i].slug = slug;
+      allBlog[i].save();
+    }
+  } catch (error) {
+    console.log(error);
   }
 };

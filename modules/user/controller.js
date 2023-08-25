@@ -89,9 +89,7 @@ exports.verifyOTP = async (req, res, next) => {
     try {
       profilePicUrl = await generateProfilePic(decodedToken.username);
     } catch (error) {
-      // Handle error during profile picture generation (optional)
       console.error("Error generating profile picture:", error);
-      // You can provide a default profile picture URL or handle the error gracefully
       profilePicUrl =
         "https://tool-plate.s3.ap-south-1.amazonaws.com/logo/ai_profile.png";
     }
@@ -139,46 +137,27 @@ exports.verifyOTP = async (req, res, next) => {
 
 exports.socialAuth = async (req, res, next) => {
   try {
-    console.log("firebase_token : ", req.body.firebase_token);
-    // Check if the request contains a firebase_token
-    if (!req.body.firebase_token) {
+    const { firebase_token } = req.body;
+
+    if (!firebase_token) {
       throw createError(400, "Invalid request. Missing firebase_token.");
     }
-    let firebaseUser;
-    // Handle Firebase authentication
-    firebaseUser = await admin.auth().verifyIdToken(req.body.firebase_token);
 
-    // Create the user in Firebase Authentication
-    if (!firebaseUser) {
-      firebaseUser = await admin.auth().createUser({
-        email: firebaseUser.email,
-        displayName: firebaseUser.name,
-        password: firebaseUser.password,
-      });
-    }
-    console.log("firebaseUser: ", firebaseUser);
+    const firebaseUser = await admin.auth().verifyIdToken(firebase_token);
 
-    // Check if the email is verified
-    if (!firebaseUser.email_verified) {
-      throw createError(401, "Email is not verified. Try with another email.");
-    }
+    const { email, name, uid } = firebaseUser;
 
-    // Check if the email already exists in the local database
-    let user = await service.findOne({ where: { email: firebaseUser.email } });
+    let user = await service.findOne({ where: { email } });
 
-    // If the user doesn't exist, create a new user
     if (!user) {
-      const { email, name } = firebaseUser;
-      const uid = firebaseUser.uid;
       // Generate the profile picture URL using the username
       let profilePicUrl;
       try {
         profilePicUrl = await generateProfilePic(name.toUpperCase());
       } catch (error) {
-        // Handle error during profile picture generation (optional)
         console.error("Error generating profile picture:", error);
-        // You can provide a default profile picture URL or handle the error gracefully
-        profilePicUrl = "YOUR_DEFAULT_PROFILE_PIC_URL";
+        profilePicUrl =
+          "https://tool-plate.s3.ap-south-1.amazonaws.com/logo/ai_profile.png";
       }
 
       // Create the user in the local database
@@ -187,19 +166,16 @@ exports.socialAuth = async (req, res, next) => {
         email,
         uid,
         profilePic: profilePicUrl,
-        // password: null,
-        // Other fields based on your database schema, but no need for the password field
       });
     }
 
-    // Check if the user is blocked or not
-    if (user.isBlocked == true)
+    if (user.isBlocked) {
       return res.status(401).json({
         status: "Permission Denied",
-        message: "You'are Blocked by Admin",
+        message: "You're Blocked by Admin",
       });
+    }
 
-    // Sign a JWT Token as Login Token
     const token = jwt.sign(
       {
         id: user.id,
@@ -413,6 +389,9 @@ exports.deleteById = async (req, res, next) => {
 
     // Call function to delete profilePic from S3
     if (user.profilePic) deleteFilesFromS3([user.profilePic]);
+
+    // Delete the user from Firebase Authentication
+    await admin.auth().deleteUser(user.uid);
 
     const affectedRows = await service.delete({
       where: {

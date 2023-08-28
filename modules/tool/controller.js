@@ -262,7 +262,7 @@ exports.getById = async (req, res, next) => {
     });
     //When opens tool, this creates entry for view
     await viewService.create({
-      toolId: req.params.id,
+      toolId: data.id,
       userId: req.requestor?.id ?? null,
     });
     // redisService.set(`oneTool`, data);

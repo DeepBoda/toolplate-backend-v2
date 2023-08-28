@@ -234,7 +234,7 @@ exports.getById = async (req, res, next) => {
       ],
     });
     await viewService.create({
-      blogId: req.params.id,
+      blogId: data.id,
       userId: req.requestor?.id ?? null,
     });
     // redisService.set(`oneBlog`, data);

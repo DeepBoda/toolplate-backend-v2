@@ -287,6 +287,11 @@ exports.search = async (req, res, next) => {
       },
       attributes: ["id", "image", "title", "description"],
     });
+    const toolsWithCategory = tools.map((tool) => ({
+      ...tool.get(), // Spread the existing tool properties
+      category: "Tool", // Add the category property
+    }));
+
     const blogs = await blogService.findAll({
       where: {
         title: {
@@ -295,10 +300,15 @@ exports.search = async (req, res, next) => {
       },
       attributes: ["id", "image", "title", "description"],
     });
+    const blogsWithCategory = tools.map((tool) => ({
+      ...tool.get(), // Spread the existing tool properties
+      category: "Blog", // Add the category property
+    }));
+
+    const data = toolsWithCategory.concat(blogsWithCategory);
     res.status(200).send({
       status: "success",
-      tools,
-      blogs,
+      data,
     });
   } catch (error) {
     next(error);

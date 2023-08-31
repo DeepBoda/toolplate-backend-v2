@@ -6,6 +6,7 @@ const viewService = require("../toolView/service");
 // const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
+const blogService = require("../blog/service");
 const ToolCategory = require("../toolCategory/model");
 const toolCategoryService = require("../toolCategory/service");
 const Category = require("../category/model");
@@ -270,6 +271,34 @@ exports.getById = async (req, res, next) => {
     res.status(200).send({
       status: "success",
       data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.search = async (req, res, next) => {
+  try {
+    const tools = await service.findAll({
+      where: {
+        title: {
+          [Op.like]: `%${req.params.title}%`,
+        },
+      },
+      attributes: ["id", "image", "title", "description"],
+    });
+    const blogs = await blogService.findAll({
+      where: {
+        title: {
+          [Op.like]: `%${req.params.title}%`,
+        },
+      },
+      attributes: ["id", "image", "title", "description"],
+    });
+    res.status(200).send({
+      status: "success",
+      tools,
+      blogs,
     });
   } catch (error) {
     next(error);

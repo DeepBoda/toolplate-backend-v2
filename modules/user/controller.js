@@ -390,12 +390,13 @@ exports.deleteById = async (req, res, next) => {
       });
     }
 
-    // Call function to delete profilePic from S3
-    if (user.profilePic) deleteFilesFromS3([user.profilePic]);
-
     // Delete the user from Firebase Authentication
     await admin.auth().deleteUser(user.uid);
 
+    // Delete the user's profile picture from S3 (if it exists)
+    if (user.profilePic) deleteFilesFromS3([user.profilePic]);
+
+    // Delete the user from your database
     const affectedRows = await service.delete({
       where: {
         id: req.params.id,

@@ -279,33 +279,37 @@ exports.getById = async (req, res, next) => {
 
 exports.search = async (req, res, next) => {
   try {
-    const tools = await service.findAll({
-      where: {
-        title: {
-          [Op.like]: `%${req.params.title}%`,
+    const [tools, blogs] = await Promise.all([
+      service.findAll({
+        where: {
+          title: {
+            [Op.like]: `%${req.params.title}%`,
+          },
         },
-      },
-      attributes: ["id", "image", "title", "description"],
-    });
+        attributes: ["id", "image", "title", "description"],
+      }),
+      blogService.findAll({
+        where: {
+          title: {
+            [Op.like]: `%${req.params.title}%`,
+          },
+        },
+        attributes: ["id", "image", "title", "description"],
+      }),
+    ]);
+
     const toolsWithCategory = tools.map((tool) => ({
       ...tool.get(), // Spread the existing tool properties
       category: "Tool", // Add the category property
     }));
 
-    const blogs = await blogService.findAll({
-      where: {
-        title: {
-          [Op.like]: `%${req.params.title}%`,
-        },
-      },
-      attributes: ["id", "image", "title", "description"],
-    });
-    const blogsWithCategory = tools.map((tool) => ({
-      ...tool.get(), // Spread the existing tool properties
+    const blogsWithCategory = blogs.map((blog) => ({
+      ...blog.get(), // Spread the existing blog properties
       category: "Blog", // Add the category property
     }));
 
     const data = toolsWithCategory.concat(blogsWithCategory);
+
     res.status(200).send({
       status: "success",
       data,

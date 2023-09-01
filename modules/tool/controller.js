@@ -298,21 +298,22 @@ exports.search = async (req, res, next) => {
       }),
     ]);
 
-    const toolsWithCategory = tools.map((tool) => ({
-      ...tool.get(), // Spread the existing tool properties
-      category: "Tool", // Add the category property
-    }));
+    // const toolsWithCategory = tools.map((tool) => ({
+    //   ...tool.get(), // Spread the existing tool properties
+    //   category: "Tool", // Add the category property
+    // }));
 
-    const blogsWithCategory = blogs.map((blog) => ({
-      ...blog.get(), // Spread the existing blog properties
-      category: "Blog", // Add the category property
-    }));
+    // const blogsWithCategory = blogs.map((blog) => ({
+    //   ...blog.get(), // Spread the existing blog properties
+    //   category: "Blog", // Add the category property
+    // }));
 
-    const data = toolsWithCategory.concat(blogsWithCategory);
+    // const data = toolsWithCategory.concat(blogsWithCategory);
 
     res.status(200).send({
       status: "success",
-      data,
+      tools,
+      blogs,
     });
   } catch (error) {
     next(error);

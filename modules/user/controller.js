@@ -390,11 +390,13 @@ exports.deleteById = async (req, res, next) => {
       });
     }
 
-    // Delete the user from Firebase Authentication
-    await admin.auth().deleteUser(user.uid);
-
-    // Delete the user's profile picture from S3 (if it exists)
-    if (user.profilePic) deleteFilesFromS3([user.profilePic]);
+    // Now, delete the user from Firebase Authentication
+    try {
+      await admin.auth().deleteUser(user.uid);
+      console.log("Firebase User deleted.");
+    } catch (firebaseError) {
+      console.error("Error deleting Firebase User: ", firebaseError);
+    }
 
     // Delete the user from your database
     const affectedRows = await service.delete({
@@ -402,6 +404,16 @@ exports.deleteById = async (req, res, next) => {
         id: req.params.id,
       },
     });
+
+    // Delete the user's profile picture from S3 (if it exists)
+    if (user.profilePic) {
+      try {
+        deleteFilesFromS3([user.profilePic]);
+        console.log("Profile picture deleted from S3.");
+      } catch (s3Error) {
+        console.error("Error deleting profile picture from S3: ", s3Error);
+      }
+    }
 
     res.status(200).json({
       status: "success",

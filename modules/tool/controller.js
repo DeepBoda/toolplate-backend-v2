@@ -286,7 +286,7 @@ exports.search = async (req, res, next) => {
             [Op.like]: `%${req.params.title}%`,
           },
         },
-        attributes: ["id", "image", "title", "description"],
+        attributes: ["id", "image", "title", "description", "slug"],
       }),
       blogService.findAll({
         where: {
@@ -294,21 +294,9 @@ exports.search = async (req, res, next) => {
             [Op.like]: `%${req.params.title}%`,
           },
         },
-        attributes: ["id", "image", "title", "description"],
+        attributes: ["id", "image", "title", "description", "slug"],
       }),
     ]);
-
-    // const toolsWithCategory = tools.map((tool) => ({
-    //   ...tool.get(), // Spread the existing tool properties
-    //   category: "Tool", // Add the category property
-    // }));
-
-    // const blogsWithCategory = blogs.map((blog) => ({
-    //   ...blog.get(), // Spread the existing blog properties
-    //   category: "Blog", // Add the category property
-    // }));
-
-    // const data = toolsWithCategory.concat(blogsWithCategory);
 
     res.status(200).send({
       status: "success",

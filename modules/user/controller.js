@@ -138,6 +138,7 @@ exports.verifyOTP = async (req, res, next) => {
 exports.socialAuth = async (req, res, next) => {
   try {
     const { firebase_token } = req.body;
+    console.log("firebase-token : ", firebase_token);
 
     if (!firebase_token) {
       throw createError(400, "Invalid request. Missing firebase_token.");

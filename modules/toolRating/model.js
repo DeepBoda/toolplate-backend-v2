@@ -14,11 +14,9 @@ const ToolRating = sequelize.define(
     },
     title: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
     review: {
       type: DataTypes.TEXT,
-      allowNull: false,
     },
     rating: {
       type: DataTypes.FLOAT,

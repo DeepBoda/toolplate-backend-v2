@@ -34,14 +34,15 @@ exports.add = async (req, res, next) => {
       }
     }
 
-    const { categories, tags, ...body } = req.body;
-    console.log("body: ", body);
+    //create slug url based on title
     let slug = req.body.title
       .trim()
       .toLowerCase()
       .replaceAll(/[?!]/g, "")
       .replaceAll(" ", "-");
     req.body.slug = slug;
+
+    const { categories, tags, ...body } = req.body;
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(body);
 
@@ -553,7 +554,7 @@ exports.update = async (req, res, next) => {
       }
     }
 
-    const { categories, tags, ...body } = req.body;
+    //create slug url based on title
     if (req.body.title) {
       let slug = req.body.title
         .trim()
@@ -562,6 +563,8 @@ exports.update = async (req, res, next) => {
         .replaceAll(" ", "-");
       req.body.slug = slug;
     }
+
+    const { categories, tags, ...body } = req.body;
     // Update the tool data
     const [affectedRows] = await service.update(body, {
       where: {

@@ -17,16 +17,17 @@ const Tag = require("../tag/model");
 exports.add = async (req, res, next) => {
   try {
     if (req.file) req.body.image = req.file.location;
-    const { categories, tags, ...body } = req.body;
-    console.log("body: ", body);
 
-    // Step 1: Create the new blog entry in the `blog` table
+    //create slug url based on title
     let slug = req.body.title
       .trim()
       .toLowerCase()
       .replaceAll(/[?!]/g, "")
       .replaceAll(" ", "-");
     req.body.slug = slug;
+
+    const { categories, tags, ...body } = req.body;
+    // Step 1: Create the new blog entry in the `blog` table
     const blog = await service.create(body);
 
     // Step 2: Get the comma-separated `categories` and `tags` IDs
@@ -452,6 +453,7 @@ exports.update = async (req, res, next) => {
       });
     }
 
+    //create slug url based on title
     if (req.body.title) {
       let slug = req.body.title
         .trim()
@@ -460,8 +462,8 @@ exports.update = async (req, res, next) => {
         .replaceAll(" ", "-");
       req.body.slug = slug;
     }
-    const { categories, tags, ...body } = req.body;
 
+    const { categories, tags, ...body } = req.body;
     // Update the blog data
     const [affectedRows] = await service.update(body, {
       where: {

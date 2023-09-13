@@ -5,6 +5,13 @@ const service = require("./service");
 const viewService = require("../toolView/service");
 // const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
+const { toolSize } = require("../../constants");
+const { resizeAndUploadImage } = require("../../utils/imageResize");
+const {
+  toolAttributes,
+  tagAttributes,
+  categoryAttributes,
+} = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
 const ToolCategory = require("../toolCategory/model");
@@ -13,6 +20,7 @@ const Category = require("../category/model");
 const ToolTag = require("../toolTag/model");
 const toolTagService = require("../toolTag/service");
 const Tag = require("../tag/model");
+const ToolImage = require("../toolImages/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -72,6 +80,7 @@ exports.add = async (req, res, next) => {
       status: "success",
       data: tool,
     });
+    resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
   } catch (error) {
     console.error(error);
     next(error);
@@ -80,6 +89,7 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
+    console.log("hello");
     // let data = await redisService.get(`tools`);
     // if (!data)
     const { categoryIds, ...query } = req.query;
@@ -100,73 +110,72 @@ exports.getAll = async (req, res, next) => {
     const data = await service.findAndCountAll({
       ...sqquery(query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
-            ),
-            "wishlists",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
-            ),
-            "isWishlisted",
-          ],
-          [
-            sequelize.fn(
-              "ROUND",
-              sequelize.literal(
-                `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-              ),
-              1
-            ),
-            "ratingsAverage",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-            ),
-            "totalRatings",
-          ],
+      attributes: [
+        ...toolAttributes,
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
+          ),
+          "views",
         ],
-      },
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
+          ),
+          "likes",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
+          ),
+          "wishlists",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+        [
+          sequelize.fn(
+            "ROUND",
+            sequelize.literal(
+              `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+            ),
+            1
+          ),
+          "ratingsAverage",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+          ),
+          "totalRatings",
+        ],
+      ],
       include: [
         {
           model: ToolCategory,
-          attributes: ["id", "toolId", "categoryId"],
+          attributes: ["categoryId"],
           ...query,
           where,
           include: {
             model: Category,
-            attributes: ["id", "name"],
+            attributes: categoryAttributes,
           },
         },
         {
           model: ToolTag,
-          attributes: ["id", "toolId", "tagId"],
+          attributes: ["tagId"],
           include: {
             model: Tag,
-            attributes: ["id", "name"],
+            attributes: tagAttributes,
           },
         },
       ],
@@ -245,8 +254,12 @@ exports.getById = async (req, res, next) => {
       },
       include: [
         {
+          model: ToolImage,
+          attributes: ["id", "image"],
+        },
+        {
           model: ToolCategory,
-          attributes: ["id", "toolId", "categoryId"],
+          attributes: ["categoryId"],
           include: {
             model: Category,
             attributes: ["id", "name"],
@@ -254,7 +267,7 @@ exports.getById = async (req, res, next) => {
         },
         {
           model: ToolTag,
-          attributes: ["id", "toolId", "tagId"],
+          attributes: ["tagId"],
           include: {
             model: Tag,
             attributes: ["id", "name"],
@@ -359,18 +372,18 @@ exports.getForAdmin = async (req, res, next) => {
       include: [
         {
           model: ToolCategory,
-          attributes: ["id", "toolId", "categoryId"],
+          attributes: ["categoryId"],
           include: {
             model: Category,
-            attributes: ["id", "name"],
+            attributes: categoryAttributes,
           },
         },
         {
           model: ToolTag,
-          attributes: ["id", "toolId", "tagId"],
+          attributes: ["tagId"],
           include: {
             model: Tag,
-            attributes: ["id", "name"],
+            attributes: tagAttributes,
           },
         },
       ],
@@ -399,14 +412,18 @@ exports.getRelatedTools = async (req, res, next) => {
       include: [
         {
           model: ToolCategory,
+          attributes: ["categoryId"],
           include: {
             model: Category,
+            attributes: categoryAttributes,
           },
         },
         {
           model: ToolTag,
+          attributes: ["tagId"],
           include: {
             model: Tag,
+            attributes: tagAttributes,
           },
         },
       ],
@@ -436,55 +453,60 @@ exports.getRelatedTools = async (req, res, next) => {
           { "$toolTags.tagId$": { [Op.in]: tagIds } },
         ],
       },
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
-          [
-            sequelize.fn(
-              "ROUND",
-              sequelize.literal(
-                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-              ),
-              1
-            ),
-            "ratingsAverage",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-            ),
-            "totalRatings",
-          ],
+      attributes: [
+        ...toolAttributes,
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
+          ),
+          "views",
         ],
-      },
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
+          ),
+          "likes",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.fn(
+            "ROUND",
+            sequelize.literal(
+              `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+            ),
+            1
+          ),
+          "ratingsAverage",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+          ),
+          "totalRatings",
+        ],
+      ],
+
       include: [
         {
           model: ToolCategory,
-          attributes: ["id", "toolId", "categoryId"],
+          attributes: ["categoryId"],
           include: {
             model: Category,
+            attributes: categoryAttributes,
           },
         },
         {
           model: ToolTag,
-          attributes: ["id", "toolId", "tagId"],
+          attributes: ["tagId"],
+          include: {
+            model: Tag,
+            attributes: tagAttributes,
+          },
         },
       ],
     });

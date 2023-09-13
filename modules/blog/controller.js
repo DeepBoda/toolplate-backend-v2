@@ -4,6 +4,13 @@ const sequelize = require("../../config/db");
 const service = require("./service");
 const viewService = require("../blogView/service");
 // const redisService = require("../../utils/redis");
+const { blogResizeImageSize } = require("../../constants");
+const {
+  blogAttributes,
+
+  tagAttributes,
+  categoryAttributes,
+} = require("../../constants/queryAttributes");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const BlogCategory = require("../blogCategory/model");
@@ -12,7 +19,7 @@ const Category = require("../category/model");
 const BlogTag = require("../blogTag/model");
 const blogTagService = require("../blogTag/service");
 const Tag = require("../tag/model");
-
+const { resizeAndUploadImage } = require("../../utils/imageResize");
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
@@ -56,6 +63,7 @@ exports.add = async (req, res, next) => {
       status: "success",
       data: blog,
     });
+    resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`);
   } catch (error) {
     console.error(error);
     next(error);
@@ -84,67 +92,66 @@ exports.getAll = async (req, res, next) => {
     const data = await service.findAndCountAll({
       ...sqquery(query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM (
+      attributes: [
+        ...blogAttributes,
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+          ),
+          "views",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+          ),
+          "likes",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM (
               SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
               UNION ALL
               SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
             ) AS commentAndReplyCounts)`
-            ),
-            "comments",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
-            ),
-            "wishlists",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
-            ),
-            "isWishlisted",
-          ],
+          ),
+          "comments",
         ],
-      },
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+          ),
+          "wishlists",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
       include: [
         {
           model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          attributes: ["categoryId"],
           ...query,
           where,
           include: {
             model: Category,
-            attributes: ["id", "name"],
+            attributes: categoryAttributes,
           },
         },
         {
           model: BlogTag,
-          attributes: ["id", "blogId", "tagId"],
+          attributes: ["tagId"],
           include: {
             model: Tag,
-            attributes: ["id", "name"],
+            attributes: tagAttributes,
           },
         },
       ],
@@ -218,18 +225,18 @@ exports.getById = async (req, res, next) => {
       include: [
         {
           model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          attributes: ["categoryId"],
           include: {
             model: Category,
-            attributes: ["id", "name"],
+            attributes: categoryAttributes,
           },
         },
         {
           model: BlogTag,
-          attributes: ["id", "blogId", "tagId"],
+          attributes: ["tagId"],
           include: {
             model: Tag,
-            attributes: ["id", "name"],
+            attributes: tagAttributes,
           },
         },
       ],
@@ -283,7 +290,7 @@ exports.getForAdmin = async (req, res, next) => {
       include: [
         {
           model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          attributes: ["categoryId"],
           include: {
             model: Category,
             attributes: ["id", "name"],
@@ -291,7 +298,7 @@ exports.getForAdmin = async (req, res, next) => {
         },
         {
           model: BlogTag,
-          attributes: ["id", "blogId", "tagId"],
+          attributes: ["tagId"],
           include: {
             model: Tag,
             attributes: ["id", "name"],
@@ -322,14 +329,18 @@ exports.getRelatedBlogs = async (req, res, next) => {
       include: [
         {
           model: BlogCategory,
+          attributes: ["categoryId"],
           include: {
             model: Category,
+            attributes: categoryAttributes,
           },
         },
         {
           model: BlogTag,
+          attributes: ["tagId"],
           include: {
             model: Tag,
+            attributes: tagAttributes,
           },
         },
       ],
@@ -358,35 +369,37 @@ exports.getRelatedBlogs = async (req, res, next) => {
           { "$blogTags.tagId$": { [Op.in]: tagIds } },
         ],
       },
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
+      attributes: [
+        ...blogAttributes,
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+          ),
+          "views",
         ],
-      },
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+      ],
+
       include: [
         {
           model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          attributes: ["categoryId"],
           include: {
             model: Category,
+            attributes: categoryAttributes,
           },
         },
         {
           model: BlogTag,
-          attributes: ["id", "blogId", "tagId"],
+          attributes: ["tagId"],
           include: {
             model: Tag,
+            attributes: tagAttributes,
           },
         },
       ],
@@ -508,7 +521,14 @@ exports.update = async (req, res, next) => {
     });
 
     // Handle the file deletion
-    if (req.file && oldBlogData?.image) deleteFilesFromS3([oldBlogData?.image]);
+    if (req.file && oldBlogData?.image) {
+      resizeAndUploadImage(
+        blogResizeImageSize,
+        req.file.location,
+        `blog_${oldBlogData.id}`
+      );
+      deleteFilesFromS3([oldBlogData?.image]);
+    }
   } catch (error) {
     console.error(error);
     next(error);

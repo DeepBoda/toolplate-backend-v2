@@ -40,12 +40,11 @@ exports.add = async (req, res, next) => {
     }
 
     // Create slug URL based on title
-    let slug = req.body.title
+    req.body.slug = req.body.title
       .trim()
       .toLowerCase()
-      .replaceAll(/[?!.$]/g, "")
-      .replaceAll(" ", "-");
-    req.body.slug = slug;
+      .replace(/[?!$]/g, "")
+      .replace(/\s+/g, "-");
 
     const { categories, tags, ...body } = req.body;
 
@@ -584,7 +583,7 @@ exports.update = async (req, res, next) => {
       req.body.slug = req.body.title
         .trim()
         .toLowerCase()
-        .replace(/[?!.$]/g, "")
+        .replace(/[?!$]/g, "")
         .replace(/\s+/g, "-");
     }
 

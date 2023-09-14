@@ -25,12 +25,11 @@ exports.add = async (req, res, next) => {
     if (req.file) req.body.image = req.file.location;
 
     //create slug url based on title
-    let slug = req.body.title
+    req.body.slug = req.body.title
       .trim()
       .toLowerCase()
-      .replaceAll(/[?!]/g, "")
-      .replaceAll(" ", "-");
-    req.body.slug = slug;
+      .replace(/[?!$]/g, "")
+      .replace(/\s+/g, "-");
 
     const { categories, tags, ...body } = req.body;
     // Step 1: Create the new blog entry in the `blog` table
@@ -467,12 +466,11 @@ exports.update = async (req, res, next) => {
 
     //create slug url based on title
     if (req.body.title) {
-      let slug = req.body.title
+      req.body.slug = req.body.title
         .trim()
         .toLowerCase()
-        .replaceAll(/[?!.$]/g, "")
-        .replaceAll(" ", "-");
-      req.body.slug = slug;
+        .replace(/[?!$]/g, "")
+        .replace(/\s+/g, "-");
     }
 
     const { categories, tags, ...body } = req.body;

@@ -25,17 +25,7 @@ const Tool = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    previews: {
-      type: DataTypes.TEXT,
-      get: function () {
-        return this.getDataValue("previews")
-          ? JSON.parse(this.getDataValue("previews"))
-          : [];
-      },
-      set: function (data) {
-        return this.setDataValue("previews", JSON.stringify(data));
-      },
-    },
+
     overview: {
       type: DataTypes.TEXT("long"),
       allowNull: false,

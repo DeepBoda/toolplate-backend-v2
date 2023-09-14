@@ -7,6 +7,7 @@ router.use(authMiddleware, protectRoute(["Admin"]));
 router.use("/users", require("../modules/user/admin"));
 router.use("/appConfig", require("../modules/appConfig/admin"));
 router.use("/tool", require("../modules/tool/admin"));
+router.use("/tools/preview", require("../modules/toolImages/admin"));
 router.use("/tools/rating", require("../modules/toolRating/admin"));
 router.use("/toolLike", require("../modules/toolLike/admin"));
 router.use("/toolTag", require("../modules/toolTag/admin"));

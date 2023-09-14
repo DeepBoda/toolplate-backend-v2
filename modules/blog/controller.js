@@ -471,7 +471,7 @@ exports.update = async (req, res, next) => {
       let slug = req.body.title
         .trim()
         .toLowerCase()
-        .replaceAll(/[?!]/g, "")
+        .replaceAll(/[?!.$]/g, "")
         .replaceAll(" ", "-");
       req.body.slug = slug;
     }
@@ -590,7 +590,7 @@ const makeSLug = async (req, res, next) => {
       let slug = allBlog[i].title
         .trim()
         .toLowerCase()
-        .replaceAll(/[?!]/g, "")
+        .replaceAll(/[?!.$]/g, "")
         .replaceAll(" ", "-");
       allBlog[i].slug = slug;
       allBlog[i].save();

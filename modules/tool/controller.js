@@ -43,8 +43,8 @@ exports.add = async (req, res, next) => {
     let slug = req.body.title
       .trim()
       .toLowerCase()
-      .replace(/[?!]/g, "")
-      .replace(/\s+/g, "-");
+      .replaceAll(/[?!.$]/g, "")
+      .replaceAll(" ", "-");
     req.body.slug = slug;
 
     const { categories, tags, ...body } = req.body;
@@ -564,102 +564,69 @@ exports.getRelatedTools = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    let oldToolData;
+    const oldToolData = req.files
+      ? await service.findOne({ where: { id: req.params.id } })
+      : {};
 
-    // Check if any files were uploaded
-    if (req.files) {
-      oldToolData = await service.findOne({
-        where: {
-          id: req.params.id,
-        },
-      });
-      // Check if Image (logo) uploaded and if got URL
-      if (req.files.image) {
-        req.body.image = req.files.image[0].location;
-      }
-      // Check if Previews uploaded and if got URLs
-      if (req.files.previews) {
-        const previews = req.files.previews.map((el) => el.location);
-        req.body.previews = previews;
-      }
-      // Check if Videos uploaded and if got URLs
-      if (req.files.videos) {
-        const videos = req.files.videos.map((el) => el.location);
-        req.body.videos = videos;
-      }
+    // Check if Image (logo) uploaded and if got URL
+    if (req.files?.image) {
+      req.body.image = req.files.image[0].location;
+      resizeAndUploadImage(toolSize, req.body.image, `tool_${e.id}`);
     }
 
-    //create slug url based on title
+    // Check if Videos uploaded and if got URLs
+    if (req.files?.videos) {
+      req.body.videos = req.files.videos.map((el) => el.location);
+    }
+
+    // Create slug URL based on title
     if (req.body.title) {
-      let slug = req.body.title
+      req.body.slug = req.body.title
         .trim()
         .toLowerCase()
-        .replaceAll(/[?!]/g, "")
-        .replaceAll(" ", "-");
-      req.body.slug = slug;
+        .replace(/[?!.$]/g, "")
+        .replace(/\s+/g, "-");
     }
 
     const { categories, tags, ...body } = req.body;
+
     // Update the tool data
     const [affectedRows] = await service.update(body, {
-      where: {
-        id: req.params.id,
-      },
+      where: { id: req.params.id },
     });
 
     // Send the response
-    res.status(200).json({
-      status: "success",
-      data: {
-        affectedRows,
-      },
-    });
+    res.status(200).json({ status: "success", data: { affectedRows } });
 
     // Handle the file deletion
-    if (req.files.image && oldToolData?.image) {
-      const filesToDelete = [oldToolData?.image];
-      if (req.files.previews && oldToolData?.previews) {
-        filesToDelete.push(...oldToolData?.previews);
-      }
-      if (req.files.videos && oldToolData?.videos) {
-        filesToDelete.push(...oldToolData?.videos);
-      }
+    if (req.files?.image && oldToolData.image) {
+      const filesToDelete = [
+        oldToolData.image,
+        ...(req.files.videos || []),
+        ...(oldToolData.videos || []),
+      ];
       deleteFilesFromS3(filesToDelete);
     }
 
     // Update categories and tags
-    const categoryIds = categories
-      .split(",")
-      .map((categoryId) => parseInt(categoryId));
-    const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
+    const categoryIds = categories.split(",").map(Number);
+    const tagIds = tags.split(",").map(Number);
 
     // Delete old associations
-    await toolCategoryService.delete({
-      where: {
-        toolId: req.params.id,
-      },
-    });
-
-    await toolTagService.delete({
-      where: {
-        toolId: req.params.id,
-      },
-    });
+    await Promise.all([
+      toolCategoryService.delete({ where: { toolId: req.params.id } }),
+      toolTagService.delete({ where: { toolId: req.params.id } }),
+    ]);
 
     // Create new associations
-    for (const categoryId of categoryIds) {
-      await toolCategoryService.create({
-        toolId: req.params.id,
-        categoryId,
-      });
-    }
-
-    for (const tagId of tagIds) {
-      await toolTagService.create({
-        toolId: req.params.id,
-        tagId,
-      });
-    }
+    await Promise.all([
+      ...categoryIds.map((categoryId) =>
+        toolCategoryService.create({ toolId: req.params.id, categoryId })
+      ),
+      ...tagIds.map((tagId) =>
+        toolTagService.create({ toolId: req.params.id, tagId })
+      ),
+    ]);
   } catch (error) {
     console.error(error);
     next(error);
@@ -669,7 +636,7 @@ exports.update = async (req, res, next) => {
 exports.delete = async (req, res, next) => {
   try {
     // Find the tool to get the file URLs
-    const { image, previews, videos } = await service.findOne({
+    const { image, videos } = await service.findOne({
       where: {
         id: req.params.id,
       },
@@ -685,18 +652,22 @@ exports.delete = async (req, res, next) => {
     // Delete files from S3 if URLs are present
     const filesToDelete = [];
     if (image) filesToDelete.push(image);
-    if (previews) filesToDelete.push(...previews);
     if (videos) filesToDelete.push(...videos);
 
     if (filesToDelete.length > 0) deleteFilesFromS3(filesToDelete);
 
-    // Delete associated categories and tags
+    // Delete associated categories and tags & images.
     await toolCategoryService.delete({
       where: {
         toolId: req.params.id,
       },
     });
     await toolTagService.delete({
+      where: {
+        toolId: req.params.id,
+      },
+    });
+    await toolImageService.delete({
       where: {
         toolId: req.params.id,
       },
@@ -726,7 +697,7 @@ const makeSLug = async (req, res, next) => {
       let slug = allBlog[i].title
         .trim()
         .toLowerCase()
-        .replaceAll(/[?!]/g, "")
+        .replaceAll(/[?!.$]/g, "")
         .replaceAll(" ", "-");
       allBlog[i].slug = slug;
       allBlog[i].save();

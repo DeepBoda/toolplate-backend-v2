@@ -3,6 +3,11 @@
 const sequelize = require("../../config/db");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
+const {
+  toolAttributes,
+  tagAttributes,
+  categoryAttributes,
+} = require("../../constants/queryAttributes");
 const Tool = require("../tool/model");
 const ToolCategory = require("../toolCategory/model");
 const Category = require("../category/model");
@@ -50,12 +55,7 @@ exports.getAll = async (req, res, next) => {
         model: Tool,
         as: "tool",
         attributes: [
-          "id",
-          "title",
-          "image",
-          "description",
-          "price",
-          "createdAt",
+          ...toolAttributes,
           [
             sequelize.fn(
               "ROUND",
@@ -78,7 +78,7 @@ exports.getAll = async (req, res, next) => {
           attributes: ["id", "toolId", "categoryId"],
           include: {
             model: Category,
-            attributes: ["id", "name"],
+            attributes: categoryAttributes,
           },
         },
       },

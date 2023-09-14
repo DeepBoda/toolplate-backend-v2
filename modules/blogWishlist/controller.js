@@ -3,6 +3,11 @@
 const sequelize = require("../../config/db");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
+const {
+  blogAttributes,
+  tagAttributes,
+  categoryAttributes,
+} = require("../../constants/queryAttributes");
 const Blog = require("../blog/model");
 const BlogCategory = require("../blogCategory/model");
 const Category = require("../category/model");
@@ -46,20 +51,13 @@ exports.getAll = async (req, res, next) => {
       ),
       include: {
         model: Blog,
-        attributes: [
-          "id",
-          "title",
-          "image",
-          "description",
-          "readTime",
-          "createdAt",
-        ],
+        attributes: blogAttributes,
         include: {
           model: BlogCategory,
           attributes: ["id", "blogId", "categoryId"],
           include: {
             model: Category,
-            attributes: ["id", "name"],
+            attributes: categoryAttributes,
           },
         },
       },
@@ -87,12 +85,7 @@ exports.getByUser = async (req, res, next) => {
         {
           model: Blog,
           attributes: [
-            "id",
-            "title",
-            "image",
-            "description",
-            "readTime",
-            "createdAt",
+            ...blogAttributes,
             [
               sequelize.literal(
                 "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
@@ -127,7 +120,7 @@ exports.getByUser = async (req, res, next) => {
             attributes: ["id", "blogId", "categoryId"],
             include: {
               model: Category,
-              attributes: ["id", "name"],
+              attributes: categoryAttributes,
             },
           },
         },

@@ -5,13 +5,12 @@ const service = require("./service");
 const viewService = require("../blogView/service");
 // const redisService = require("../../utils/redis");
 const { blogResizeImageSize } = require("../../constants");
+const { usersqquery, sqquery } = require("../../utils/query");
 const {
   blogAttributes,
-
   tagAttributes,
   categoryAttributes,
 } = require("../../constants/queryAttributes");
-const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const BlogCategory = require("../blogCategory/model");
 const blogCategoryService = require("../blogCategory/service");

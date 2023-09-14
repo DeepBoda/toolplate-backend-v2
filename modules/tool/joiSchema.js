@@ -18,7 +18,6 @@ module.exports = {
     description: Joi.string(),
     image: Joi.string(),
     price: Joi.string().valid("Free", "Premium", "Freemium"),
-    previews: Joi.array(),
     overview: Joi.string(),
     link: Joi.string(),
     videos: Joi.array(),

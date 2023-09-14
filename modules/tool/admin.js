@@ -24,7 +24,6 @@ router
   .patch(
     upload.fields([
       { name: "image", maxCount: 1 },
-      { name: "previews", maxCount: 10 },
       { name: "videos", maxCount: 10 },
     ]),
     joiValidator(toolSchema.update),

@@ -5,7 +5,7 @@ const service = require("./service");
 const viewService = require("../toolView/service");
 // const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
-const { toolSize } = require("../../constants");
+const { toolSize, toolPreviewSize } = require("../../constants");
 const { resizeAndUploadImage } = require("../../utils/imageResize");
 const {
   toolAttributes,
@@ -21,6 +21,7 @@ const ToolTag = require("../toolTag/model");
 const toolTagService = require("../toolTag/service");
 const Tag = require("../tag/model");
 const ToolImage = require("../toolImages/model");
+const toolImageService = require("../toolImages/service");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -30,11 +31,7 @@ exports.add = async (req, res, next) => {
       if (req.files.image) {
         req.body.image = req.files.image[0].location;
       }
-      // Check if Previews uploaded and if got URLs
-      if (req.files.previews) {
-        const previews = req.files.previews.map((el) => el.location);
-        req.body.previews = previews;
-      }
+
       // Check if Videos uploaded and if got URLs
       if (req.files.videos) {
         const videos = req.files.videos.map((el) => el.location);
@@ -42,17 +39,32 @@ exports.add = async (req, res, next) => {
       }
     }
 
-    //create slug url based on title
+    // Create slug URL based on title
     let slug = req.body.title
       .trim()
       .toLowerCase()
-      .replaceAll(/[?!]/g, "")
-      .replaceAll(" ", "-");
+      .replace(/[?!]/g, "")
+      .replace(/\s+/g, "-");
     req.body.slug = slug;
 
     const { categories, tags, ...body } = req.body;
+
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(body);
+
+    // Check if Previews uploaded and if got URLs
+    if (req.files.previews) {
+      const previews = req.files.previews.map((el) => ({
+        image: el.location,
+        toolId: tool.id,
+      }));
+
+      // Bulk insert the records into the ToolImage table
+      const toolPreviews = await toolImageService.bulkCreate(previews);
+      toolPreviews.map((e) => {
+        resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      });
+    }
 
     // Step 2: Get the comma-separated `categories` and `tags` IDs
     const categoryIds = categories
@@ -60,21 +72,19 @@ exports.add = async (req, res, next) => {
       .map((categoryId) => parseInt(categoryId));
     const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
 
-    // Step 3: Add entries in the `toolCategory` table
-    for (const categoryId of categoryIds) {
-      await toolCategoryService.create({
-        toolId: tool.id,
-        categoryId,
-      });
-    }
+    // Step 3: Add entries in the `toolCategory` table using bulk insert
+    const categoryBulkInsertData = categoryIds.map((categoryId) => ({
+      toolId: tool.id,
+      categoryId,
+    }));
+    await toolCategoryService.bulkCreate(categoryBulkInsertData);
 
-    // Step 4: Add entries in the `toolTag` table
-    for (const tagId of tagIds) {
-      await toolTagService.create({
-        toolId: tool.id,
-        tagId,
-      });
-    }
+    // Step 4: Add entries in the `toolTag` table using bulk insert
+    const tagBulkInsertData = tagIds.map((tagId) => ({
+      toolId: tool.id,
+      tagId,
+    }));
+    await toolTagService.bulkCreate(tagBulkInsertData);
 
     res.status(200).json({
       status: "success",
@@ -89,7 +99,6 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    console.log("hello");
     // let data = await redisService.get(`tools`);
     // if (!data)
     const { categoryIds, ...query } = req.query;
@@ -262,7 +271,7 @@ exports.getById = async (req, res, next) => {
           attributes: ["categoryId"],
           include: {
             model: Category,
-            attributes: ["id", "name"],
+            attributes: categoryAttributes,
           },
         },
         {
@@ -270,7 +279,7 @@ exports.getById = async (req, res, next) => {
           attributes: ["tagId"],
           include: {
             model: Tag,
-            attributes: ["id", "name"],
+            attributes: tagAttributes,
           },
         },
       ],
@@ -370,6 +379,10 @@ exports.getForAdmin = async (req, res, next) => {
         ],
       },
       include: [
+        {
+          model: ToolImage,
+          attributes: ["id", "image"],
+        },
         {
           model: ToolCategory,
           attributes: ["categoryId"],

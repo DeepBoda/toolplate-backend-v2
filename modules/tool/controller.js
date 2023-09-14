@@ -43,8 +43,8 @@ exports.add = async (req, res, next) => {
     req.body.slug = req.body.title
       .trim()
       .toLowerCase()
-      .replace(/[?!$]/g, "")
-      .replace(/\s+/g, "-");
+      .replace(/[?!$]/g, "") // Replace ? or ! or $ with empty
+      .replace(/[\s/]+/g, "-"); // Replace spaces or / with hyphens
 
     const { categories, tags, ...body } = req.body;
 
@@ -583,8 +583,8 @@ exports.update = async (req, res, next) => {
       req.body.slug = req.body.title
         .trim()
         .toLowerCase()
-        .replace(/[?!$]/g, "")
-        .replace(/\s+/g, "-");
+        .replace(/[?!$]/g, "") // Replace ? or ! or $ with empty
+        .replace(/[\s/]+/g, "-"); // Replace spaces or / with hyphens
     }
 
     const { categories, tags, ...body } = req.body;

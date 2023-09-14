@@ -29,7 +29,7 @@ exports.add = async (req, res, next) => {
       .trim()
       .toLowerCase()
       .replace(/[?!$]/g, "")
-      .replace(/\s+/g, "-");
+      .replace(/[\s/]+/g, "-"); // Replace spaces or / with hyphens
 
     const { categories, tags, ...body } = req.body;
     // Step 1: Create the new blog entry in the `blog` table
@@ -470,7 +470,7 @@ exports.update = async (req, res, next) => {
         .trim()
         .toLowerCase()
         .replace(/[?!$]/g, "")
-        .replace(/\s+/g, "-");
+        .replace(/[\s/]+/g, "-"); // Replace spaces or / with hyphens
     }
 
     const { categories, tags, ...body } = req.body;

@@ -505,6 +505,12 @@ exports.getRelatedTools = async (req, res, next) => {
           "isLiked",
         ],
         [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+        [
           sequelize.fn(
             "ROUND",
             sequelize.literal(

@@ -166,59 +166,14 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-exports.getById = async (req, res, next) => {
+exports.getBySlug = async (req, res, next) => {
   try {
     // let data = await redisService.get(`oneBlog`);
     // if (!data)
-    const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findOne({
       where: {
         slug: req.params.slug,
-      },
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM (
-              SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
-              UNION ALL
-              SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
-            ) AS commentAndReplyCounts)`
-            ),
-            "comments",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
-            ),
-            "wishlists",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
-            ),
-            "isWishlisted",
-          ],
-        ],
       },
       include: [
         {
@@ -243,6 +198,74 @@ exports.getById = async (req, res, next) => {
       blogId: data.id,
       userId: req.requestor?.id ?? null,
     });
+    // redisService.set(`oneBlog`, data);
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getDynamicBySlug = async (req, res, next) => {
+  try {
+    // let data = await redisService.get(`oneBlog`);
+    // if (!data)
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+      attributes: [
+        ...blogAttributes,
+        // ...["id", "slug"],
+
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
+          ),
+          "views",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
+          ),
+          "likes",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM (
+              SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
+              UNION ALL
+              SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
+            ) AS commentAndReplyCounts)`
+          ),
+          "comments",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
+          ),
+          "wishlists",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
+    });
+
     // redisService.set(`oneBlog`, data);
 
     res.status(200).send({
@@ -324,22 +347,15 @@ exports.getRelatedBlogs = async (req, res, next) => {
     // Find the details of the opened blog
     const openedBlog = await service.findOne({
       where: { id: req.params.id },
+      attributes: blogAttributes,
       include: [
         {
           model: BlogCategory,
           attributes: ["categoryId"],
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
         },
         {
           model: BlogTag,
           attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
         },
       ],
     });
@@ -454,76 +470,67 @@ exports.getRelatedBlogs = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    let oldBlogData;
+    // Check if any files were uploaded and get oldBlogData if needed
+    const oldBlogData = req.file
+      ? await service.findOne({ where: { id: req.params.id } })
+      : {};
+
+    // Check if Image uploaded and if got URL
     if (req.file) {
       req.body.image = req.file.location;
-      oldBlogData = await service.findOne({
-        where: {
-          id: req.params.id,
-        },
-      });
-    }
 
-    //create slug url based on title
-    if (req.body.title) {
-      req.body.slug = req.body.title
-        .trim()
-        .toLowerCase()
-        .replace(/[?!$]/g, "")
-        .replace(/[\s/]+/g, "-"); // Replace spaces or / with hyphens
-    }
-
-    const { categories, tags, ...body } = req.body;
-    // Update the blog data
-    const [affectedRows] = await service.update(body, {
-      where: {
-        id: req.params.id,
-      },
-    });
-
-    // Handle categories and tags updates
-
-    // Step 1: Delete existing associations with categories and tags
-    await blogCategoryService.delete({ where: { blogId: req.params.id } });
-    await blogTagService.delete({ where: { blogId: req.params.id } });
-
-    // Step 2: Get the comma-separated `categories` and `tags` IDs
-    const categoryIds = categories
-      .split(",")
-      .map((categoryId) => parseInt(categoryId));
-    const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
-
-    // Step 3: Add updated entries in the `blogCategory` table
-    for (const categoryId of categoryIds) {
-      await blogCategoryService.create({
-        blogId: req.params.id,
-        categoryId,
-      });
-    }
-
-    // Step 4: Add updated entries in the `blogTag` table
-    for (const tagId of tagIds) {
-      await blogTagService.create({
-        blogId: req.params.id,
-        tagId,
-      });
-    }
-
-    // Send the response
-    res.status(200).json({
-      status: "success",
-      data: {
-        affectedRows,
-      },
-    });
-
-    // Handle the file deletion
-    if (req.file && oldBlogData?.image) {
+      // Resize and upload the image (if needed)
       resizeAndUploadImage(
         blogResizeImageSize,
         req.file.location,
         `blog_${oldBlogData.id}`
       );
+    }
+
+    // Create slug URL based on title
+    if (req.body.title) {
+      req.body.slug = req.body.title
+        .trim()
+        .toLowerCase()
+        .replace(/[?!$]/g, "")
+        .replace(/[\s/]+/g, "-");
+    }
+
+    const { categories, tags, ...body } = req.body;
+
+    // Update the blog data
+    const [affectedRows] = await service.update(body, {
+      where: { id: req.params.id },
+    });
+
+    // Handle categories and tags updates
+    const categoryIds = categories.split(",").map(Number);
+    const tagIds = tags.split(",").map(Number);
+
+    // Delete existing associations with categories and tags
+    await Promise.all([
+      blogCategoryService.delete({ where: { blogId: req.params.id } }),
+      blogTagService.delete({ where: { blogId: req.params.id } }),
+    ]);
+
+    // Add updated entries in the `blogCategory` and `blogTag` tables
+    await Promise.all([
+      ...categoryIds.map((categoryId) =>
+        blogCategoryService.create({ blogId: req.params.id, categoryId })
+      ),
+      ...tagIds.map((tagId) =>
+        blogTagService.create({ blogId: req.params.id, tagId })
+      ),
+    ]);
+
+    // Send the response
+    res.status(200).json({
+      status: "success",
+      data: { affectedRows },
+    });
+
+    // Handle the file deletion
+    if (req.file && oldBlogData?.image) {
       deleteFilesFromS3([oldBlogData?.image]);
     }
   } catch (error) {

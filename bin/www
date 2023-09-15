@@ -26,7 +26,11 @@ const server = http.createServer(app);
  */
 
 server.listen(port, () => {
-  console.log(`Server is listening to port ${port}`);
+  console.log(
+    `Server is listening to port ${port} \x1b[${
+      process.env.NODE_ENV === "production" ? "31m" : "32m"
+    }[${process.env.NODE_ENV === "production" ? "PROD" : "DEV"}]\x1b[0m`
+  );
 });
 
 server.on("error", onError);

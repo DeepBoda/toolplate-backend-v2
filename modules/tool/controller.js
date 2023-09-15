@@ -202,42 +202,41 @@ exports.getAll = async (req, res, next) => {
 
 exports.getBySlug = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`oneTool`);
-    // if (!data)
-
-    const data = await service.findOne({
-      where: {
-        slug: req.params.slug,
-      },
-      include: [
-        {
-          model: ToolImage,
-          attributes: ["id", "image"],
+    let data = await redisService.get(`tool?slug=${req.params.slug}`);
+    if (!data)
+      data = await service.findOne({
+        where: {
+          slug: req.params.slug,
         },
-        {
-          model: ToolCategory,
-          attributes: ["categoryId"],
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
+        include: [
+          {
+            model: ToolImage,
+            attributes: ["id", "image"],
           },
-        },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
+          {
+            model: ToolCategory,
+            attributes: ["categoryId"],
+            include: {
+              model: Category,
+              attributes: categoryAttributes,
+            },
           },
-        },
-      ],
-    });
+          {
+            model: ToolTag,
+            attributes: ["tagId"],
+            include: {
+              model: Tag,
+              attributes: tagAttributes,
+            },
+          },
+        ],
+      });
     //When opens tool, this creates entry for view
     await viewService.create({
       toolId: data.id,
       userId: req.requestor?.id ?? null,
     });
-    // redisService.set(`oneTool`, data);
+    redisService.set(`tool?slug=${req.params.slug}`, data);
 
     res.status(200).send({
       status: "success",

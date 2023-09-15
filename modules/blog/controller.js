@@ -2,8 +2,8 @@
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
 const service = require("./service");
+const redisService = require("../../utils/redis");
 const viewService = require("../blogView/service");
-// const redisService = require("../../utils/redis");
 const { blogResizeImageSize } = require("../../constants");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
@@ -168,37 +168,36 @@ exports.getAll = async (req, res, next) => {
 
 exports.getBySlug = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`oneBlog`);
-    // if (!data)
-
-    const data = await service.findOne({
-      where: {
-        slug: req.params.slug,
-      },
-      include: [
-        {
-          model: BlogCategory,
-          attributes: ["categoryId"],
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
+    let data = await redisService.get(`blog?slug=${req.params.slug}`);
+    if (!data)
+      data = await service.findOne({
+        where: {
+          slug: req.params.slug,
         },
-        {
-          model: BlogTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
+        include: [
+          {
+            model: BlogCategory,
+            attributes: ["categoryId"],
+            include: {
+              model: Category,
+              attributes: categoryAttributes,
+            },
           },
-        },
-      ],
-    });
+          {
+            model: BlogTag,
+            attributes: ["tagId"],
+            include: {
+              model: Tag,
+              attributes: tagAttributes,
+            },
+          },
+        ],
+      });
     await viewService.create({
       blogId: data.id,
       userId: req.requestor?.id ?? null,
     });
-    // redisService.set(`oneBlog`, data);
+    redisService.set(`blog?slug=${req.params.slug}`, data);
 
     res.status(200).send({
       status: "success",

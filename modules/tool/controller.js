@@ -200,65 +200,14 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-exports.getById = async (req, res, next) => {
+exports.getBySlug = async (req, res, next) => {
   try {
     // let data = await redisService.get(`oneTool`);
     // if (!data)
-    const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findOne({
       where: {
         slug: req.params.slug,
-      },
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
-            ),
-            "wishlists",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
-            ),
-            "isWishlisted",
-          ],
-          [
-            sequelize.fn(
-              "ROUND",
-              sequelize.literal(
-                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-              ),
-              1
-            ),
-            "ratingsAverage",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-            ),
-            "totalRatings",
-          ],
-        ],
       },
       include: [
         {
@@ -288,6 +237,77 @@ exports.getById = async (req, res, next) => {
       toolId: data.id,
       userId: req.requestor?.id ?? null,
     });
+    // redisService.set(`oneTool`, data);
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getDynamicBySlug = async (req, res, next) => {
+  try {
+    // let data = await redisService.get(`oneTool`);
+    // if (!data)
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+      attributes: [
+        ...toolAttributes,
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
+          ),
+          "views",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
+          ),
+          "likes",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
+          ),
+          "wishlists",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+        [
+          sequelize.fn(
+            "ROUND",
+            sequelize.literal(
+              `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+            ),
+            1
+          ),
+          "ratingsAverage",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+          ),
+          "totalRatings",
+        ],
+      ],
+    });
+
     // redisService.set(`oneTool`, data);
 
     res.status(200).send({

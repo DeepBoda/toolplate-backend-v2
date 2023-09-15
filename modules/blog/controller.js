@@ -221,8 +221,6 @@ exports.getDynamicBySlug = async (req, res, next) => {
       },
       attributes: [
         ...blogAttributes,
-        // ...["id", "slug"],
-
         [
           sequelize.literal(
             "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"

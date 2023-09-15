@@ -1,6 +1,7 @@
 "use strict";
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
+const createError = require("http-errors");
 const service = require("./service");
 const redisService = require("../../utils/redis");
 const viewService = require("../blogView/service");
@@ -468,9 +469,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     // Check if any files were uploaded and get oldBlogData if needed
-    const oldBlogData = req.file
-      ? await service.findOne({ where: { id: req.params.id } })
-      : {};
+    const oldBlogData = await service.findOne({ where: { id: req.params.id } });
 
     // Check if Image uploaded and if got URL
     if (req.file) {
@@ -499,6 +498,9 @@ exports.update = async (req, res, next) => {
     const [affectedRows] = await service.update(body, {
       where: { id: req.params.id },
     });
+
+    //clear redis cache
+    redisService.del(`blog?slug=${oldBlogData.slug}`);
 
     // Handle categories and tags updates
     const categoryIds = categories.split(",").map(Number);

@@ -589,9 +589,7 @@ exports.getRelatedTools = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    const oldToolData = req.files
-      ? await service.findOne({ where: { id: req.params.id } })
-      : {};
+    const oldToolData = await service.findOne({ where: { id: req.params.id } });
 
     // Check if Image (logo) uploaded and if got URL
     if (req.files?.image) {
@@ -622,6 +620,9 @@ exports.update = async (req, res, next) => {
 
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });
+
+    //clear redis cache
+    if (req.body.title) await redisService.del(`tool?slug=${oldToolData.slug}`);
 
     // Handle the file deletion
     if (req.files?.image && oldToolData.image) {

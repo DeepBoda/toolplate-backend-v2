@@ -499,8 +499,11 @@ exports.update = async (req, res, next) => {
       where: { id: req.params.id },
     });
 
+    // Send the response
+    res.status(200).json({ status: "success", data: { affectedRows } });
+
     //clear redis cache
-    redisService.del(`blog?slug=${oldBlogData.slug}`);
+    if (req.body.title) await redisService.del(`blog?slug=${oldBlogData.slug}`);
 
     // Handle categories and tags updates
     const categoryIds = categories.split(",").map(Number);
@@ -521,12 +524,6 @@ exports.update = async (req, res, next) => {
         blogTagService.create({ blogId: req.params.id, tagId })
       ),
     ]);
-
-    // Send the response
-    res.status(200).json({
-      status: "success",
-      data: { affectedRows },
-    });
 
     // Handle the file deletion
     if (req.file && oldBlogData?.image) {

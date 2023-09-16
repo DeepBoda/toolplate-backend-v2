@@ -594,7 +594,7 @@ exports.update = async (req, res, next) => {
     // Check if Image (logo) uploaded and if got URL
     if (req.files?.image) {
       req.body.image = req.files.image[0].location;
-      resizeAndUploadImage(toolSize, req.body.image, `tool_${e.id}`);
+      resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`);
     }
 
     // Check if Videos uploaded and if got URLs

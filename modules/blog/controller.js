@@ -269,7 +269,7 @@ exports.getAllForAdmin = async (req, res, next) => {
 exports.getBySlug = async (req, res, next) => {
   try {
     let data = await redisService.get(`blog?slug=${req.params.slug}`);
-    if (!data)
+    if (!data) {
       data = await service.findOne({
         where: {
           slug: req.params.slug,
@@ -293,11 +293,12 @@ exports.getBySlug = async (req, res, next) => {
           },
         ],
       });
-    await viewService.create({
+      redisService.set(`blog?slug=${req.params.slug}`, data);
+    }
+    viewService.create({
       blogId: data.id,
       userId: req.requestor?.id ?? null,
     });
-    redisService.set(`blog?slug=${req.params.slug}`, data);
 
     res.status(200).send({
       status: "success",

@@ -309,7 +309,7 @@ exports.getAllForAdmin = async (req, res, next) => {
 exports.getBySlug = async (req, res, next) => {
   try {
     let data = await redisService.get(`tool?slug=${req.params.slug}`);
-    if (!data)
+    if (!data) {
       data = await service.findOne({
         where: {
           slug: req.params.slug,
@@ -337,12 +337,13 @@ exports.getBySlug = async (req, res, next) => {
           },
         ],
       });
+      redisService.set(`tool?slug=${req.params.slug}`, data);
+    }
     //When opens tool, this creates entry for view
-    await viewService.create({
+    viewService.create({
       toolId: data.id,
       userId: req.requestor?.id ?? null,
     });
-    redisService.set(`tool?slug=${req.params.slug}`, data);
 
     res.status(200).send({
       status: "success",

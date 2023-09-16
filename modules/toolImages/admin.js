@@ -10,7 +10,7 @@ router
   .route("/")
   .get(toolImages.getAll)
   .post(
-    upload.single("image"),
+    upload.fields([{ name: "previews", maxCount: 10 }]),
     joiValidator(toolImagesSchema.create),
     toolImages.add
   );

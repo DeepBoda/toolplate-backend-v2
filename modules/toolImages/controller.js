@@ -1,18 +1,31 @@
 "use strict";
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
+const { toolPreviewSize } = require("../../constants");
+const { resizeAndUploadImage } = require("../../utils/imageResize");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 
 // ------------- Only Admin can Create, Get or Delete --------------
 exports.add = async (req, res, next) => {
+  let toolPreviews; // Declare toolPreviews here to make it accessible outside the block
   try {
-    if (req.file) req.body.image = req.file.location;
+    // Check if Previews uploaded and if got URLs
+    if (req.files.previews) {
+      const previews = req.files.previews.map((el) => ({
+        image: el.location,
+        toolId: req.body.toolId,
+      }));
 
-    const blog = await service.create(req.body);
+      // Bulk insert the records into the ToolImage table
+      toolPreviews = await service.bulkCreate(previews);
+      toolPreviews.map((e) => {
+        resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      });
+    }
 
     res.status(200).json({
       status: "success",
-      data: blog,
+      data: toolPreviews,
     });
   } catch (error) {
     console.error(error);

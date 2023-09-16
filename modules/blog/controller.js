@@ -425,10 +425,7 @@ exports.getForAdmin = async (req, res, next) => {
         },
       ],
     });
-    await viewService.create({
-      blogId: req.params.id,
-      userId: null,
-    });
+
     // redisService.set(`oneBlog`, data);
 
     res.status(200).send({

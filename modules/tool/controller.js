@@ -526,11 +526,7 @@ exports.getForAdmin = async (req, res, next) => {
         },
       ],
     });
-    //When opens tool, this creates entry for view
-    await viewService.create({
-      toolId: req.params.id,
-      userId: null,
-    });
+
     // redisService.set(`oneTool`, data);
 
     res.status(200).send({

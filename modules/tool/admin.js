@@ -8,7 +8,7 @@ const { upload } = require("../../middlewares/multer");
 
 router
   .route("/")
-  .get(tool.getAll)
+  .get(tool.getAllForAdmin)
   .post(
     upload.fields([
       { name: "image", maxCount: 1 },

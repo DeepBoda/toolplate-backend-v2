@@ -8,7 +8,7 @@ const { upload } = require("../../middlewares/multer");
 
 router
   .route("/")
-  .get(blog.getAll)
+  .get(blog.getAllForAdmin)
   .post(upload.single("image"), joiValidator(blogSchema.create), blog.add);
 router
   .route("/:id")

@@ -201,6 +201,111 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
+exports.getAllForAdmin = async (req, res, next) => {
+  try {
+    // let data = await redisService.get(`tools`);
+    // if (!data)
+    const { categoryIds, ...query } = req.query;
+
+    const where = {};
+
+    if (categoryIds) {
+      // Split the comma-separated categoryIds into an array
+      const categoryIdArray = categoryIds.split(",").map(Number);
+
+      // Use the `Op.in` operator to find tools that match any of the specified categoryIds
+      where["$toolCategories.categoryId$"] = {
+        [Op.in]: categoryIdArray,
+      };
+    }
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findAndCountAll({
+      ...sqquery(query, {}, ["title"]),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
+            ),
+            "views",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
+            ),
+            "likes",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
+          ],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
+            ),
+            "wishlists",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+            ),
+            "isWishlisted",
+          ],
+          [
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+              ),
+              1
+            ),
+            "ratingsAverage",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+            ),
+            "totalRatings",
+          ],
+        ],
+      },
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+        {
+          model: ToolTag,
+          attributes: ["tagId"],
+          include: {
+            model: Tag,
+            attributes: tagAttributes,
+          },
+        },
+      ],
+    });
+
+    // redisService.set(`tools`, data);
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getBySlug = async (req, res, next) => {
   try {
     let data = await redisService.get(`tool?slug=${req.params.slug}`);

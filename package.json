@@ -1,7 +1,32 @@
 {
-  "name": "nodejs-sequelize-architecture",
-  "version": "0.0.1",
+  "name": "toolplate.ai",
+  "version": "1.0.0",
+  "description": "Toolplate.ai- An extensive Directory of AI tools, reviews and news!",
   "private": true,
+  "author": "Deep Boda <deep@tsttechnology.in>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TST-Technology/toolplate-backend.git"
+  },
+  "homepage": "https://toolplate.ai",
+  "keywords": [
+    "toolplate",
+    "AI",
+    "Node.js"
+  ],
+  "maintainers": [
+    {
+      "name": "Deep Boda",
+      "email": "deep@tsttechnology.in",
+      "signature": "DP"
+    },
+    {
+      "name": "Hiren Kalariya",
+      "email": "kalariyahiren74@gmail.com",
+      "signature": "HK"
+    }
+  ],
   "scripts": {
     "start": "node ./bin/www",
     "dev": "nodemon ./bin/www",

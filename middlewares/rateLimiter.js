@@ -1,10 +1,18 @@
 const rateLimit = require("express-rate-limit");
+const RedisStore = require("rate-limit-redis");
+const client = require(".././config/redis");
 
-//example of ratelimiter
-exports.BuySellLimiter = rateLimit({
-  windowMs: 1 * 12 * 1000, // 10 sec
-  max: 3, // Limit each IP to 2 requests per `window` (here, per 10 second)
-  message: async (req, res) => {
+
+exports.readLimit = rateLimit({
+  // Rate limiter configuration
+  windowMs: 1 * 30 * 1000, // 30 sec
+  max: 3,
+  // Redis store configuration
+  store: new RedisStore({
+    sendCommand: (...args) => client.sendCommand(args),
+  }),
+
+  message: (req, res) => {
     res.status(200).json({
       status: "fail",
       message:

@@ -5,6 +5,10 @@ exports.create = async (data) => {
   return Model.create(data);
 };
 
+exports.bulkCreate = async (data) => {
+  return Model.bulkCreate(data);
+};
+
 exports.findOne = async (conditions) => {
   return Model.findOne(conditions);
 };

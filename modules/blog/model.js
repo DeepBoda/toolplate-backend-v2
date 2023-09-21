@@ -21,6 +21,9 @@ const Blog = sequelize.define(
     image: {
       type: DataTypes.STRING,
     },
+    alt: {
+      type: DataTypes.STRING,
+    },
     readTime: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -37,5 +40,7 @@ const Blog = sequelize.define(
     paranoid: true,
   }
 );
+
+// Blog.sync({ alter: true });
 
 module.exports = Blog;

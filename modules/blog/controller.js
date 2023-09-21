@@ -2,6 +2,7 @@
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
 const createError = require("http-errors");
+const slugify = require("slugify");
 const service = require("./service");
 const redisService = require("../../utils/redis");
 const viewService = require("../blogView/service");
@@ -23,45 +24,52 @@ const { resizeAndUploadImage } = require("../../utils/imageResize");
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    if (req.file) req.body.image = req.file.location;
+    // Check if an image file is provided and add the file location to the request body
+    if (req.file) {
+      req.body.image = req.file.location;
+    }
 
-    //create slug url based on title
-    req.body.slug = req.body.title
-      .trim()
-      .toLowerCase()
-      .replace(/[?!$]/g, "")
-      .replace(/[\s/]+/g, "-"); // Replace spaces or / with hyphens
+    // Create slug URL based on title
+    req.body.slug = slugify(req.body.title, {
+      replacement: "-", // Replace spaces with hyphens
+      lower: true, // Convert to lowercase
+      remove: /[*+~.()'"!:@]/g, // Remove special characters
+    });
 
     const { categories, tags, ...body } = req.body;
+
     // Step 1: Create the new blog entry in the `blog` table
     const blog = await service.create(body);
 
     // Step 2: Get the comma-separated `categories` and `tags` IDs
-    const categoryIds = categories
-      .split(",")
-      .map((categoryId) => parseInt(categoryId));
-    const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
+    const categoryIds = categories.split(",").map(Number);
+    const tagIds = tags.split(",").map(Number);
 
-    // Step 3: Add entries in the `blogCategory` table
-    for (const categoryId of categoryIds) {
-      await blogCategoryService.create({
-        blogId: blog.id,
-        categoryId,
-      });
-    }
+    // Step 3: Create an array of objects for bulk insert in `blogCategory` table
+    const categoryBulkInsertData = categoryIds.map((categoryId) => ({
+      blogId: blog.id,
+      categoryId,
+    }));
 
-    // Step 4: Add entries in the `blogTag` table
-    for (const tagId of tagIds) {
-      await blogTagService.create({
-        blogId: blog.id,
-        tagId,
-      });
-    }
+    // Step 4: Create an array of objects for bulk insert in `blogTag` table
+    const tagBulkInsertData = tagIds.map((tagId) => ({
+      blogId: blog.id,
+      tagId,
+    }));
 
+    // Step 5: Use bulk create operations for `blogCategory` and `blogTag`
+    await Promise.all([
+      blogCategoryService.bulkCreate(categoryBulkInsertData),
+      blogTagService.bulkCreate(tagBulkInsertData),
+    ]);
+
+    // Send the HTTP response with a success status and the created blog entry
     res.status(200).json({
       status: "success",
       data: blog,
     });
+
+    // Resize and upload the blog image
     resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`);
   } catch (error) {
     console.error(error);
@@ -562,45 +570,44 @@ exports.getRelatedBlogs = async (req, res, next) => {
   }
 };
 
-// ---------- Only Admin can Update/Delete ----------
+// ---------- Only Admin can Update/Delete ----------exports.update = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
-    // Check if any files were uploaded and get oldBlogData if needed
-    const oldBlogData = await service.findOne({ where: { id: req.params.id } });
+    const { id } = req.params;
+    const { file, body } = req;
 
-    // Check if Image uploaded and if got URL
-    if (req.file) {
-      req.body.image = req.file.location;
+    // Retrieve the old blog data based on the provided blog ID
+    const oldBlogData = await service.findOne({ where: { id } });
+
+    // Check if an image is uploaded and update the image property in the request body
+    if (file) {
+      body.image = file.location;
 
       // Resize and upload the image (if needed)
-      resizeAndUploadImage(
-        blogResizeImageSize,
-        req.file.location,
-        `blog_${oldBlogData.id}`
-      );
+      resizeAndUploadImage(blogResizeImageSize, file.location, `blog_${id}`);
     }
 
     // Create slug URL based on title
-    if (req.body.title) {
-      req.body.slug = req.body.title
-        .trim()
-        .toLowerCase()
-        .replace(/[?!$]/g, "")
-        .replace(/[\s/]+/g, "-");
+    if (body.title) {
+      body.slug = slugify(body.title, {
+        replacement: "-", // Replace spaces with hyphens
+        lower: true, // Convert to lowercase
+        remove: /[*+~.()'"!:@]/g, // Remove special characters
+      });
     }
 
-    const { categories, tags, ...body } = req.body;
+    const { categories, tags, ...updatedData } = body;
 
     // Update the blog data
-    const [affectedRows] = await service.update(body, {
-      where: { id: req.params.id },
-    });
+    const [affectedRows] = await service.update(updatedData, { where: { id } });
 
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });
 
-    //clear redis cache
-    if (req.body.title) await redisService.del(`blog?slug=${oldBlogData.slug}`);
+    // Clear Redis cache
+    if (body.title) {
+      await redisService.del(`blog?slug=${oldBlogData.slug}`);
+    }
 
     // Handle categories and tags updates
     const categoryIds = categories.split(",").map(Number);
@@ -608,23 +615,31 @@ exports.update = async (req, res, next) => {
 
     // Delete existing associations with categories and tags
     await Promise.all([
-      blogCategoryService.delete({ where: { blogId: req.params.id } }),
-      blogTagService.delete({ where: { blogId: req.params.id } }),
+      blogCategoryService.delete({ where: { blogId: id } }),
+      blogTagService.delete({ where: { blogId: id } }),
     ]);
 
-    // Add updated entries in the `blogCategory` and `blogTag` tables
+    // Create an array of objects for bulk insert in `blogCategory` table
+    const categoryBulkInsertData = categoryIds.map((categoryId) => ({
+      blogId: id,
+      categoryId,
+    }));
+
+    // Create an array of objects for bulk insert in `blogTag` table
+    const tagBulkInsertData = tagIds.map((tagId) => ({
+      blogId: id,
+      tagId,
+    }));
+
+    // Use bulk create operations for `blogCategory` and `blogTag`
     await Promise.all([
-      ...categoryIds.map((categoryId) =>
-        blogCategoryService.create({ blogId: req.params.id, categoryId })
-      ),
-      ...tagIds.map((tagId) =>
-        blogTagService.create({ blogId: req.params.id, tagId })
-      ),
+      blogCategoryService.bulkCreate(categoryBulkInsertData),
+      blogTagService.bulkCreate(tagBulkInsertData),
     ]);
 
     // Handle the file deletion
-    if (req.file && oldBlogData?.image) {
-      deleteFilesFromS3([oldBlogData?.image]);
+    if (file && oldBlogData?.image) {
+      deleteFilesFromS3([oldBlogData.image]);
     }
   } catch (error) {
     console.error(error);
@@ -696,4 +711,5 @@ const makeSLug = async (req, res, next) => {
     console.log(error);
   }
 };
+// makeSLug();
 // makeSLug();

@@ -2,6 +2,7 @@
 const { Op, where } = require("sequelize");
 const sequelize = require("../../config/db");
 const createError = require("http-errors");
+const slugify = require("slugify");
 const service = require("./service");
 const viewService = require("../toolView/service");
 const redisService = require("../../utils/redis");
@@ -35,18 +36,16 @@ exports.add = async (req, res, next) => {
 
       // Check if Videos uploaded and if got URLs
       if (req.files.videos) {
-        const videos = req.files.videos.map((el) => el.location);
-        req.body.videos = videos;
+        req.body.videos = req.files.videos.map((el) => el.location);
       }
     }
 
     // Create slug URL based on title
-    req.body.slug = req.body.title
-      .trim()
-      .toLowerCase()
-      .replace(/[?!$]/g, "")
-      .replace(/[\s/]+/g, "-"); // Replace spaces or / with hyphens
-
+    req.body.slug = slugify(req.body.title, {
+      replacement: "-", // replace spaces with hyphens
+      lower: true, // convert to lowercase
+      remove: /[*+~()'"!:@]/g, // remove special characters
+    });
     const { categories, tags, ...body } = req.body;
 
     // Step 1: Create the new tool entry in the `tool` table
@@ -61,35 +60,38 @@ exports.add = async (req, res, next) => {
 
       // Bulk insert the records into the ToolImage table
       const toolPreviews = await toolImageService.bulkCreate(previews);
-      toolPreviews.map((e) => {
+      toolPreviews.forEach((e) => {
         resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
       });
     }
 
     // Step 2: Get the comma-separated `categories` and `tags` IDs
-    const categoryIds = categories
-      .split(",")
-      .map((categoryId) => parseInt(categoryId));
-    const tagIds = tags.split(",").map((tagId) => parseInt(tagId));
+    const categoryIds = categories.split(",").map(Number);
+    const tagIds = tags.split(",").map(Number);
 
     // Step 3: Add entries in the `toolCategory` table using bulk insert
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       toolId: tool.id,
       categoryId,
     }));
-    await toolCategoryService.bulkCreate(categoryBulkInsertData);
 
     // Step 4: Add entries in the `toolTag` table using bulk insert
     const tagBulkInsertData = tagIds.map((tagId) => ({
       toolId: tool.id,
       tagId,
     }));
-    await toolTagService.bulkCreate(tagBulkInsertData);
+
+    // Use Promise.all to execute bulk inserts concurrently
+    await Promise.all([
+      toolCategoryService.bulkCreate(categoryBulkInsertData),
+      toolTagService.bulkCreate(tagBulkInsertData),
+    ]);
 
     res.status(200).json({
       status: "success",
       data: tool,
     });
+
     resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
   } catch (error) {
     console.error(error);
@@ -691,7 +693,10 @@ exports.getRelatedTools = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    const oldToolData = await service.findOne({ where: { id: req.params.id } });
+    const { id } = req.params;
+
+    // Retrieve the old tool data from the database based on the provided tool ID.
+    const oldToolData = await service.findOne({ where: { id } });
 
     // Check if Image (logo) uploaded and if got URL
     if (req.files?.image) {
@@ -706,24 +711,22 @@ exports.update = async (req, res, next) => {
 
     // Create slug URL based on title
     if (req.body.title) {
-      req.body.slug = req.body.title
-        .trim()
-        .toLowerCase()
-        .replace(/[?!$]/g, "")
-        .replace(/[\s/]+/g, "-"); // Replace spaces or / with hyphens
+      req.body.slug = slugify(req.body.title, {
+        replacement: "-", // replace spaces with hyphens
+        lower: true, // convert to lowercase
+        remove: /[*+~()'"!:@]/g, // remove special characters
+      });
     }
 
     const { categories, tags, ...body } = req.body;
 
     // Update the tool data
-    const [affectedRows] = await service.update(body, {
-      where: { id: req.params.id },
-    });
+    const [affectedRows] = await service.update(body, { where: { id } });
 
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });
 
-    //clear redis cache
+    // Clear Redis cache
     if (req.body.title) await redisService.del(`tool?slug=${oldToolData.slug}`);
 
     // Handle the file deletion
@@ -742,18 +745,20 @@ exports.update = async (req, res, next) => {
 
     // Delete old associations
     await Promise.all([
-      toolCategoryService.delete({ where: { toolId: req.params.id } }),
-      toolTagService.delete({ where: { toolId: req.params.id } }),
+      toolCategoryService.delete({ where: { toolId: id } }),
+      toolTagService.delete({ where: { toolId: id } }),
     ]);
 
-    // Create new associations
+    // Create new associations using bulk create operations
+    const categoryBulkInsertData = categoryIds.map((categoryId) => ({
+      toolId: id,
+      categoryId,
+    }));
+    const tagBulkInsertData = tagIds.map((tagId) => ({ toolId: id, tagId }));
+
     await Promise.all([
-      ...categoryIds.map((categoryId) =>
-        toolCategoryService.create({ toolId: req.params.id, categoryId })
-      ),
-      ...tagIds.map((tagId) =>
-        toolTagService.create({ toolId: req.params.id, tagId })
-      ),
+      toolCategoryService.bulkCreate(categoryBulkInsertData),
+      toolTagService.bulkCreate(tagBulkInsertData),
     ]);
   } catch (error) {
     console.error(error);

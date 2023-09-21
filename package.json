@@ -2,9 +2,13 @@
   "name": "toolplate.ai",
   "version": "1.0.0",
   "description": "Toolplate.ai- An extensive Directory of AI tools, reviews and news!",
+  "main": "app.js",
   "private": true,
   "author": "Deep Boda <deep@tsttechnology.in>",
-  "license": "MIT",
+  "license": "ISC",
+  "engines": {
+    "node": "16.20.1"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/TST-Technology/toolplate-backend.git"
@@ -69,6 +73,7 @@
     "redis": "^4.6.8",
     "sequelize": "^6.21.6",
     "sharp": "^0.32.4",
+    "slugify": "^1.6.6",
     "winston": "^3.10.0",
     "xmlbuilder": "^15.1.1"
   }

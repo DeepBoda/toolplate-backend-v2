@@ -23,27 +23,31 @@ exports.resizeAndUploadImage = async (
     });
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
-    // Resize the original image and create resized versions
+    // Create a pipeline for parallel image processing
+    const pipeline = sharp(originalImageBuffer);
+
+    // Configure AVIF settings
+    pipeline.avif({
+      quality: 100, // Adjust quality as needed (0-100)
+      speed: 8, // Adjust speed for performance vs. size trade-off (0-8)
+    });
+
+    // Resize the original image and create resized versions in parallel
     const resizePromises = sizes.map((size) => {
-      return sharp(originalImageBuffer)
+      return pipeline
+        .clone() // Clone the pipeline to avoid modifying the original
         .resize(size.width, size.height, {
-          fit: "cover", // Use 'inside' to avoid stretching or cropping
-          withoutEnlargement: true, // Do not enlarge the image if it's smaller than the target size,
-          centerSampling: true,
-        })
-        .toFormat("avif")
-        .avif({
-          quality: 100,
-          reductionEffort: 6,
-          smartSubsample: true,
-          force: true,
+          fit: "contain",
+          withoutEnlargement: true,
+          progressive: true, // Enable progressive loading
+          kernel: sharp.kernel.lanczos3, // Set resampling kernel for quality
         })
         .toBuffer();
     });
 
     const resizedImages = await Promise.all(resizePromises);
 
-    // Upload the original image and resized versions to S3
+    // Upload the original image and resized versions to S3 in parallel
     const uploadPromises = sizes.map((size, index) => {
       return s3Client.putObject({
         Bucket: process.env.BUCKET,

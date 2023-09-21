@@ -24,10 +24,9 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // Check if req.requestor is defined before using it
-    const userId = req.requestor ? req.requestor.id : null;
+    const userId = req.requestor?.id || null; // Check if req.requestor is defined before using it
 
-    const data = await service.findAndCountAll({
+    const data = await service.findAll({
       ...sqquery(req.query),
       attributes: [
         "id",
@@ -83,10 +82,18 @@ exports.getAll = async (req, res, next) => {
       replacements: { UserId: userId },
     });
 
+    const totalComments = data.length; // Calculate the total count of comments
+    const totalCommentReplies = data.reduce(
+      (total, comment) => total + (comment.blogCommentReplies || []).length,
+      0
+    ); // Calculate the total count of comment replies
+
     res.status(200).send({
       status: "success",
-      counting: data.length,
-      data,
+      data: {
+        count: totalComments + totalCommentReplies,
+        rows: data,
+      },
     });
   } catch (error) {
     next(error);

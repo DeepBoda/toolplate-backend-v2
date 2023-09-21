@@ -15,6 +15,7 @@ exports.blogAttributes = [
   "title",
   "description",
   "image",
+  "alt",
   "readTime",
   "slug",
   "createdAt",

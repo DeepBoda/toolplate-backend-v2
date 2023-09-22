@@ -14,6 +14,9 @@ const ToolImage = sequelize.define(
     image: {
       type: DataTypes.STRING,
     },
+    alt: {
+      type: DataTypes.STRING,
+    },
   },
   {
     paranoid: true,
@@ -25,5 +28,7 @@ Tool.hasMany(ToolImage, {
   },
 });
 ToolImage.belongsTo(Tool);
+
 // ToolImage.sync({ alter: true });
+
 module.exports = ToolImage;

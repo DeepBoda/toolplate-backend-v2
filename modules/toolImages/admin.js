@@ -15,6 +15,6 @@ router
     toolImages.add
   );
 
-router.route("/:id").delete(toolImages.delete);
+router.route("/:id").patch(toolImages.update).delete(toolImages.delete);
 
 module.exports = router;

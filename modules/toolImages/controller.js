@@ -49,6 +49,22 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
+exports.update = async (req, res, next) => {
+  try {
+    // Update the tool previews data
+    const [affectedRows] = await service.update(req.body, { where: { id } });
+
+    // Send the response
+    res.status(200).json({ status: "success", data: { affectedRows } });
+
+    // Clear Redis cache
+    // if (req.body.title) await redisService.del(`tool?slug=${oldToolData.slug}`);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 exports.delete = async (req, res, next) => {
   try {
     // Find the blog to get the image URL

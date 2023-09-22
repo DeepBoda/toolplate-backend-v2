@@ -319,7 +319,7 @@ exports.getBySlug = async (req, res, next) => {
         include: [
           {
             model: ToolImage,
-            attributes: ["id", "image"],
+            attributes: ["id", "image", "alt"],
           },
           {
             model: ToolCategory,
@@ -508,7 +508,7 @@ exports.getForAdmin = async (req, res, next) => {
       include: [
         {
           model: ToolImage,
-          attributes: ["id", "image"],
+          attributes: ["id", "image", "alt"],
         },
         {
           model: ToolCategory,

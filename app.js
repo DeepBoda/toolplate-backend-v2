@@ -26,7 +26,11 @@ app.use(cors());
 // Enable compression middleware
 app.use(compression());
 // Enhance security with helmet middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Customize your CSP policy as needed
+  })
+);
 
 // Routes
 app.use("/", indexRouter);

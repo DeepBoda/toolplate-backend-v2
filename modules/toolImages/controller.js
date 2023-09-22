@@ -52,7 +52,9 @@ exports.getAll = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     // Update the tool previews data
-    const [affectedRows] = await service.update(req.body, { where: { id } });
+    const [affectedRows] = await service.update(req.body, {
+      where: { id: req.params.id },
+    });
 
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });

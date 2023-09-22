@@ -29,6 +29,4 @@ Tool.hasMany(ToolImage, {
 });
 ToolImage.belongsTo(Tool);
 
-// ToolImage.sync({ alter: true });
-
 module.exports = ToolImage;

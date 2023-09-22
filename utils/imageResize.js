@@ -46,12 +46,15 @@ exports.resizeAndUploadImage = async (
 
     const resizedImages = await Promise.all(resizePromises);
 
+    // Convert resizedImages to Buffers
+    const resizedBuffers = resizedImages.map((image) => image.toBuffer());
+
     // Upload the original image and resized versions to S3 in parallel
     const uploadPromises = sizes.map((size, index) => {
       return s3Client.putObject({
         Bucket: process.env.BUCKET,
         Key: `${keyPrefix}_${size.width}_${size.height}.avif`,
-        Body: resizedImages[index].toBuffer(), // Ensure it's a Buffer
+        Body: resizedBuffers[index], // Use the Buffers
         ACL: "public-read",
         ContentType: "image/avif",
       });

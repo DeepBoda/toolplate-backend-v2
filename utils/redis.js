@@ -1,53 +1,76 @@
-const logger = require("./logger");
 const redisClient = require("../config/redis");
 
-// Function to get data from Redis
+/**
+ * Get data from Redis.
+ * @param {String} endPoint - The endpoint to retrieve data from Redis.
+ * @returns {Promise<Object|null>} - The retrieved data from Redis as a parsed JSON object, or null if the data is not found or an error occurs.
+ */
 exports.get = async (endPoint) => {
   try {
-    const data = await redisClient.GET(endPoint); // Assuming getAsync is a promisified version of GET
-
+    const data = await redisClient.GET(endPoint);
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    logger.error(`Error in Redis GET operation:\n ${error}`);
+    console.error(`Error in Redis GET operation:\n ${error}`);
     return null;
   }
 };
 
-// Function to set data in Redis
+/**
+ * Set data in Redis.
+ * @param {String} endPoint - The key under which the data will be stored in Redis.
+ * @param {Array | Object | String | Number | Boolean} data - The data to be stored in Redis. It can be an array, object, string, number, or boolean.
+ */
 exports.set = async (endPoint, data) => {
   try {
-    await redisClient.SET(endPoint, JSON.stringify(data)); // Assuming setAsync is a promisified version of SET
+    const jsonData = JSON.stringify(data);
+    await redisClient.SET(endPoint, jsonData);
   } catch (error) {
-    logger.error(`Error in Redis SET operation:\n ${error}`);
+    console.error(`Error in Redis SET operation:\n ${error}`);
   }
 };
 
-// Function to delete a key from Redis
+/**
+ * Delete a key from Redis.
+ * @param {String} endPoint - The key to be deleted from Redis.
+ */
 exports.del = async (endPoint) => {
   try {
-    await redisClient.DEL(endPoint); // Assuming delAsync is a promisified version of DEL
+    await redisClient.DEL(endPoint);
   } catch (error) {
-    logger.error(`Error in Redis DEL operation:\n ${error}`);
+    console.error(`Error in Redis DEL operation:\n ${error}`);
   }
 };
 
-// Function to delete multiple keys matching a pattern
+/**
+ * Delete multiple keys matching a pattern from Redis.
+ * @param {String} endPoint - The pattern used to match the keys to be deleted from Redis.
+ */
 exports.hDel = async (endPoint) => {
   try {
-    const keys = await redisClient.keysAsync(endPoint); // Assuming keysAsync is a promisified version of KEYS
+    let keys = await redisClient.KEYS(endPoint);
     if (keys.length) {
-      await redisClient.DEL(keys); // Assuming delAsync is a promisified version of DEL
+      await redisClient.DEL(keys);
     }
   } catch (error) {
-    logger.error(`Error in Redis HDEL operation:\n ${error}`);
+    console.error(`Error in Redis hDel operation:\n ${error}`);
   }
 };
 
-// Function to flush all keys in Redis (use with caution)
-exports.flushAll = async () => {
+/**
+ * Flush all data in Redis.
+ * @param {Request} req - The request object representing the HTTP request made to the server.
+ * @param {Response} res - The response object representing the HTTP response that will be sent back to the client.
+ * @param {NextFunction} next - The next middleware function in the request-response cycle.
+ */
+exports.flushAll = async (req, res, next) => {
   try {
-    await redisClient.flushallAsync(); // Assuming flushallAsync is a promisified version of FLUSHALL
+    await redisClient.FLUSHALL();
+    res.status(200).json({
+      status: "success",
+      message: "Redis cleaned successfully!",
+    });
   } catch (error) {
-    logger.error(`Error in Redis FLUSHALL operation:\n ${error}`);
+    console.error(`Error in Redis FLUSHALL operation:\n ${error}`);
+    next(error);
   }
 };

@@ -40,4 +40,5 @@ const resizeImageDelete = async () => {
     console.log(error);
   }
 };
+
 imageResize();

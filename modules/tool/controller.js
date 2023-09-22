@@ -44,7 +44,7 @@ exports.add = async (req, res, next) => {
     req.body.slug = slugify(req.body.title, {
       replacement: "-", // replace spaces with hyphens
       lower: true, // convert to lowercase
-      remove: /[*+~()'"!:@]/g, // remove special characters
+      remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
     });
     const { categories, tags, ...body } = req.body;
 
@@ -714,7 +714,7 @@ exports.update = async (req, res, next) => {
       req.body.slug = slugify(req.body.title, {
         replacement: "-", // replace spaces with hyphens
         lower: true, // convert to lowercase
-        remove: /[*+~()'"!:@]/g, // remove special characters
+        remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
       });
     }
 
@@ -822,18 +822,18 @@ exports.delete = async (req, res, next) => {
 
 const makeSLug = async (req, res, next) => {
   try {
-    const allBlog = await service.findAll({
+    const allTool = await service.findAll({
       attributes: ["id", "title"],
     });
 
-    for (let i in allBlog) {
-      let slug = allBlog[i].title
-        .trim()
-        .toLowerCase()
-        .replaceAll(/[?!.$]/g, "")
-        .replaceAll(" ", "-");
-      allBlog[i].slug = slug;
-      allBlog[i].save();
+    for (let i in allTool) {
+      let slug = slugify(allTool[i].title, {
+        replacement: "-", // replace spaces with hyphens
+        lower: true, // convert to lowercase
+        remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
+      });
+      allTool[i].slug = slug;
+      allTool[i].save();
     }
   } catch (error) {
     console.log(error);

@@ -37,12 +37,12 @@ exports.resizeAndUploadImage = async (
       return pipeline
         .clone() // Clone the pipeline to avoid modifying the original
         .resize(size.width, size.height, {
-          fit: "contain",
+          fit: "inside", // Maintain aspect ratio, fit inside specified dimensions
           withoutEnlargement: true,
           progressive: true, // Enable progressive loading
           kernel: sharp.kernel.lanczos3, // Set resampling kernel for quality
         })
-        .toBuffer();
+        .sharpen(); // Apply sharpness to enhance quality
     });
 
     const resizedImages = await Promise.all(resizePromises);

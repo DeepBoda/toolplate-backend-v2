@@ -33,7 +33,7 @@ exports.add = async (req, res, next) => {
     req.body.slug = slugify(req.body.title, {
       replacement: "-", // Replace spaces with hyphens
       lower: true, // Convert to lowercase
-      remove: /[*+~.()'"!:@]/g, // Remove special characters
+      remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
     });
 
     const { categories, tags, ...body } = req.body;
@@ -592,7 +592,7 @@ exports.update = async (req, res, next) => {
       body.slug = slugify(body.title, {
         replacement: "-", // Replace spaces with hyphens
         lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@]/g, // Remove special characters
+        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
       });
     }
 
@@ -699,11 +699,11 @@ const makeSLug = async (req, res, next) => {
     });
 
     for (let i in allBlog) {
-      let slug = allBlog[i].title
-        .trim()
-        .toLowerCase()
-        .replaceAll(/[?!.$]/g, "")
-        .replaceAll(" ", "-");
+      let slug = slugify(allBlog[i].title, {
+        replacement: "-", // Replace spaces with hyphens
+        lower: true, // Convert to lowercase
+        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+      });
       allBlog[i].slug = slug;
       allBlog[i].save();
     }

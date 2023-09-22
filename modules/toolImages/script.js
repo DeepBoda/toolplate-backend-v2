@@ -39,3 +39,4 @@ const toolPreviewToToolImage = async () => {
     console.log(error);
   }
 };
+imageResize();

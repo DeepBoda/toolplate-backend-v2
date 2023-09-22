@@ -27,8 +27,8 @@ exports.resizeAndUploadImage = async (
 
     // Configure AVIF settings
     pipeline.avif({
-      quality: 100,
-      speed: 6,
+      quality: 90,
+      speed: 0,
     });
 
     // Resize the original image and create resized versions in parallel
@@ -49,15 +49,13 @@ exports.resizeAndUploadImage = async (
     // Upload the original image and resized versions to S3 in parallel
     const uploadPromises = sizes.map(async (size, index) => {
       const resizedBuffer = await resizedImages[index].toBuffer();
-      return s3Client
-        .putObject({
-          Bucket: process.env.BUCKET,
-          Key: `${keyPrefix}_${size.width}_${size.height}.avif`,
-          Body: resizedBuffer,
-          ACL: "public-read",
-          ContentType: "image/avif",
-        })
-        .promise();
+      return s3Client.putObject({
+        Bucket: process.env.BUCKET,
+        Key: `${keyPrefix}_${size.width}_${size.height}.avif`,
+        Body: resizedBuffer,
+        ACL: "public-read",
+        ContentType: "image/avif",
+      });
     });
 
     await Promise.all(uploadPromises);

@@ -1,9 +1,7 @@
-"use strict";
 const AWS = require("@aws-sdk/client-s3");
 const sharp = require("sharp");
 require("dotenv").config();
 const axios = require("axios");
-
 const s3Client = new AWS.S3({
   region: process.env.AWS_REGION,
   credentials: {
@@ -22,42 +20,44 @@ exports.resizeAndUploadImage = async (
     const response = await axios.get(originalImageS3Link, {
       responseType: "arraybuffer",
     });
-
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
     // Create a pipeline for parallel image processing
     const pipeline = sharp(originalImageBuffer);
 
-    // Configure AVIF settings for high quality
+    // Configure AVIF settings
     pipeline.avif({
-      quality: 80, // Adjust quality as needed (0-100), 80 is a good balance of quality and file size
-      speed: 0, // Use speed 0 for highest quality, but it may be slower
+      quality: 100,
+      speed: 6,
     });
 
     // Resize the original image and create resized versions in parallel
     const resizePromises = sizes.map((size) => {
-      return pipeline.clone().resize(size.width, size.height, {
-        fit: "inside",
-        withoutEnlargement: true,
-        progressive: true,
-        kernel: sharp.kernel.lanczos3,
-      });
+      return pipeline
+        .clone()
+        .resize(size.width, size.height, {
+          fit: "inside",
+          withoutEnlargement: true,
+          progressive: true,
+          kernel: sharp.kernel.lanczos3,
+        })
+        .sharpen();
     });
 
     const resizedImages = await Promise.all(resizePromises);
 
-    // Convert resizedImages to Buffers
-    const resizedBuffers = resizedImages.map((image) => image.toBuffer());
-
     // Upload the original image and resized versions to S3 in parallel
-    const uploadPromises = sizes.map((size, index) => {
-      return s3Client.putObject({
-        Bucket: process.env.BUCKET,
-        Key: `${keyPrefix}_${size.width}_${size.height}.avif`,
-        Body: resizedBuffers[index], // Use the Buffers
-        ACL: "public-read",
-        ContentType: "image/avif",
-      });
+    const uploadPromises = sizes.map(async (size, index) => {
+      const resizedBuffer = await resizedImages[index].toBuffer();
+      return s3Client
+        .putObject({
+          Bucket: process.env.BUCKET,
+          Key: `${keyPrefix}_${size.width}_${size.height}.avif`,
+          Body: resizedBuffer,
+          ACL: "public-read",
+          ContentType: "image/avif",
+        })
+        .promise();
     });
 
     await Promise.all(uploadPromises);

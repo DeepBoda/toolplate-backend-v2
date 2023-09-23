@@ -433,7 +433,7 @@ exports.search = async (req, res, next) => {
       service.findAll({
         where: {
           title: {
-            [Op.like]: `%${req.params.title}%`,
+            [Op.like]: `%${req.query.title}%`,
           },
         },
         attributes: ["id", "image", "title", "description", "slug"],
@@ -441,7 +441,7 @@ exports.search = async (req, res, next) => {
       blogService.findAll({
         where: {
           title: {
-            [Op.like]: `%${req.params.title}%`,
+            [Op.like]: `%${req.query.title}%`,
           },
         },
         attributes: ["id", "image", "title", "description", "slug"],

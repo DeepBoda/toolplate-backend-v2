@@ -64,6 +64,7 @@ app.use(
 );
 
 // Routes
+app.use("/", indexRouter);
 app.use("/", restrictByIP, indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error

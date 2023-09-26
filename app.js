@@ -21,6 +21,29 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+//Ip protected Add
+const allowedIPs = ["192.168.1.100", "127.0.0.1", "::1"];
+
+const getIp = (req) => {
+  if (req.headers["x-forwarded-for"] || req.connection.remoteAddress) {
+    return (req.headers["x-forwarded-for"] || req.connection.remoteAddress)
+      .split(",")[0]
+      .trim();
+  }
+  return "0.0.0.0";
+};
+function restrictByIP(req, res, next) {
+  const clientIP = getIp(req); // Get the client's IP address
+  console.log(clientIP);
+  // Check if the client's IP is in the whitelist
+  if (allowedIPs.includes(clientIP)) {
+    next(); // Allow the request to proceed to the next middleware
+  } else {
+    // If the IP is not in the whitelist, respond with a 403 Forbidden status
+    res.status(403).send("Access denied. Your IP is not whitelisted.");
+  }
+}
+
 // Configure CORS
 app.use(cors());
 // Enable compression middleware
@@ -34,6 +57,7 @@ app.use(
 
 // Routes
 app.use("/", indexRouter);
+// app.use("/", restrictByIP, indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
 app.use((req, res, next) => {

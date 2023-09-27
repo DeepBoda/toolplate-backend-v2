@@ -7,25 +7,17 @@ const { cl, jwtDecoder } = require("../utils/service");
 const createHttpError = require("http-errors");
 
 exports.protectRoute = (roles) => async (req, res, next) => {
-  try {
-    const jwtUser = await jwtDecoder(req);
-    if (!roles.includes(jwtUser.role)) {
-      return next(createHttpError(401, "Access denied"));
-    }
+  const { role } = req.requestor || {}; // Destructure the role from req.requestor
 
-    req.requestor = jwtUser;
-    next();
-  } catch (error) {
-    return next(createHttpError(401, "Invalid Jwt Token"));
+  if (!roles.includes(role)) {
+    return next(createHttpError(401, "Access denied"));
   }
+
+  next();
 };
 
 exports.authMiddleware = async (req, res, next) => {
-  let token;
-
-  if (req.headers.authorization?.startsWith("Bearer")) {
-    token = req.headers.authorization.split(" ")[1];
-  }
+  const token = req.headers.authorization?.split(" ")[1];
 
   try {
     let requestor = null;
@@ -55,22 +47,20 @@ exports.authMiddleware = async (req, res, next) => {
       requestor.dataValues.role = role;
       req.requestor = requestor.toJSON();
     } else {
-      // If requestor is not found, set it to null
       req.requestor = null;
     }
-
-    next();
 
     if (requestor) {
       cl("🧑🏻‍💻 API Call --->", {
         API: req.method + " " + req.originalUrl,
         body: req.body,
-        // query: req.query,
         requestor: requestor.toJSON(),
       });
     }
+
+    next();
   } catch (error) {
     console.error("Error in authMiddleware:\n", error);
-    next(error);
+    return next(error);
   }
 };

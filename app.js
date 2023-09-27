@@ -21,6 +21,37 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+//Ip protected Add
+const allowedIPs = [
+  "192.168.1.100", // Local router IP
+  "127.0.0.1", // Localhost (loopback) IP
+  "::1", // IPv6 loopback address (localhost)
+  "13.126.138.220", // Add your EC2 instance IP address here
+];
+
+const getIp = (req) => {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  const remoteAddress = req.connection.remoteAddress;
+
+  if (forwardedFor || remoteAddress) {
+    return (forwardedFor || remoteAddress).split(",")[0].trim();
+  }
+
+  return "0.0.0.0";
+};
+function restrictByIP(req, res, next) {
+  const clientIP = getIp(req); // Get the client's IP address
+  console.log(clientIP);
+
+  // Check if the client's IP is in the whitelist
+  if (allowedIPs.includes(clientIP)) {
+    next(); // Allow the request to proceed to the next middleware
+  } else {
+    // If the IP is not in the whitelist, respond with a 403 Forbidden status
+    res.status(403).send("Access denied. Your IP is not whitelisted.");
+  }
+}
+
 // Configure CORS
 app.use(cors());
 // Enable compression middleware
@@ -34,6 +65,7 @@ app.use(
 
 // Routes
 app.use("/", indexRouter);
+app.use("/", restrictByIP, indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
 app.use((req, res, next) => {
@@ -124,21 +156,21 @@ app.use((err, req, res, next) => {
     message: err.message || "Unknown Error",
   });
 
-  // // Logging the error
-  // if (err.status >= 500 || res.statusCode >= 500) {
-  //   responseInClientSlack({
-  //     attachments: [
-  //       {
-  //         title: `error`,
-  //         text: `\n\nstatusCode: ${err?.status} \n\nMessage : ${err?.message}\n\n stack: ${err?.stack} \n\n user:${req?.requestor?.id}`,
-  //         color: "#FF0000",
-  //       },
-  //     ],
-  //   });
-  // }
-
-  // Logging error and handling
   app.use((err, req, res, next) => {
+    // Logging the error to the slack
+    // if (err.status >= 500 || res.statusCode >= 500) {
+    //   responseInClientSlack({
+    //     attachments: [
+    //       {
+    //         title: `error`,
+    //         text: `\n\nstatusCode: ${err?.status} \n\nMessage : ${err?.message}\n\n stack: ${err?.stack} \n\n user:${req?.requestor?.id}`,
+    //         color: "#FF0000",
+    //       },
+    //     ],
+    //   });
+    // }
+
+    // Logging error
     logService.create({
       method: req.method,
       url: req.url,
@@ -151,6 +183,9 @@ app.use((err, req, res, next) => {
       },
       userId: req?.requestor?.id,
     });
+
+    // Re-throw the error to let the subsequent error-handling middleware handle it
+    throw err;
   });
 });
 module.exports = app;

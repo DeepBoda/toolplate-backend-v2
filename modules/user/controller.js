@@ -138,13 +138,14 @@ exports.verifyOTP = async (req, res, next) => {
 exports.socialAuth = async (req, res, next) => {
   try {
     const { firebase_token } = req.body;
-    console.log("firebase-token : ", firebase_token);
+    console.log("firebase-Token: ", firebase_token);
 
     if (!firebase_token) {
       throw createError(400, "Invalid request. Missing firebase_token.");
     }
 
     const firebaseUser = await admin.auth().verifyIdToken(firebase_token);
+    console.log("firebase-User: ", firebaseUser);
     if (!firebaseUser || !firebaseUser.email) {
       throw createError(400, "Invalid firebase_token or missing email.");
     }

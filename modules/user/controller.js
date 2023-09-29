@@ -64,7 +64,7 @@ exports.verifyOTP = async (req, res, next) => {
     const { otp } = req.body;
 
     const decodedToken = jwt.decode(req.body.token);
-    console.log("token: ", decodedToken);
+
     if (
       !decodedToken ||
       !decodedToken.username ||
@@ -100,7 +100,6 @@ exports.verifyOTP = async (req, res, next) => {
       password: decodedToken.password,
       displayName: decodedToken.username,
     });
-    console.log("firebaseUser: ", firebaseUser);
     // Get the user's UUID from Firebase
     const uid = firebaseUser.uid;
 
@@ -145,7 +144,7 @@ exports.socialAuth = async (req, res, next) => {
     }
 
     const firebaseUser = await admin.auth().verifyIdToken(firebase_token);
-    console.log("firebase-User: ", firebaseUser);
+
     if (!firebaseUser || !firebaseUser.email) {
       throw createError(400, "Invalid firebase_token or missing email.");
     }
@@ -276,10 +275,7 @@ exports.getProfile = async (req, res, next) => {
 exports.updateProfile = async (req, res, next) => {
   try {
     const userId = req.requestor.id;
-    console.log("requestor: ", req.requestor);
     const { file, body } = req;
-    console.log("file: ", file);
-    console.log("body: ", body);
 
     // Remove password from the request body
     delete body.password;

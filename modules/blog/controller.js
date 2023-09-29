@@ -549,8 +549,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
 
     // Limit the result to the top 3 most related blogs
     const mostRelatedBlogs = relatedBlogs.slice(0, 3);
-    // console.log(mostRelatedBlogs);
-    console.log("mostRelatedBlogs", mostRelatedBlogs);
+
     // Select only the required attributes (image and title) for each blog
     const reducedData = mostRelatedBlogs.map(
       (blog) => (

@@ -275,41 +275,41 @@ exports.getProfile = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
   try {
-    req.params.id = req.requestor.id;
-    delete req.body.password;
-    let oldUserData;
-    if (req.file) {
-      req.body.profilePic = req.file.location;
-      oldUserData = await service.findOne({
-        where: {
-          id: req.requestor.id,
-        },
-      });
+    const userId = req.requestor.id;
+    const { file, body } = req;
+
+    // Remove password from the request body
+    delete body.password;
+
+    let oldProfilePic;
+    if (file) {
+      // Update profile picture location in the request body
+      body.profilePic = file.location;
+
+      // Retrieve old user data from the database
+      const oldUserData = await service.findOne({ where: { id: userId } });
+      oldProfilePic = oldUserData?.profilePic;
     }
-    const [affectedRows] = await service.update(req.body, {
-      where: {
-        id: req.requestor.id,
-      },
+
+    // Update user's data in the database
+    const [affectedRows] = await service.update(body, {
+      where: { id: userId },
     });
 
-    // Get the updated user and sign a login token
-    const user = await service.findOne({
-      where: {
-        id: req.requestor.id,
-      },
-    });
+    // Get the updated user data
+    const updatedUser = await service.findOne({ where: { id: userId } });
 
+    // Send success response with the number of affected rows
     res.status(200).json({
       status: "success",
-      data: {
-        affectedRows,
-      },
-      // token,
+      data: { affectedRows },
     });
-    if (req.file && oldUserData?.profilePic)
-      deleteFilesFromS3([oldUserData?.profilePic]);
+
+    // Delete old profile picture from S3 storage if it exists
+    if (file && oldProfilePic) {
+      deleteFilesFromS3([oldProfilePic]);
+    }
   } catch (error) {
-    // console.error(error);
     next(error);
   }
 };

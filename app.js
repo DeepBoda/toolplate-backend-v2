@@ -52,14 +52,14 @@ app.use(express.static(path.join(__dirname, "public")));
 //   }
 // }
 
-// Set up a list of allowed origins
-const allowedOrigins = ["https://toolplate.ai"];
+// Define your frontend domain
+const frontendDomain = "https://toolplate.ai";
 
-// Configure CORS
+// Configure CORS to allow only requests from your frontend
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+    origin: (origin, callback) => {
+      if (!origin || origin === frontendDomain) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));

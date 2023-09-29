@@ -53,7 +53,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // }
 
 // Define your frontend domain
-const frontendDomain = "https://toolplate.ai";
+const frontendDomain = "https://new-toolplate-website.vercel.app";
 
 // Configure CORS to allow only requests from your frontend
 app.use(

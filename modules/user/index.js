@@ -17,8 +17,8 @@ router.post("/login", user.login);
 // <=============== Authorized APIs ===============>
 router.use(authMiddleware,protectRoute(['User']));
 // <=============== APIs only for Users ===============>
-router.get("/profile", user.getProfile);
 router.patch("/profile", upload.single('profilePic') ,joiValidator(userSchema.updateProfile), user.updateProfile);
+router.get("/profile", user.getProfile);
 
 
 

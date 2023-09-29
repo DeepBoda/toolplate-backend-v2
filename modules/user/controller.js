@@ -276,7 +276,10 @@ exports.getProfile = async (req, res, next) => {
 exports.updateProfile = async (req, res, next) => {
   try {
     const userId = req.requestor.id;
+    console.log("requestor: ", req.requestor);
     const { file, body } = req;
+    console.log("file: ", file);
+    console.log("body: ", body);
 
     // Remove password from the request body
     delete body.password;
@@ -295,9 +298,6 @@ exports.updateProfile = async (req, res, next) => {
     const [affectedRows] = await service.update(body, {
       where: { id: userId },
     });
-
-    // Get the updated user data
-    const updatedUser = await service.findOne({ where: { id: userId } });
 
     // Send success response with the number of affected rows
     res.status(200).json({

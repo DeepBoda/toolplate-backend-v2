@@ -38,14 +38,14 @@ exports.sqquery = (
 
   let where = { ...filter };
 
-  Object.keys(q).forEach((v) => {
-    if (typeof q[v] === "object") {
-      Object.keys(q[v]).forEach((e) => {
-        const obj = exports.getOpAttributeValue(e, q[v][e]);
-        if (obj) where[v] = obj;
+  Object.entries(q).forEach(([key, value]) => {
+    if (typeof value === "object") {
+      Object.entries(value).forEach(([op, val]) => {
+        const obj = exports.getOpAttributeValue(op, val);
+        if (obj) where[key] = obj;
       });
     } else {
-      where[v] = q[v];
+      where[key] = value;
     }
   });
 
@@ -56,11 +56,9 @@ exports.sqquery = (
       },
     }));
 
-    if (Object.keys(where).length) {
-      where = { ...where, [Op.or]: searchData };
-    } else {
-      where = { [Op.or]: searchData };
-    }
+    where = Object.keys(where).length
+      ? { ...where, [Op.or]: searchData }
+      : { [Op.or]: searchData };
   }
 
   if (excludeColumnsFromOrder.includes(sort)) {
@@ -71,15 +69,24 @@ exports.sqquery = (
 };
 
 exports.usersqquery = (q) => {
+  // Extract limit and page properties with default values
   const limit = parseInt(q?.limit) || 10000;
   const page = parseInt(q?.page) || 1;
+
+  // Calculate skip value
   const skip = (page - 1) * limit;
+
+  // Extract sort and sortBy properties with default values
   const sort = q?.sort || "createdAt";
   const sortBy = q?.sortBy || "DESC";
 
+  // Create the order property
+  const order = [[sort, sortBy]];
+
+  // Check if limit property is present
   if (q?.limit) {
-    return { order: [[sort, sortBy]], limit, offset: skip };
+    return { order, limit, offset: skip };
   }
 
-  return { order: [[sort, sortBy]] };
+  return { order };
 };

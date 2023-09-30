@@ -21,39 +21,62 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-//Ip protected Add
-const allowedIPs = [
-  "192.168.1.100", // Local router IP
-  "127.0.0.1", // Localhost (loopback) IP
-  "::1", // IPv6 loopback address (localhost)
-  "13.126.138.220", // Add your EC2 instance IP address here
+// //Ip protected Add
+// const allowedIPs = [
+//   "192.168.1.100", // Local router IP
+//   "127.0.0.1", // Localhost (loopback) IP
+//   "::1", // IPv6 loopback address (localhost)
+//   "13.126.138.220", // Add your EC2 instance IP address here
+// ];
+
+// const getIp = (req) => {
+//   const forwardedFor = req.headers["x-forwarded-for"];
+//   const remoteAddress = req.connection.remoteAddress;
+
+//   if (forwardedFor || remoteAddress) {
+//     return (forwardedFor || remoteAddress).split(",")[0].trim();
+//   }
+
+//   return "0.0.0.0";
+// };
+// function restrictByIP(req, res, next) {
+//   const clientIP = getIp(req); // Get the client's IP address
+//   console.log(clientIP);
+
+//   // Check if the client's IP is in the whitelist
+//   if (allowedIPs.includes(clientIP)) {
+//     next(); // Allow the request to proceed to the next middleware
+//   } else {
+//     // If the IP is not in the whitelist, respond with a 403 Forbidden status
+//     res.status(403).send("Access denied. Your IP is not whitelisted.");
+//   }
+// }
+
+// Define your frontend domain
+const frontendDomains = [
+  "https://toolplate.ai",
+  "https://www.toolplate.ai",
+  "https://admin.toolplate.ai",
+  "https://new-toolplate-website.vercel.app",
+  "http://localhost:3000",
+  "https://tool-plate-dashboard-git-staging-care-taker.vercel.app",
+  "http://localhost:3001",
+  "https://test.toolplate.ai",
 ];
 
-const getIp = (req) => {
-  const forwardedFor = req.headers["x-forwarded-for"];
-  const remoteAddress = req.connection.remoteAddress;
+// Configure CORS to allow only requests from your frontend domains
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || frontendDomains.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+  })
+);
 
-  if (forwardedFor || remoteAddress) {
-    return (forwardedFor || remoteAddress).split(",")[0].trim();
-  }
-
-  return "0.0.0.0";
-};
-function restrictByIP(req, res, next) {
-  const clientIP = getIp(req); // Get the client's IP address
-  console.log(clientIP);
-
-  // Check if the client's IP is in the whitelist
-  if (allowedIPs.includes(clientIP)) {
-    next(); // Allow the request to proceed to the next middleware
-  } else {
-    // If the IP is not in the whitelist, respond with a 403 Forbidden status
-    res.status(403).send("Access denied. Your IP is not whitelisted.");
-  }
-}
-
-// Configure CORS
-app.use(cors());
 // Enable compression middleware
 app.use(compression());
 // Enhance security with helmet middleware
@@ -65,7 +88,7 @@ app.use(
 
 // Routes
 app.use("/", indexRouter);
-app.use("/", restrictByIP, indexRouter);
+// app.use("/", restrictByIP, indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
 app.use((req, res, next) => {

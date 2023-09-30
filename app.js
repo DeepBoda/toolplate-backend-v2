@@ -53,13 +53,17 @@ app.use(express.static(path.join(__dirname, "public")));
 // }
 
 // Define your frontend domain
-const frontendDomain = "https://new-toolplate-website.vercel.app";
+const frontendDomains = [
+  "https://new-toolplate-website.vercel.app",
+  "http://localhost:3000",
+  "https://test.toolplate.ai",
+];
 
-// Configure CORS to allow only requests from your frontend
+// Configure CORS to allow only requests from your frontend domains
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || origin === frontendDomain) {
+      if (!origin || frontendDomains.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));

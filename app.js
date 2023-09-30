@@ -54,6 +54,9 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Define your frontend domain
 const frontendDomains = [
+  "https://toolplate.ai",
+  "https://www.toolplate.ai",
+  "https://admin.toolplate.ai",
   "https://new-toolplate-website.vercel.app",
   "http://localhost:3000",
   "https://tool-plate-dashboard-git-staging-care-taker.vercel.app",

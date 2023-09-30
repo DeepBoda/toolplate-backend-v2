@@ -8,7 +8,12 @@ const upload = multer({
     s3,
     bucket: process.env.BUCKET,
     metadata: function (req, file, cb) {
-      cb(null, { fieldName: file.fieldname });
+      // Validate and sanitize user input here if needed
+      cb(null, {
+        fieldName: file.fieldname,
+        "Cache-Control": "public, max-age=31536000", // Adjust the max-age as needed
+        "Content-Disposition": "inline; filename=" + file.originalname,
+      });
     },
     key: function (req, file, cb) {
       const uniqueFileName =
@@ -41,7 +46,8 @@ const deleteFilesFromS3 = (urls) => {
     });
   } catch (error) {
     console.error(error);
-    next(error);
+    next(error); // Pass the error to Express error handling
   }
 };
+
 module.exports = { upload, deleteFilesFromS3 };

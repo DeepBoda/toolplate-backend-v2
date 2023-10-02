@@ -7,7 +7,7 @@ const { joiValidator } = require("../../middlewares/joiValidator");
 
 router
   .route("/")
-  .get(category.getAll)
+  .get(category.getAllForAdmin)
   .post(joiValidator(categorySchema.create), category.add);
 router
   .route("/:id")

@@ -25,7 +25,7 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // Try to retrieve the categories from the Redis cache
+    // Try to retrieve the categories from the Redis cach
     let data = await redisService.get(`categories`);
 
     // If the categories is not found in the cache
@@ -33,6 +33,22 @@ exports.getAll = async (req, res, next) => {
       data = await service.findAndCountAll(usersqquery(req.query));
       redisService.set(`categories`, data);
     }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllForAdmin = async (req, res, next) => {
+  try {
+    // Try to retrieve the categories from the Redis cach
+
+    // If the categories is not found in the cache
+    const data = await service.findAndCountAll(usersqquery(req.query));
 
     res.status(200).send({
       status: "success",

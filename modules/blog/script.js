@@ -35,7 +35,7 @@ const resizeImageDelete = async () => {
     );
     console.log(deleteFiles);
 
-    await deleteFilesFromS3(deleteFiles);
+    deleteFilesFromS3(deleteFiles);
   } catch (error) {
     console.log(error);
   }

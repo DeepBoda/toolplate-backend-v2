@@ -277,6 +277,8 @@ exports.updateProfile = async (req, res, next) => {
     const userId = req.requestor.id;
     const { file, body } = req;
 
+    console.log("file: ", file);
+
     // Remove password from the request body
     delete body.password;
 

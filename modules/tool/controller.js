@@ -24,6 +24,7 @@ const toolTagService = require("../toolTag/service");
 const Tag = require("../tag/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
+const { suggestTool } = require("../../utils/prompt");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -457,6 +458,21 @@ exports.search = async (req, res, next) => {
     next(error);
   }
 };
+exports.promptSearch = async (req, res, next) => {
+  try {
+    const promptTool = await suggestTool(req.query.search);
+
+    // prompt tool array search in elastic search and find id
+
+    //from id find tool in database and send to API
+    res.status(200).send({
+      status: "success",
+      promptTool,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getForAdmin = async (req, res, next) => {
   try {
@@ -839,4 +855,3 @@ const makeSLug = async (req, res, next) => {
     console.log(error);
   }
 };
-// makeSLug();

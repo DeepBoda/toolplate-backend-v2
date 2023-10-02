@@ -90,8 +90,7 @@ exports.verifyOTP = async (req, res, next) => {
       profilePicUrl = await generateProfilePic(decodedToken.username);
     } catch (error) {
       console.error("Error generating profile picture:", error);
-      profilePicUrl =
-        "https://tool-plate.s3.ap-south-1.amazonaws.com/logo/ai_profile.png";
+      profilePicUrl = "https://cdn.toolplate.ai/logo/ai_profile.png";
     }
 
     // Create the user in Firebase Authentication
@@ -160,8 +159,7 @@ exports.socialAuth = async (req, res, next) => {
         profilePicUrl = await generateProfilePic(name.toUpperCase());
       } catch (error) {
         console.error("Error generating profile picture:", error);
-        profilePicUrl =
-          "https://tool-plate.s3.ap-south-1.amazonaws.com/logo/ai_profile.png";
+        profilePicUrl = "https://cdn.toolplate.ai/logo/ai_profile.png";
       }
 
       // Create the user in the local database

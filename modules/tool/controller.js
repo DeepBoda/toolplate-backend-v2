@@ -1,6 +1,8 @@
 "use strict";
 const { Op, where } = require("sequelize");
 const sequelize = require("../../config/db");
+const Sequelize = require("sequelize");
+
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
@@ -465,9 +467,20 @@ exports.promptSearch = async (req, res, next) => {
     // prompt tool array search in elastic search and find id
 
     //from id find tool in database and send to API
+
+    const data = await service.findAll({
+      where: {
+        [Sequelize.Op.or]: promptTool.map((name) => ({
+          title: {
+            [Sequelize.Op.like]: `%${name}%`,
+          },
+        })),
+      },
+    });
     res.status(200).send({
       status: "success",
       promptTool,
+      data,
     });
   } catch (error) {
     next(error);

@@ -21,36 +21,33 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-// //Ip protected Add
-// const allowedIPs = [
-//   "192.168.1.100", // Local router IP
-//   "127.0.0.1", // Localhost (loopback) IP
-//   "::1", // IPv6 loopback address (localhost)
-//   "13.126.138.220", // Add your EC2 instance IP address here
-// ];
+const allowedIPs = [
+  "192.168.1.100", // Local router IP
+  "127.0.0.1", // Localhost (loopback) IP
+  "::1", // IPv6 loopback address (localhost)
+  "13.126.138.220", // Add your EC2 instance IP address here
+];
 
-// const getIp = (req) => {
-//   const forwardedFor = req.headers["x-forwarded-for"];
-//   const remoteAddress = req.connection.remoteAddress;
+function checkAllowedIP(req, res, next) {
+  const clientIP = req.ip; // Get the client's IP address
 
-//   if (forwardedFor || remoteAddress) {
-//     return (forwardedFor || remoteAddress).split(",")[0].trim();
-//   }
+  // Check if the client's IP is in the whitelist
+  if (allowedIPs.includes(clientIP)) {
+    next(); // Allow the request to proceed to the next middleware
+  } else {
+    res.status(403).send("Access denied. Your IP is not whitelisted.");
+  }
+}
 
-//   return "0.0.0.0";
-// };
-// function restrictByIP(req, res, next) {
-//   const clientIP = getIp(req); // Get the client's IP address
-//   console.log(clientIP);
-
-//   // Check if the client's IP is in the whitelist
-//   if (allowedIPs.includes(clientIP)) {
-//     next(); // Allow the request to proceed to the next middleware
-//   } else {
-//     // If the IP is not in the whitelist, respond with a 403 Forbidden status
-//     res.status(403).send("Access denied. Your IP is not whitelisted.");
-//   }
-// }
+function checkReferer(req, res, next) {
+  const referer = req.get("Referer");
+  if (!referer || referer.startsWith("https://test.toolplate.ai")) {
+    // Request is either from a page with no referer (like a direct request) or from your trusted frontend.
+    next();
+  } else {
+    res.status(403).send("Access denied. Invalid referer.");
+  }
+}
 
 // Define your frontend domain
 const frontendDomains = [
@@ -87,7 +84,7 @@ app.use(
 );
 
 // Routes
-app.use("/", indexRouter);
+app.use("/", checkAllowedIP, checkReferer, indexRouter);
 // app.use("/", restrictByIP, indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error

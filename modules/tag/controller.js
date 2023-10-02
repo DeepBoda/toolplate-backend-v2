@@ -43,6 +43,21 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
+exports.getAllForAdmin = async (req, res, next) => {
+  try {
+    // If the tags is not found in the cache
+
+    const data = await service.findAndCountAll(usersqquery(req.query));
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getById = async (req, res, next) => {
   try {
     const data = await service.findOne({

@@ -81,11 +81,17 @@ function checkAllowedIP(req, res, next) {
 // Middleware for checking Referer
 function checkReferer(req, res, next) {
   const referer = req.get("Referer");
-  if (!referer || frontendDomains.includes(referer)) {
+  if (!referer || isAllowedReferer(referer)) {
     next();
   } else {
     res.status(403).send("Access denied. Invalid referer.");
   }
+}
+
+function isAllowedReferer(referer) {
+  const lowercaseReferer = referer.toLowerCase();
+  const allowedDomains = frontendDomains.map((domain) => domain.toLowerCase());
+  return allowedDomains.some((domain) => lowercaseReferer.includes(domain));
 }
 
 // Define your routes

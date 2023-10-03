@@ -43,7 +43,10 @@ const frontendDomains = isProduction
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || frontendDomains.includes(origin)) {
+      if (
+        !origin ||
+        frontendDomains.some((domain) => origin.startsWith(domain))
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -78,25 +81,9 @@ function checkAllowedIP(req, res, next) {
   }
 }
 
-// Middleware for checking Referer
-function checkReferer(req, res, next) {
-  const referer = req.get("Referer");
-  if (!referer || isAllowedReferer(referer)) {
-    next();
-  } else {
-    res.status(403).send("Access denied. Invalid referer.");
-  }
-}
-
-function isAllowedReferer(referer) {
-  const lowercaseReferer = referer.toLowerCase();
-  const allowedDomains = frontendDomains.map((domain) => domain.toLowerCase());
-  return allowedDomains.some((domain) => lowercaseReferer.includes(domain));
-}
-
 // Define your routes
 const indexRouter = require("./routes");
-app.use("/", checkAllowedIP, checkReferer, indexRouter);
+app.use("/", checkAllowedIP, indexRouter);
 // app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error

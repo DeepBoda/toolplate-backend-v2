@@ -64,7 +64,7 @@ app.use(
 // Define your IP whitelist based on the environment
 const allowedIPs = isProduction
   ? ["192.168.1.100", "127.0.0.1", "::1", "13.126.138.220"]
-  : ["192.168.1.100", "127.0.0.1", "::1", "13.126.138.220"];
+  : ["192.168.1.100", "127.0.0.1", "::1", "13.126.138.220", "15.207.242.14"];
 
 // Middleware for checking allowed IPs
 function checkAllowedIP(req, res, next) {

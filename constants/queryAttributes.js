@@ -19,6 +19,10 @@ exports.blogAttributes = [
   "readTime",
   "slug",
   "createdAt",
+  "likes",
+  "views",
+  "comments",
+  "wishlists",
 ];
 exports.tagAttributes = ["name"];
 exports.categoryAttributes = ["name"];

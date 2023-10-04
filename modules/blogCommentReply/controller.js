@@ -1,13 +1,18 @@
 "use strict";
 
 const service = require("./service");
-
+const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
     const data = await service.create(req.body);
+
+    blogService.update(
+      { comments: sequelize.literal("comments  + 1") },
+      { where: { id: data.id } }
+    );
 
     res.status(200).json({
       status: "success",

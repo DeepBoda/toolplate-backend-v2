@@ -35,6 +35,22 @@ const Blog = sequelize.define(
     slug: {
       type: DataTypes.STRING,
     },
+    likes: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    views: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    comments: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    wishlists: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
   },
   {
     paranoid: true,

@@ -2,7 +2,7 @@
 const sequelize = require("sequelize");
 const service = require("./service");
 const reply = require("../blogCommentReply/service");
-
+const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const BlogCommentReply = require("../blogCommentReply/model");
 const User = require("../user/model");
@@ -11,6 +11,11 @@ exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
     const data = await service.create(req.body);
+
+    blogService.update(
+      { comments: sequelize.literal("comments  + 1") },
+      { where: { id: data.id } }
+    );
 
     res.status(200).json({
       status: "success",

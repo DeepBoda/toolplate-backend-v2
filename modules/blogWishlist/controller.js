@@ -2,6 +2,7 @@
 
 const sequelize = require("../../config/db");
 const service = require("./service");
+const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   blogAttributes,
@@ -22,12 +23,22 @@ exports.add = async (req, res, next) => {
       await service.delete({
         where: req.body,
       });
+      blogService.update(
+        { wishlists: sequelize.literal("wishlists  - 1") },
+        { where: { id: data.id } }
+      );
+
       res.status(200).json({
         status: "success",
         message: "Blog removed from wishlist!.",
       });
     } else {
       await service.create(req.body);
+      blogService.update(
+        { wishlists: sequelize.literal("wishlists  + 1") },
+        { where: { id: data.id } }
+      );
+
       res.status(200).json({
         status: "success",
         message: "Blog added to wishlist!.",

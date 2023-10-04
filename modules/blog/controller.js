@@ -99,49 +99,22 @@ exports.getAll = async (req, res, next) => {
     const data = await service.findAndCountAll({
       ...sqquery(query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: [
-        ...blogAttributes,
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-          ),
-          "views",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
-          ),
-          "likes",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM (
-              SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
-              UNION ALL
-              SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
-            ) AS commentAndReplyCounts)`
-          ),
-          "comments",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
-          ),
-          "wishlists",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
-          ),
-          "isWishlisted",
-        ],
-      ],
+      // attributes: {
+      //   include: [
+      //     // ...blogAttributes,
+      //     [
+      //       sequelize.literal(
+      //         `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+      //       ),
+      //       "isLiked",
+      //     ],
+      //     [
+      //       sequelize.literal(
+      //         `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+      //       ),
+      //       "isWishlisted",
+      //     ],
+      //   ],
       include: [
         {
           model: BlogCategory,
@@ -162,6 +135,7 @@ exports.getAll = async (req, res, next) => {
           },
         },
       ],
+      // },
     });
 
     // redisService.set(`blogs`, data);
@@ -276,7 +250,9 @@ exports.getAllForAdmin = async (req, res, next) => {
 
 exports.getBySlug = async (req, res, next) => {
   try {
-    let data = await redisService.get(`blog?slug=${req.params.slug}`);
+    const cacheKey = `blog?slug=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
     if (!data) {
       data = await service.findOne({
         where: {
@@ -301,12 +277,22 @@ exports.getBySlug = async (req, res, next) => {
           },
         ],
       });
-      redisService.set(`blog?slug=${req.params.slug}`, data);
+
+      redisService.set(cacheKey, data);
     }
-    viewService.create({
-      blogId: data.id,
-      userId: req.requestor?.id ?? null,
-    });
+    console.log(data);
+
+    service.update(
+      { views: sequelize.literal("views + 1") },
+      { where: { id: data.id } }
+    );
+
+    if (req.requestor) {
+      view = viewService.create({
+        blogId: data.id,
+        userId: req.requestor?.id ?? null,
+      });
+    }
 
     res.status(200).send({
       status: "success",

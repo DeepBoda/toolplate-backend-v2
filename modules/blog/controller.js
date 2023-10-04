@@ -21,6 +21,7 @@ const BlogTag = require("../blogTag/model");
 const blogTagService = require("../blogTag/service");
 const Tag = require("../tag/model");
 const { resizeAndUploadImage } = require("../../utils/imageResize");
+
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
@@ -470,7 +471,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
   }
 };
 
-// ---------- Only Admin can Update/Delete ----------exports.update = async (req, res, next) => {
+// ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
     const { id } = req.params;

@@ -313,7 +313,9 @@ exports.getAllForAdmin = async (req, res, next) => {
 
 exports.getBySlug = async (req, res, next) => {
   try {
-    let data = await redisService.get(`tool?slug=${req.params.slug}`);
+    const cacheKey = `tool?slug=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
     if (!data) {
       data = await service.findOne({
         where: {
@@ -342,9 +344,11 @@ exports.getBySlug = async (req, res, next) => {
           },
         ],
       });
-      redisService.set(`tool?slug=${req.params.slug}`, data);
+
+      redisService.set(cacheKey, data);
     }
-    //When opens tool, this creates entry for view
+
+    // Create an entry for the tool view
     viewService.create({
       toolId: data.id,
       userId: req.requestor?.id ?? null,
@@ -460,6 +464,7 @@ exports.search = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.promptSearch = async (req, res, next) => {
   try {
     const promptTool = await suggestTool(req.query.search);

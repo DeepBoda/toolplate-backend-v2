@@ -28,17 +28,19 @@ exports.getAll = async (req, res, next) => {
     // Try to retrieve the tags from the Redis cache
     let data = await redisService.get(`tags`);
 
-    // If the tags is not found in the cache
+    // If the tags are not found in the cache, query the service to fetch the data
     if (!data) {
       data = await service.findAndCountAll(usersqquery(req.query));
       redisService.set(`tags`, data);
     }
 
+    // Send a success response with the retrieved data
     res.status(200).send({
       status: "success",
       data,
     });
   } catch (error) {
+    // Pass any error to the next middleware function
     next(error);
   }
 };

@@ -2,6 +2,7 @@
 const sequelize = require("sequelize");
 const service = require("./service");
 const blogService = require("../blog/service");
+const commentService = require("../blogComment/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 exports.add = async (req, res, next) => {

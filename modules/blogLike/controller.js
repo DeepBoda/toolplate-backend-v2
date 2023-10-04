@@ -1,5 +1,5 @@
 "use strict";
-
+const sequelize = require("sequelize");
 const service = require("./service");
 const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");

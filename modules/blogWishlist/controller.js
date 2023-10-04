@@ -25,7 +25,7 @@ exports.add = async (req, res, next) => {
       });
       blogService.update(
         { wishlists: sequelize.literal("wishlists  - 1") },
-        { where: req.body.blogId }
+        { where: { id: req.body.blogId } }
       );
 
       res.status(200).json({
@@ -36,7 +36,7 @@ exports.add = async (req, res, next) => {
       await service.create(req.body);
       blogService.update(
         { wishlists: sequelize.literal("wishlists  + 1") },
-        { where: req.body.blogId }
+        { where: { id: req.body.blogId } }
       );
 
       res.status(200).json({

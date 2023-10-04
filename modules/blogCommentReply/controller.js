@@ -9,9 +9,13 @@ exports.add = async (req, res, next) => {
     req.body.userId = req.requestor.id;
     const data = await service.create(req.body);
 
+    const comment = await commentService.findOne({
+      where: { id: req.body.blogCommentId },
+    });
+
     blogService.update(
       { comments: sequelize.literal("comments  + 1") },
-      { where: { id: data.id } }
+      { where: { id: comment.blogId } }
     );
 
     res.status(200).json({

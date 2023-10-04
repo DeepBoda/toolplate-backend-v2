@@ -16,7 +16,7 @@ exports.likeBlog = async (req, res, next) => {
       });
       blogService.update(
         { likes: sequelize.literal("likes  - 1") },
-        { where: { id: data.id } }
+        { where: req.body.blogId }
       );
       res.status(200).json({
         status: "success",
@@ -26,7 +26,7 @@ exports.likeBlog = async (req, res, next) => {
       await service.create(req.body);
       blogService.update(
         { likes: sequelize.literal("likes  + 1") },
-        { where: { id: data.id } }
+        { where: req.body.blogId }
       );
       res.status(200).json({
         status: "success",

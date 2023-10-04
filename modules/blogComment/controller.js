@@ -14,7 +14,7 @@ exports.add = async (req, res, next) => {
 
     blogService.update(
       { comments: sequelize.literal("comments  + 1") },
-      { where: { id: data.id } }
+      { where: req.body.blogId }
     );
 
     res.status(200).json({

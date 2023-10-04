@@ -506,9 +506,7 @@ exports.update = async (req, res, next) => {
     res.status(200).json({ status: "success", data: { affectedRows } });
 
     // Clear Redis cache
-    if (body.title) {
-      await redisService.del(`blog?slug=${oldBlogData.slug}`);
-    }
+    redisService.del(`blog?slug=${oldBlogData.slug}`);
 
     // Handle categories and tags updates
     const categoryIds = categories.split(",").map(Number);

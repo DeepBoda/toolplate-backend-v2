@@ -29,7 +29,7 @@ exports.sqquery = (
   const page = parseInt(q.page) || 1;
   const skip = (page - 1) * limit;
   const sort = q.sort || "createdAt";
-  const sortBy = q.sortBy || "ASC";
+  const sortBy = q.sortBy || "DESC";
   const search = q?.search || "";
 
   excludeFields.push("page", "sort", "limit", "fields", "sortBy", "search");
@@ -78,7 +78,7 @@ exports.usersqquery = (q) => {
 
   // Extract sort and sortBy properties with default values
   const sort = q?.sort || "createdAt";
-  const sortBy = q?.sortBy || "ASC";
+  const sortBy = q?.sortBy || "DESC";
 
   // Create the order property
   const order = [[sort, sortBy]];

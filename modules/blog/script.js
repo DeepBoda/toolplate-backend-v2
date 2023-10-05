@@ -72,5 +72,4 @@ const updateBlogCounts = async () => {
   }
 };
 
-// Call the function to update counts
 // updateBlogCounts();

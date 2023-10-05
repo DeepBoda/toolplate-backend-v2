@@ -23,7 +23,7 @@ exports.resizeAndUploadImage = async (
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
     const pipeline = sharp(originalImageBuffer).avif({
-      quality: 100,
+      quality: 90,
       speed: 0,
     });
 

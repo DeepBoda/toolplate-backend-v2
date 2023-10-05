@@ -9,17 +9,21 @@ const upload = multer({
     s3,
     bucket: process.env.BUCKET,
     metadata: function (req, file, cb) {
-      // Validate and sanitize user input here if needed
-      cb(null, {
+      // Add custom metadata or validation here if needed
+      const metadata = {
         fieldName: file.fieldname,
         "Cache-Control": "public, max-age=31536000", // Adjust the max-age as needed
-        "Content-Disposition": "inline; filename=" + file.originalname,
-      });
+        "Content-Disposition": `inline; filename="${file.originalname}"`,
+      };
+      cb(null, metadata);
     },
+
     key: function (req, file, cb) {
-      const uniqueFileName = `${Date.now()}-${uuidv4()}`;
-      cb(null, uniqueFileName + path.extname(file.originalname));
+      // Generate a unique file name for the S3 object
+      const uniqueFileName = uuidv4();
+      cb(null, path.join(uniqueFileName, path.extname(file.originalname)));
     },
+
     contentType: multerS3.AUTO_CONTENT_TYPE, // Automatically detect content type based on file extension
   }),
 });

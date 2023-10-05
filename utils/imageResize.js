@@ -1,5 +1,5 @@
 const AWS = require("@aws-sdk/client-s3");
-const sharp = require("sharp");
+const libvips = require("libvips");
 require("dotenv").config();
 const axios = require("axios");
 const s3Client = new AWS.S3({
@@ -22,43 +22,37 @@ exports.resizeAndUploadImage = async (
     });
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
-    const pipeline = sharp(originalImageBuffer).avif({
-      quality: 90,
-      speed: 0,
-    });
+    // Create a LibVIPS image object from the original image buffer
+    const image = libvips.Image.newFromBuffer(originalImageBuffer);
 
-    const resizePromises = sizes.map(async (size) => {
-      const sizePipeline = pipeline
-        .clone()
-        .resize(size.width, size.height, {
-          fit: "inside",
-          withoutEnlargement: true,
-          progressive: true,
-          kernel: sharp.kernel.lanczos3,
-        })
-        .sharpen();
-      const resizedBuffer = await sizePipeline.toBuffer();
-      return { size, buffer: resizedBuffer };
-    });
-
-    const resizedImages = await Promise.all(resizePromises);
-
-    const uploadPromises = sizes.map(async (size, index) => {
-      const resizedBuffer = resizedImages[index].buffer;
-      return s3Client.putObject({
-        Bucket: process.env.BUCKET,
-        Key: `${keyPrefix}_${size.width}_${size.height}.avif`,
-        Body: resizedBuffer,
-        ACL: "public-read",
-        ContentType: "image/avif",
-        Metadata: {
-          "Cache-Control": "public, max-age=31536000",
-          "Content-Disposition": `inline; filename="${keyPrefix}_toolplate.avif"`,
-        },
+    // Create a pipeline to resize and sharpen the image
+    const pipeline = image.pipeline();
+    sizes.forEach((size) => {
+      pipeline.resize(size.width, size.height, {
+        fit: "inside",
+        withoutEnlargement: true,
+        kernel: "lanczos3",
       });
     });
+    pipeline.sharpen();
 
-    await Promise.all(uploadPromises);
+    // Process the pipeline and get the resized image buffer
+    const resizedImageBuffer = await pipeline.getBuffer();
+
+    // Upload the resized image to S3
+    const uploadPromise = s3Client.putObject({
+      Bucket: process.env.BUCKET,
+      Key: `${keyPrefix}_${sizes[0].width}_${sizes[0].height}.avif`,
+      Body: resizedImageBuffer,
+      ACL: "public-read",
+      ContentType: "image/avif",
+      Metadata: {
+        "Cache-Control": "public, max-age=31536000",
+        "Content-Disposition": `inline; filename="${keyPrefix}_toolplate.avif"`,
+      },
+    });
+
+    await uploadPromise;
     console.log("success");
 
     return true;

@@ -41,7 +41,7 @@ const resizeImageDelete = async () => {
   }
 };
 
-// imageResize();
+imageResize();
 
 const { blogs, sequelize } = require("./model"); // Adjust the path
 
@@ -73,4 +73,4 @@ const updateBlogCounts = async () => {
 };
 
 // Call the function to update counts
-updateBlogCounts();
+// updateBlogCounts();

@@ -15,6 +15,7 @@ const params = {
     title: "Test Notification Title",
     body: "This is a test notification body",
     topic: "toolplate-blogs-dev",
+    click_action: "blog",
   }),
 };
 

@@ -22,18 +22,13 @@ exports.resizeAndUploadImage = async (
     });
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
-    // Create a pipeline for parallel image processing
-    const pipeline = sharp(originalImageBuffer);
-
-    // Configure AVIF settings
-    pipeline.avif({
+    const pipeline = sharp(originalImageBuffer).avif({
       quality: 90,
       speed: 0,
     });
 
-    // Resize the original image and create resized versions in parallel
-    const resizePromises = sizes.map((size) => {
-      return pipeline
+    const resizePromises = sizes.map(async (size) => {
+      const sizePipeline = pipeline
         .clone()
         .resize(size.width, size.height, {
           fit: "inside",
@@ -42,26 +37,31 @@ exports.resizeAndUploadImage = async (
           kernel: sharp.kernel.lanczos3,
         })
         .sharpen();
+      const resizedBuffer = await sizePipeline.toBuffer();
+      return { size, buffer: resizedBuffer };
     });
 
     const resizedImages = await Promise.all(resizePromises);
 
-    // Upload the original image and resized versions to S3 in parallel
     const uploadPromises = sizes.map(async (size, index) => {
-      const resizedBuffer = await resizedImages[index].toBuffer();
+      const resizedBuffer = resizedImages[index].buffer;
       return s3Client.putObject({
         Bucket: process.env.BUCKET,
         Key: `${keyPrefix}_${size.width}_${size.height}.avif`,
         Body: resizedBuffer,
         ACL: "public-read",
         ContentType: "image/avif",
+        Metadata: {
+          "Cache-Control": "public, max-age=31536000",
+          "Content-Disposition": `inline; filename="${keyPrefix}_toolplate.avif"`,
+        },
       });
     });
 
     await Promise.all(uploadPromises);
     console.log("success");
 
-    return true; // Successfully uploaded and resized images
+    return true;
   } catch (err) {
     console.error("Error resizing and uploading images", err);
     return false;

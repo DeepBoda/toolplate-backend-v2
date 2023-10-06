@@ -1,28 +1,38 @@
 "use strict";
-const AWS = require("aws-sdk");
+const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 
-AWS.config.update({
-  accessKeyId: "",
-  secretAccessKey: "",
-  region: "",
+const lambdaClient = new LambdaClient({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
 });
-const lambda = new AWS.Lambda();
 
-// Call the Lambda function
-const params = {
-  FunctionName: "sendNotificationToTopic",
-  Payload: JSON.stringify({
-    title: "Test Notification Title",
-    body: "This is a test notification body",
-    topic: "toolplate-blogs-dev",
-    click_action: "blog",
-  }),
-};
+// Function to send a notification
+exports.sendNotificationToTopic = async (notificationData) => {
+  try {
+    // Extract properties from the notificationData object
+    const { title, body, topic, click_action } = notificationData;
 
-lambda.invoke(params, (err, data) => {
-  if (err) {
-    console.error("Error calling Lambda function:", err);
-  } else {
-    console.log("Notification send successfully");
+    // Invoke the Lambda function
+    const params = {
+      FunctionName: "sendNotificationToTopic", // Replace with your Lambda function name
+      Payload: JSON.stringify({
+        title,
+        body,
+        topic,
+        click_action,
+      }),
+    };
+    try {
+      const lambdaData = await lambdaClient.send(new InvokeCommand(params));
+      console.log("Notification sent successfully by Lambda:\n", lambdaData);
+      return true;
+    } catch (error) {
+      console.error("Error sending notification:\n", error);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error sending notification:\n", error);
+    throw error; // You can choose to handle or rethrow the error as needed.
   }
-});
+};

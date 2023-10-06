@@ -13,8 +13,8 @@ exports.add = async (req, res, next) => {
         ? process.env.TOPIC
         : process.env.DEV_TOPIC;
 
-    // sendNotificationToTopic(req.body);
     const { title, body, click_action, topic } = req.body;
+    sendNotificationToTopic(topic, title, body, click_action);
     pushNotificationTopic(topic, title, body, click_action);
     service.create(req.body);
 

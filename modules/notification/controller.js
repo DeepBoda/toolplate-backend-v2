@@ -2,22 +2,31 @@
 
 const service = require("./service");
 const { sendNotificationToTopic } = require("../../service/lambda");
+const { AdminAttributes } = require("../../constants/queryAttributes");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { pushNotificationTopic } = require("../../service/firebase");
+const Admin = require("../admin/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    // Set the topic property of the request body based on the environment
+    req.body.AdminId = req.requestor.id;
     req.body.topic =
       process.env.NODE_ENV === "production"
         ? process.env.TOPIC
         : process.env.DEV_TOPIC;
 
     const { title, body, click_action, topic } = req.body;
+
+    // Send the notification to the specified topic
     // sendNotificationToTopic(topic, title, body, click_action);
     pushNotificationTopic(topic, title, body, click_action);
+
+    // Save the notification data
     service.create(req.body);
 
+    // Send a success response
     res.status(200).json({
       status: "success",
       message: "Notification sent successfully!",
@@ -30,7 +39,13 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query),
+      include: {
+        model: Admin,
+        attributes: AdminAttributes,
+      },
+    });
 
     res.status(200).send({
       status: "success",

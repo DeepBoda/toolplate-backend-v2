@@ -1,5 +1,7 @@
 "use strict";
 
+exports.AdminAttributes = ["id", "name", "email"];
+
 exports.toolAttributes = [
   "id",
   "title",

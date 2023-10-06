@@ -1,6 +1,7 @@
 "use strict";
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
+const Admin = require("../admin/model");
 
 const Notification = sequelize.define("notification", {
   id: {
@@ -26,5 +27,14 @@ const Notification = sequelize.define("notification", {
     allowNull: false,
   },
 });
+
+Admin.hasMany(Notification, {
+  foreignKey: {
+    allowNull: false,
+  },
+});
+Notification.belongsTo(Admin);
+
+// Notification.sync({ alter: true });
 
 module.exports = Notification;

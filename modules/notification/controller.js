@@ -15,7 +15,7 @@ exports.add = async (req, res, next) => {
 
     const { title, body, click_action, topic } = req.body;
     sendNotificationToTopic(topic, title, body, click_action);
-    pushNotificationTopic(topic, title, body, click_action);
+    // pushNotificationTopic(topic, title, body, click_action);
     service.create(req.body);
 
     res.status(200).json({

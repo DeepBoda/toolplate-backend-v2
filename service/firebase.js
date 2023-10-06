@@ -1,5 +1,5 @@
 require("dotenv").config();
-const admin = require("../config/firebaseConfige");
+const admin = require("../config/firebaseConfig");
 // const notificationService = require("../modules/notification/service");
 
 exports.pushNotificationTo = async (to, title, body, click_action, userId) => {

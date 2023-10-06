@@ -3,6 +3,7 @@
 const service = require("./service");
 const { sendNotificationToTopic } = require("../../service/lambda");
 const { usersqquery, sqquery } = require("../../utils/query");
+const { pushNotificationTopic } = require("../../service/firebase");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -12,7 +13,8 @@ exports.add = async (req, res, next) => {
         ? process.env.TOPIC
         : process.env.DEV_TOPIC;
 
-    sendNotificationToTopic(req.body);
+    // sendNotificationToTopic(req.body);
+    pushNotificationTopic(req.body);
     service.create(req.body);
 
     res.status(200).json({

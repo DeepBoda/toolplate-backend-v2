@@ -5,9 +5,7 @@ const createError = require("http-errors");
 const cors = require("cors");
 const compression = require("compression");
 const helmet = require("helmet");
-const dotenv = require("dotenv");
-
-dotenv.config();
+require("dotenv").config();
 
 const app = express();
 

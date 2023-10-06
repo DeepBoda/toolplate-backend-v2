@@ -1,4 +1,5 @@
-require("dotenv").config();
+"use strict";
+
 const admin = require("../config/firebaseConfig");
 // const notificationService = require("../modules/notification/service");
 

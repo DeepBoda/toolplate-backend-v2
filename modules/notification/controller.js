@@ -14,7 +14,8 @@ exports.add = async (req, res, next) => {
         : process.env.DEV_TOPIC;
 
     // sendNotificationToTopic(req.body);
-    pushNotificationTopic(req.body);
+    const { title, body, click_action, topic } = req.body;
+    pushNotificationTopic(topic, title, body, click_action);
     service.create(req.body);
 
     res.status(200).json({

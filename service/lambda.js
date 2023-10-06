@@ -11,7 +11,7 @@ const lambdaClient = new LambdaClient({
 exports.sendNotificationToTopic = async (notificationData) => {
   try {
     // Extract properties from the notificationData object
-    const { title, body, topic, click_action } = notificationData;
+    const { topic, title, body, click_action } = notificationData;
 
     // Invoke the Lambda function
     const params = {

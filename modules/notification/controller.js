@@ -7,24 +7,24 @@ const { usersqquery, sqquery } = require("../../utils/query");
 const { pushNotificationTopic } = require("../../service/firebase");
 const Admin = require("../admin/model");
 
-// ------------- Only Admin can Create --------------
+// ------------- Only Admin can Create and Get all--------------
 exports.add = async (req, res, next) => {
   try {
     // Set the topic property of the request body based on the environment
-    req.body.AdminId = req.requestor.id;
-    req.body.topic =
+    const adminId = req.requestor ? req.requestor.id : 1;
+    const topic =
       process.env.NODE_ENV === "production"
         ? process.env.TOPIC
         : process.env.DEV_TOPIC;
 
-    const { title, body, click_action, topic } = req.body;
+    const { title, body, click_action } = req.body;
 
     // Send the notification to the specified topic
     // sendNotificationToTopic(topic, title, body, click_action);
-    pushNotificationTopic(topic, title, body, click_action);
+    pushNotificationTopic(topic, title, body, click_action, adminId);
 
     // Save the notification data
-    service.create(req.body);
+    // service.create(req.body);
 
     // Send a success response
     res.status(200).json({

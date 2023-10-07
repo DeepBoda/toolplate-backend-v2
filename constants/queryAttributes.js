@@ -1,5 +1,7 @@
 "use strict";
 
+exports.AdminAttributes = ["id", "name", "email"];
+
 exports.toolAttributes = [
   "id",
   "title",
@@ -9,6 +11,11 @@ exports.toolAttributes = [
   "link",
   "slug",
   "createdAt",
+  "likes",
+  "views",
+  "wishlists",
+  "ratingsAverage",
+  "totalRatings",
 ];
 exports.blogAttributes = [
   "id",
@@ -19,6 +26,10 @@ exports.blogAttributes = [
   "readTime",
   "slug",
   "createdAt",
+  "likes",
+  "views",
+  "comments",
+  "wishlists",
 ];
 exports.tagAttributes = ["name"];
 exports.categoryAttributes = ["name"];

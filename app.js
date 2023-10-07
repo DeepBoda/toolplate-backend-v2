@@ -2,73 +2,49 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const createError = require("http-errors");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const compression = require("compression");
 const helmet = require("helmet");
-
-dotenv.config();
-
-// const { responseInClientSlack } = require("./utils/slackBoat");
-const logService = require("./modules/log/service");
-const indexRouter = require("./routes");
-const sequelize = require("./config/db");
+require("dotenv").config();
 
 const app = express();
 
+// Configure environment-specific settings
+const isProduction = process.env.NODE_ENV === "production";
+
+// Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Middleware for parsing cookies
 app.use(cookieParser());
+
+// Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
+const sequelize = require("./config/db");
 
-// //Ip protected Add
-// const allowedIPs = [
-//   "192.168.1.100", // Local router IP
-//   "127.0.0.1", // Localhost (loopback) IP
-//   "::1", // IPv6 loopback address (localhost)
-//   "13.126.138.220", // Add your EC2 instance IP address here
-// ];
+// Configure CORS
+const frontendDomains = isProduction
+  ? [
+      "https://toolplate.ai",
+      "https://www.toolplate.ai",
+      "https://admin.toolplate.ai",
+    ]
+  : [
+      "https://new-toolplate-website.vercel.app",
+      "https://tool-plate-dashboard-git-staging-care-taker.vercel.app",
+      "https://test.toolplate.ai",
+      "http://localhost:3000",
+      "http://localhost:3001",
+    ];
 
-// const getIp = (req) => {
-//   const forwardedFor = req.headers["x-forwarded-for"];
-//   const remoteAddress = req.connection.remoteAddress;
-
-//   if (forwardedFor || remoteAddress) {
-//     return (forwardedFor || remoteAddress).split(",")[0].trim();
-//   }
-
-//   return "0.0.0.0";
-// };
-// function restrictByIP(req, res, next) {
-//   const clientIP = getIp(req); // Get the client's IP address
-//   console.log(clientIP);
-
-//   // Check if the client's IP is in the whitelist
-//   if (allowedIPs.includes(clientIP)) {
-//     next(); // Allow the request to proceed to the next middleware
-//   } else {
-//     // If the IP is not in the whitelist, respond with a 403 Forbidden status
-//     res.status(403).send("Access denied. Your IP is not whitelisted.");
-//   }
-// }
-
-// Define your frontend domain
-const frontendDomains = [
-  "https://toolplate.ai",
-  "https://www.toolplate.ai",
-  "https://admin.toolplate.ai",
-  "https://new-toolplate-website.vercel.app",
-  "http://localhost:3000",
-  "https://tool-plate-dashboard-git-staging-care-taker.vercel.app",
-  "http://localhost:3001",
-  "https://test.toolplate.ai",
-];
-
-// Configure CORS to allow only requests from your frontend domains
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || frontendDomains.includes(origin)) {
+      if (
+        !origin ||
+        frontendDomains.some((domain) => origin.startsWith(domain))
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -79,6 +55,7 @@ app.use(
 
 // Enable compression middleware
 app.use(compression());
+
 // Enhance security with helmet middleware
 app.use(
   helmet({
@@ -86,9 +63,26 @@ app.use(
   })
 );
 
-// Routes
+// Define your IP whitelist based on the environment
+const allowedIPs = isProduction
+  ? ["192.168.1.100", "127.0.0.1", "::1", "13.235.186.84", "13.126.138.220"]
+  : ["192.168.1.100", "127.0.0.1", "::1", "13.126.138.220", "15.207.242.14"];
+
+// Middleware for checking allowed IPs
+function checkAllowedIP(req, res, next) {
+  const clientIP = req.ip; // Get the client's IP address
+
+  if (allowedIPs.includes(clientIP)) {
+    next(); // Allow the request to proceed to the next middleware
+  } else {
+    res.status(403).send("Access denied. Your IP is not whitelisted.");
+  }
+}
+
+// Define your routes
+const indexRouter = require("./routes");
 app.use("/", indexRouter);
-// app.use("/", restrictByIP, indexRouter);
+// app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
 app.use((req, res, next) => {
@@ -125,8 +119,8 @@ if (force) {
   );
 } else {
   sequelize
-    // .sync()
-    .authenticate()
+    .sync()
+    // .authenticate()
     .then(async (result) => {
       console.log(`✔ Database connection successful! 🎯`);
     })

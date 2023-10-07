@@ -41,4 +41,35 @@ const resizeImageDelete = async () => {
   }
 };
 
-imageResize();
+// imageResize();
+
+const { blogs, sequelize } = require("./model"); // Adjust the path
+
+const updateBlogCounts = async () => {
+  try {
+    const updateQuery = `
+      UPDATE blogs AS b
+      SET
+        b.views = IFNULL((SELECT COUNT(*) FROM blogViews AS bv WHERE bv.blogId = b.id), 0),
+        b.likes = IFNULL((SELECT COUNT(*) FROM blogLikes AS bl WHERE bl.blogId = b.id), 0),
+        b.comments = IFNULL((
+          SELECT COUNT(*) FROM (
+            SELECT 1 FROM blogComments AS bc WHERE bc.blogId = b.id
+            UNION ALL
+            SELECT 1 FROM blogComments AS bc
+            JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId
+            WHERE bc.blogId = b.id
+          ) AS commentAndReplyCounts
+        ), 0),
+        b.wishlists = IFNULL((SELECT COUNT(*) FROM blogWishlists AS bw WHERE bw.blogId = b.id), 0);
+    `;
+
+    await sequelize.query(updateQuery, { type: sequelize.QueryTypes.UPDATE });
+
+    console.log("Blogs counts updated successfully");
+  } catch (error) {
+    console.error("Error updating blogs counts:", error);
+  }
+};
+
+// updateBlogCounts();

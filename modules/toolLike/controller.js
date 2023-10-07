@@ -1,7 +1,8 @@
 "use strict";
 
+const sequelize = require("sequelize");
 const service = require("./service");
-
+const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 exports.likeTool = async (req, res, next) => {
@@ -14,12 +15,20 @@ exports.likeTool = async (req, res, next) => {
       await service.delete({
         where: req.body,
       });
+      toolService.update(
+        { likes: sequelize.literal("likes  - 1") },
+        { where: { id: req.body.toolId } }
+      );
       res.status(200).json({
         status: "success",
         message: "You removed like!.",
       });
     } else {
       await service.create(req.body);
+      toolService.update(
+        { likes: sequelize.literal("likes  + 1") },
+        { where: { id: req.body.toolId } }
+      );
       res.status(200).json({
         status: "success",
         message: "Liked tool 🫣!.",

@@ -33,4 +33,38 @@ const resizeImageDelete = async () => {
     console.log(error);
   }
 };
-imageResize();
+// imageResize();
+
+const { tools, sequelize } = require("./model"); // Adjust the path
+
+const updateToolCounts = async () => {
+  try {
+    const updateQuery = `
+      UPDATE tools AS t
+      SET
+        t.views = IFNULL((SELECT COUNT(*) FROM toolViews AS tv WHERE tv.toolId = t.id), 0),
+        t.likes = IFNULL((SELECT COUNT(*) FROM toolLikes AS tl WHERE tl.toolId = t.id), 0),
+        t.wishlists = IFNULL((SELECT COUNT(*) FROM toolWishlists AS tw WHERE tw.toolId = t.id), 0),
+        t.ratingsAverage = (
+          SELECT IFNULL(
+            ROUND(AVG(tr.rating), 1), 
+            0
+          )
+          FROM toolRatings AS tr 
+          WHERE tr.toolId = t.id
+          AND tr.deletedAt IS NULL
+        ),
+        t.totalRatings = IFNULL(
+          (SELECT COUNT(*) FROM toolRatings AS tr WHERE tr.toolId = t.id AND tr.deletedAt IS NULL),
+          0
+        );
+    `;
+
+    await sequelize.query(updateQuery, { type: sequelize.QueryTypes.UPDATE });
+
+    console.log("Tools counts updated successfully");
+  } catch (error) {
+    console.error("Error updating tools counts:", error);
+  }
+};
+// updateToolCounts();

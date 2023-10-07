@@ -7,7 +7,7 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     await queryInterface.addColumn("tools", "previews", {
-      type: DataTypes.TEXT,
+      type: Sequelize.TEXT,
       get: function () {
         return this.getDataValue("previews")
           ? JSON.parse(this.getDataValue("previews"))

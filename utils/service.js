@@ -1,9 +1,7 @@
 "use strict";
 const jwt = require("jsonwebtoken");
-// const AWS = require("aws-sdk");
 const { Op } = require("sequelize");
 const moment = require("moment");
-const { s3 } = require("../config/aws");
 
 exports.cl = (tag, message = "", level = "info") => {
   if (process.env.log == 1) {

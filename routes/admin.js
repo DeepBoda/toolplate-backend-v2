@@ -9,6 +9,7 @@ router.use("/flush", flushAll);
 router.use(authMiddleware, protectRoute(["Admin"]));
 router.use("/users", require("../modules/user/admin"));
 router.use("/appConfig", require("../modules/appConfig/admin"));
+router.use("/notification", require("../modules/notification/admin"));
 router.use("/tool", require("../modules/tool/admin"));
 router.use("/tools/preview", require("../modules/toolImages/admin"));
 router.use("/tools/rating", require("../modules/toolRating/admin"));

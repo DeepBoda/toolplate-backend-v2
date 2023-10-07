@@ -1,27 +1,35 @@
 "use strict";
-const sequelize = require("sequelize");
-const service = require("./service");
-const blogService = require("../blog/service");
-const commentService = require("../blogComment/service");
-const { usersqquery, sqquery } = require("../../utils/query");
 
+const service = require("./service");
+const { sendNotificationToTopic } = require("../../service/lambda");
+const { AdminAttributes } = require("../../constants/queryAttributes");
+const { usersqquery, sqquery } = require("../../utils/query");
+const { pushNotificationTopic } = require("../../service/firebase");
+const Admin = require("../admin/model");
+
+// ------------- Only Admin can Create and Get all--------------
 exports.add = async (req, res, next) => {
   try {
-    req.body.userId = req.requestor.id;
-    const data = await service.create(req.body);
+    // Set the topic property of the request body based on the environment
+    const adminId = req.requestor ? req.requestor.id : 1;
+    const topic =
+      process.env.NODE_ENV === "production"
+        ? process.env.TOPIC
+        : process.env.DEV_TOPIC;
 
-    const comment = await commentService.findOne({
-      where: { id: req.body.blogCommentId },
-    });
+    const { title, body, click_action } = req.body;
 
-    blogService.update(
-      { comments: sequelize.literal("comments  + 1") },
-      { where: { id: comment.blogId } }
-    );
+    // Send the notification to the specified topic
+    // sendNotificationToTopic(topic, title, body, click_action);
+    pushNotificationTopic(topic, title, body, click_action, adminId);
 
+    // Save the notification data
+    // service.create(req.body);
+
+    // Send a success response
     res.status(200).json({
       status: "success",
-      data,
+      message: "Notification sent successfully!",
     });
   } catch (error) {
     console.error(error);
@@ -31,7 +39,13 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query),
+      include: {
+        model: Admin,
+        attributes: AdminAttributes,
+      },
+    });
 
     res.status(200).send({
       status: "success",
@@ -59,6 +73,7 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+// ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
     // Update the blog data

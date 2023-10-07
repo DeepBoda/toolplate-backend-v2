@@ -307,6 +307,24 @@ exports.updateProfile = async (req, res, next) => {
     next(error);
   }
 };
+exports.updateFCM = async (req, res, next) => {
+  try {
+    const userId = req.requestor.id;
+
+    // Update user's data in the database
+    const [affectedRows] = await service.update(req.body, {
+      where: { id: userId },
+    });
+
+    // Send success response with the number of affected rows
+    res.status(200).json({
+      status: "success",
+      data: { affectedRows },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // <=============== For Admins ===================>
 

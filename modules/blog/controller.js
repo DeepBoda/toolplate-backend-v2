@@ -4,6 +4,7 @@ const sequelize = require("../../config/db");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
+const { pushNotificationTopic } = require("../../service/firebase");
 const redisService = require("../../utils/redis");
 const viewService = require("../blogView/service");
 const { blogResizeImageSize } = require("../../constants");
@@ -21,6 +22,7 @@ const BlogTag = require("../blogTag/model");
 const blogTagService = require("../blogTag/service");
 const Tag = require("../tag/model");
 const { resizeAndUploadImage } = require("../../utils/imageResize");
+
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
@@ -36,28 +38,38 @@ exports.add = async (req, res, next) => {
       remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
     });
 
-    const { categories, tags, ...body } = req.body;
+    const { categories, tags, ...bodyData } = req.body;
 
-    // Step 1: Create the new blog entry in the `blog` table
-    const blog = await service.create(body);
+    // Create the new blog entry in the `blog` table
+    const blog = await service.create(bodyData);
 
-    // Step 2: Get the comma-separated `categories` and `tags` IDs
+    // Send a push notification with the blog title and body
+    const topic =
+      process.env.NODE_ENV === "production"
+        ? process.env.TOPIC
+        : process.env.DEV_TOPIC;
+    const title = blog.title;
+    const body = "Hot on Toolplate- check it now!";
+    const click_action = `blog/${blog.slug}`;
+    pushNotificationTopic(topic, title, body, click_action, 1);
+
+    // Get the comma-separated `categories` and `tags` IDs
     const categoryIds = categories.split(",").map(Number);
     const tagIds = tags.split(",").map(Number);
 
-    // Step 3: Create an array of objects for bulk insert in `blogCategory` table
+    // Create an array of objects for bulk insert in `blogCategory` table
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       blogId: blog.id,
       categoryId,
     }));
 
-    // Step 4: Create an array of objects for bulk insert in `blogTag` table
+    // Create an array of objects for bulk insert in `blogTag` table
     const tagBulkInsertData = tagIds.map((tagId) => ({
       blogId: blog.id,
       tagId,
     }));
 
-    // Step 5: Use bulk create operations for `blogCategory` and `blogTag`
+    // Use bulk create operations for `blogCategory` and `blogTag`
     await Promise.all([
       blogCategoryService.bulkCreate(categoryBulkInsertData),
       blogTagService.bulkCreate(tagBulkInsertData),
@@ -103,34 +115,6 @@ exports.getAll = async (req, res, next) => {
         ...blogAttributes,
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-          ),
-          "views",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
-          ),
-          "likes",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM (
-              SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
-              UNION ALL
-              SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
-            ) AS commentAndReplyCounts)`
-          ),
-          "comments",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
-          ),
-          "wishlists",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
@@ -162,6 +146,7 @@ exports.getAll = async (req, res, next) => {
           },
         },
       ],
+      // },
     });
 
     // redisService.set(`blogs`, data);
@@ -199,34 +184,6 @@ exports.getAllForAdmin = async (req, res, next) => {
       distinct: true, // Add this option to ensure accurate counts
       attributes: {
         include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM (
-              SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
-              UNION ALL
-              SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
-            ) AS commentAndReplyCounts)`
-            ),
-            "comments",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
-            ),
-            "wishlists",
-          ],
           [
             sequelize.literal(
               `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
@@ -276,7 +233,9 @@ exports.getAllForAdmin = async (req, res, next) => {
 
 exports.getBySlug = async (req, res, next) => {
   try {
-    let data = await redisService.get(`blog?slug=${req.params.slug}`);
+    const cacheKey = `blog?slug=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
     if (!data) {
       data = await service.findOne({
         where: {
@@ -301,12 +260,22 @@ exports.getBySlug = async (req, res, next) => {
           },
         ],
       });
-      redisService.set(`blog?slug=${req.params.slug}`, data);
+
+      redisService.set(cacheKey, data);
     }
-    viewService.create({
-      blogId: data.id,
-      userId: req.requestor?.id ?? null,
-    });
+    console.log(data);
+
+    service.update(
+      { views: sequelize.literal("views + 1") },
+      { where: { id: data.id } }
+    );
+
+    if (req.requestor) {
+      view = viewService.create({
+        blogId: data.id,
+        userId: req.requestor?.id ?? null,
+      });
+    }
 
     res.status(200).send({
       status: "success",
@@ -329,34 +298,6 @@ exports.getDynamicBySlug = async (req, res, next) => {
       },
       attributes: [
         ...blogAttributes,
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-          ),
-          "views",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
-          ),
-          "likes",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM (
-              SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
-              UNION ALL
-              SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
-            ) AS commentAndReplyCounts)`
-          ),
-          "comments",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
-          ),
-          "wishlists",
-        ],
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
@@ -391,28 +332,6 @@ exports.getForAdmin = async (req, res, next) => {
     const data = await service.findOne({
       where: {
         id: req.params.id,
-      },
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
-            ),
-            "wishlists",
-          ],
-        ],
       },
       include: [
         {
@@ -490,12 +409,6 @@ exports.getRelatedBlogs = async (req, res, next) => {
         ...blogAttributes,
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-          ),
-          "views",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
@@ -569,7 +482,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
   }
 };
 
-// ---------- Only Admin can Update/Delete ----------exports.update = async (req, res, next) => {
+// ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -604,9 +517,7 @@ exports.update = async (req, res, next) => {
     res.status(200).json({ status: "success", data: { affectedRows } });
 
     // Clear Redis cache
-    if (body.title) {
-      await redisService.del(`blog?slug=${oldBlogData.slug}`);
-    }
+    redisService.del(`blog?slug=${oldBlogData.slug}`);
 
     // Handle categories and tags updates
     const categoryIds = categories.split(",").map(Number);
@@ -710,5 +621,4 @@ const makeSLug = async (req, res, next) => {
     console.log(error);
   }
 };
-// makeSLug();
 // makeSLug();

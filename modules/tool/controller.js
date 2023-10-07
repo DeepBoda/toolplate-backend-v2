@@ -1,9 +1,11 @@
 "use strict";
 const { Op, where } = require("sequelize");
 const sequelize = require("../../config/db");
+const Sequelize = require("sequelize");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
+const { pushNotificationTopic } = require("../../service/firebase");
 const viewService = require("../toolView/service");
 const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
@@ -24,6 +26,7 @@ const toolTagService = require("../toolTag/service");
 const Tag = require("../tag/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
+const { suggestTool } = require("../../utils/prompt");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -46,10 +49,20 @@ exports.add = async (req, res, next) => {
       lower: true, // convert to lowercase
       remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
     });
-    const { categories, tags, ...body } = req.body;
+    const { categories, tags, ...bodyData } = req.body;
 
     // Step 1: Create the new tool entry in the `tool` table
-    const tool = await service.create(body);
+    const tool = await service.create(bodyData);
+
+    // Send a push notification with the blog title and body
+    const topic =
+      process.env.NODE_ENV === "production"
+        ? process.env.TOPIC
+        : process.env.DEV_TOPIC;
+    const title = tool.title;
+    const body = "Hot on Toolplate- check it now!";
+    const click_action = `tool/${tool.slug}`;
+    pushNotificationTopic(topic, title, body, click_action, 1);
 
     // Check if Previews uploaded and if got URLs
     if (req.files.previews) {
@@ -92,6 +105,7 @@ exports.add = async (req, res, next) => {
       data: tool,
     });
 
+    // Resize and upload the tool icons
     resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
   } catch (error) {
     console.error(error);
@@ -125,49 +139,15 @@ exports.getAll = async (req, res, next) => {
         ...toolAttributes,
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-          ),
-          "views",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-          ),
-          "likes",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
         ],
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
-          ),
-          "wishlists",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
-        ],
-        [
-          sequelize.fn(
-            "ROUND",
-            sequelize.literal(
-              `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-            ),
-            1
-          ),
-          "ratingsAverage",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-          ),
-          "totalRatings",
         ],
       ],
       include: [
@@ -229,49 +209,15 @@ exports.getAllForAdmin = async (req, res, next) => {
         include: [
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
               `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
             ),
             "isLiked",
           ],
           [
             sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
-            ),
-            "wishlists",
-          ],
-          [
-            sequelize.literal(
               `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
             ),
             "isWishlisted",
-          ],
-          [
-            sequelize.fn(
-              "ROUND",
-              sequelize.literal(
-                `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-              ),
-              1
-            ),
-            "ratingsAverage",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-            ),
-            "totalRatings",
           ],
         ],
       },
@@ -310,7 +256,9 @@ exports.getAllForAdmin = async (req, res, next) => {
 
 exports.getBySlug = async (req, res, next) => {
   try {
-    let data = await redisService.get(`tool?slug=${req.params.slug}`);
+    const cacheKey = `tool?slug=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
     if (!data) {
       data = await service.findOne({
         where: {
@@ -339,13 +287,21 @@ exports.getBySlug = async (req, res, next) => {
           },
         ],
       });
-      redisService.set(`tool?slug=${req.params.slug}`, data);
+
+      redisService.set(cacheKey, data);
     }
-    //When opens tool, this creates entry for view
-    viewService.create({
-      toolId: data.id,
-      userId: req.requestor?.id ?? null,
-    });
+
+    service.update(
+      { views: sequelize.literal("views + 1") },
+      { where: { id: data.id } }
+    );
+    // Create an entry for the tool view
+    if (req.requestor) {
+      viewService.create({
+        toolId: data.id,
+        userId: req.requestor?.id ?? null,
+      });
+    }
 
     res.status(200).send({
       status: "success",
@@ -369,24 +325,6 @@ exports.getDynamicBySlug = async (req, res, next) => {
         ...toolAttributes,
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-          ),
-          "views",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-          ),
-          "likes",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
-          ),
-          "wishlists",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
@@ -396,22 +334,6 @@ exports.getDynamicBySlug = async (req, res, next) => {
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
-        ],
-        [
-          sequelize.fn(
-            "ROUND",
-            sequelize.literal(
-              `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-            ),
-            1
-          ),
-          "ratingsAverage",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-          ),
-          "totalRatings",
         ],
       ],
     });
@@ -433,7 +355,7 @@ exports.search = async (req, res, next) => {
       service.findAll({
         where: {
           title: {
-            [Op.like]: `%${req.query.title}%`,
+            [Op.like]: `${req.query.title}%`,
           },
         },
         attributes: ["id", "image", "title", "description", "slug"],
@@ -458,6 +380,33 @@ exports.search = async (req, res, next) => {
   }
 };
 
+exports.promptSearch = async (req, res, next) => {
+  try {
+    const promptTool = await suggestTool(req.query.search);
+
+    // prompt tool array search in elastic search and find id
+
+    //from id find tool in database and send to API
+
+    const data = await service.findAll({
+      where: {
+        [Sequelize.Op.or]: promptTool.map((name) => ({
+          title: {
+            [Sequelize.Op.like]: `%${name}%`,
+          },
+        })),
+      },
+    });
+    res.status(200).send({
+      status: "success",
+      promptTool,
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getForAdmin = async (req, res, next) => {
   try {
     // let data = await redisService.get(`oneTool`);
@@ -466,44 +415,6 @@ exports.getForAdmin = async (req, res, next) => {
     const data = await service.findOne({
       where: {
         id: req.params.id,
-      },
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-            ),
-            "views",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-            ),
-            "likes",
-          ],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
-            ),
-            "wishlists",
-          ],
-          [
-            sequelize.fn(
-              "ROUND",
-              sequelize.literal(
-                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-              ),
-              1
-            ),
-            "ratingsAverage",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-            ),
-            "totalRatings",
-          ],
-        ],
       },
       include: [
         {
@@ -593,18 +504,6 @@ exports.getRelatedTools = async (req, res, next) => {
         ...toolAttributes,
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-          ),
-          "views",
-        ],
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-          ),
-          "likes",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
@@ -614,22 +513,6 @@ exports.getRelatedTools = async (req, res, next) => {
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
-        ],
-        [
-          sequelize.fn(
-            "ROUND",
-            sequelize.literal(
-              `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-            ),
-            1
-          ),
-          "ratingsAverage",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-          ),
-          "totalRatings",
         ],
       ],
 
@@ -727,7 +610,7 @@ exports.update = async (req, res, next) => {
     res.status(200).json({ status: "success", data: { affectedRows } });
 
     // Clear Redis cache
-    if (req.body.title) await redisService.del(`tool?slug=${oldToolData.slug}`);
+    redisService.del(`tool?slug=${oldToolData.slug}`);
 
     // Handle the file deletion
     if (req.files?.image && oldToolData.image) {

@@ -19,6 +19,7 @@ router.use(authMiddleware,protectRoute(['User']));
 // <=============== APIs only for Users ===============>
 router.get("/me", user.getProfile);
 router.patch("/profile", upload.single('profilePic') ,joiValidator(userSchema.updateProfile), user.updateProfile);
+router.patch("/fcm",joiValidator(userSchema.updateFCM), user.updateFCM);
 
 
 

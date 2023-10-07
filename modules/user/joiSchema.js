@@ -18,4 +18,8 @@ module.exports = {
     isBlocked: Joi.boolean(),
     FCM: Joi.string(),
   }),
+  updateFCM: Joi.object().keys({
+    username: Joi.string(),
+    FCM: Joi.string(),
+  }),
 };

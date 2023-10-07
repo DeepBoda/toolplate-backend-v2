@@ -28,7 +28,7 @@ exports.getAll = async (req, res, next) => {
     // Try to retrieve the categories from the Redis cache
     let data = await redisService.get(`categories`);
 
-    // If the categories is not found in the cache
+    // If the categories are not found in the cache
     if (!data) {
       data = await service.findAndCountAll(usersqquery(req.query));
       redisService.set(`categories`, data);

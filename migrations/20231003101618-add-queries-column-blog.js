@@ -3,19 +3,19 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.addColumn("blogs", "likes", {
-      type: DataTypes.INTEGER,
+      type: Sequelize.INTEGER,
       defaultValue: 0,
     });
     await queryInterface.addColumn("blogs", "views", {
-      type: DataTypes.INTEGER,
+      type: Sequelize.INTEGER,
       defaultValue: 0,
     });
     await queryInterface.addColumn("blogs", "comments", {
-      type: DataTypes.INTEGER,
+      type: Sequelize.INTEGER,
       defaultValue: 0,
     });
     await queryInterface.addColumn("blogs", "wishlists", {
-      type: DataTypes.INTEGER,
+      type: Sequelize.INTEGER,
       defaultValue: 0,
     });
   },

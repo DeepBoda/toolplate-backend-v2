@@ -4,6 +4,7 @@ const sequelize = require("../../config/db");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
+const { pushNotificationTopic } = require("../../service/firebase");
 const redisService = require("../../utils/redis");
 const viewService = require("../blogView/service");
 const { blogResizeImageSize } = require("../../constants");
@@ -37,28 +38,38 @@ exports.add = async (req, res, next) => {
       remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
     });
 
-    const { categories, tags, ...body } = req.body;
+    const { categories, tags, ...bodyData } = req.body;
 
-    // Step 1: Create the new blog entry in the `blog` table
-    const blog = await service.create(body);
+    // Create the new blog entry in the `blog` table
+    const blog = await service.create(bodyData);
 
-    // Step 2: Get the comma-separated `categories` and `tags` IDs
+    // Send a push notification with the blog title and body
+    const topic =
+      process.env.NODE_ENV === "production"
+        ? process.env.TOPIC
+        : process.env.DEV_TOPIC;
+    const title = blog.title;
+    const body = "Hot on Toolplate- check it now!";
+    const click_action = `blog/${blog.slug}`;
+    pushNotificationTopic(topic, title, body, click_action, 1);
+
+    // Get the comma-separated `categories` and `tags` IDs
     const categoryIds = categories.split(",").map(Number);
     const tagIds = tags.split(",").map(Number);
 
-    // Step 3: Create an array of objects for bulk insert in `blogCategory` table
+    // Create an array of objects for bulk insert in `blogCategory` table
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       blogId: blog.id,
       categoryId,
     }));
 
-    // Step 4: Create an array of objects for bulk insert in `blogTag` table
+    // Create an array of objects for bulk insert in `blogTag` table
     const tagBulkInsertData = tagIds.map((tagId) => ({
       blogId: blog.id,
       tagId,
     }));
 
-    // Step 5: Use bulk create operations for `blogCategory` and `blogTag`
+    // Use bulk create operations for `blogCategory` and `blogTag`
     await Promise.all([
       blogCategoryService.bulkCreate(categoryBulkInsertData),
       blogTagService.bulkCreate(tagBulkInsertData),

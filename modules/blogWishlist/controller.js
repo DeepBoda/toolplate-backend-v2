@@ -94,37 +94,7 @@ exports.getByUser = async (req, res, next) => {
         // },
         {
           model: Blog,
-          attributes: [
-            ...blogAttributes,
-            [
-              sequelize.literal(
-                "(SELECT COUNT(*) FROM `blogViews` WHERE `blog`.`id` = `blogViews`.`blogId` )"
-              ),
-              "views",
-            ],
-            [
-              sequelize.literal(
-                "(SELECT COUNT(*) FROM `blogLikes` WHERE `blog`.`id` = `blogLikes`.`blogId` )"
-              ),
-              "likes",
-            ],
-            [
-              sequelize.literal(
-                `(SELECT COUNT(*) FROM (
-                SELECT 1 AS count FROM blogComments WHERE blogComments.blogId = blog.id
-                UNION ALL
-                SELECT 1 AS count FROM blogComments AS bc JOIN blogCommentReplies AS bcr ON bc.id = bcr.blogCommentId WHERE bc.blogId = blog.id
-              ) AS commentAndReplyCounts)`
-              ),
-              "comments",
-            ],
-            [
-              sequelize.literal(
-                "(SELECT COUNT(*) FROM `blogWishlists` WHERE `blog`.`id` = `blogWishlists`.`blogId` )"
-              ),
-              "wishlists",
-            ],
-          ],
+          attributes: blogAttributes,
           include: {
             model: BlogCategory,
             attributes: ["id", "blogId", "categoryId"],

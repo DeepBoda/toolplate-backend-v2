@@ -11,6 +11,11 @@ exports.toolAttributes = [
   "link",
   "slug",
   "createdAt",
+  "likes",
+  "views",
+  "wishlists",
+  "ratingsAverage",
+  "totalRatings",
 ];
 exports.blogAttributes = [
   "id",

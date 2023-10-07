@@ -48,6 +48,26 @@ const Tool = sequelize.define(
     slug: {
       type: DataTypes.STRING,
     },
+    likes: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    views: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    wishlists: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    ratingsAverage: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
+    },
+    totalRatings: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
   },
   {
     paranoid: true,

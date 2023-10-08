@@ -69,6 +69,7 @@ const allowedIPs = isProduction
   : ["192.168.1.100", "127.0.0.1", "::1", "13.126.138.220", "15.207.242.14"];
 
 // Middleware for checking allowed IPs
+app.set("trust proxy", true);
 function checkAllowedIP(req, res, next) {
   const clientIP = req.ip; // Get the client's IP address
   console.log("IP: ", req.ip);

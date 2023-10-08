@@ -79,6 +79,9 @@ function checkAllowedIP(req, res, next) {
   }
 }
 
+console.log("IP: ", req.ip);
+console.log("IPS: ", req.ips);
+
 // Define your routes
 const indexRouter = require("./routes");
 app.use("/", indexRouter);

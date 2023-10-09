@@ -2,6 +2,8 @@
 
 exports.AdminAttributes = ["id", "name", "email"];
 
+exports.userAdminAttributes = ["username", "email", "profilePic"];
+exports.blogAdminAttributes = ["title", "image", "alt"];
 exports.toolAttributes = [
   "id",
   "title",
@@ -31,5 +33,6 @@ exports.blogAttributes = [
   "comments",
   "wishlists",
 ];
+
 exports.tagAttributes = ["name"];
 exports.categoryAttributes = ["name"];

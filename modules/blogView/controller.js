@@ -4,6 +4,11 @@ const { Op } = require("sequelize");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const User = require("../user/model");
+const {
+  userAdminAttributes,
+  blogAdminAttributes,
+} = require("../../constants/queryAttributes");
+const Blog = require("../blog/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -29,10 +34,16 @@ exports.getAll = async (req, res, next) => {
         },
       }),
       distinct: true, // Add this option to ensure accurate counts
-      include: {
-        model: User,
-        attributes: ["id", "username", "email", "profilePic"],
-      },
+      include: [
+        {
+          model: User,
+          attributes: userAdminAttributes,
+        },
+        {
+          model: Blog,
+          attributes: blogAdminAttributes,
+        },
+      ],
     });
 
     res.status(200).send({

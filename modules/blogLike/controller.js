@@ -3,6 +3,12 @@ const sequelize = require("sequelize");
 const service = require("./service");
 const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
+const User = require("../user/model");
+const {
+  userAdminAttributes,
+  blogAdminAttributes,
+} = require("../../constants/queryAttributes");
+const Blog = require("../blog/model");
 
 exports.likeBlog = async (req, res, next) => {
   try {
@@ -41,7 +47,20 @@ exports.likeBlog = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query),
+      distinct: true, // Add this option to ensure accurate counts
+      include: [
+        {
+          model: User,
+          attributes: userAdminAttributes,
+        },
+        {
+          model: Blog,
+          attributes: blogAdminAttributes,
+        },
+      ],
+    });
 
     res.status(200).send({
       status: "success",

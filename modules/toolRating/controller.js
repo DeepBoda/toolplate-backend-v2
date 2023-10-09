@@ -6,6 +6,7 @@ const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const Tool = require("../tool/model");
 const User = require("../user/model");
+const { userAdminAttributes } = require("../../constants/queryAttributes");
 
 exports.add = async (req, res, next) => {
   try {
@@ -56,7 +57,7 @@ exports.getAll = async (req, res, next) => {
       include: [
         {
           model: User,
-          attributes: ["id", "username", "profilePic"],
+          attributes: userAdminAttributes,
         },
         {
           model: Tool,
@@ -112,7 +113,7 @@ exports.getByUser = async (req, res, next) => {
       include: [
         {
           model: User,
-          attributes: ["id", "username", "profilePic"],
+          attributes: userAdminAttributes,
         },
         {
           model: Tool,

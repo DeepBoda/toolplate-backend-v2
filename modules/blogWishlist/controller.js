@@ -8,10 +8,13 @@ const {
   blogAttributes,
   tagAttributes,
   categoryAttributes,
+  userAdminAttributes,
+  blogAdminAttributes,
 } = require("../../constants/queryAttributes");
 const Blog = require("../blog/model");
 const BlogCategory = require("../blogCategory/model");
 const Category = require("../category/model");
+const User = require("../user/model");
 
 exports.add = async (req, res, next) => {
   try {
@@ -89,20 +92,13 @@ exports.getByUser = async (req, res, next) => {
       ...sqquery(req.query),
       distinct: true, // Add this option to ensure accurate counts
       include: [
-        // {
-        //   model: User,
-        // },
+        {
+          model: User,
+          attributes: userAdminAttributes,
+        },
         {
           model: Blog,
-          attributes: blogAttributes,
-          include: {
-            model: BlogCategory,
-            attributes: ["id", "blogId", "categoryId"],
-            include: {
-              model: Category,
-              attributes: categoryAttributes,
-            },
-          },
+          attributes: blogAdminAttributes,
         },
       ],
     });

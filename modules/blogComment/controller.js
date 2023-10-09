@@ -6,6 +6,7 @@ const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const BlogCommentReply = require("../blogCommentReply/model");
 const User = require("../user/model");
+const { userAdminAttributes } = require("../../constants/queryAttributes");
 
 exports.add = async (req, res, next) => {
   try {
@@ -55,7 +56,7 @@ exports.getAll = async (req, res, next) => {
       include: [
         {
           model: User,
-          attributes: ["id", "username", "profilePic"],
+          attributes: userAdminAttributes,
         },
         {
           model: BlogCommentReply,
@@ -80,11 +81,76 @@ exports.getAll = async (req, res, next) => {
           ],
           include: {
             model: User,
-            attributes: ["id", "username", "profilePic"],
+            attributes: userAdminAttributes,
           },
         },
       ],
       replacements: { UserId: userId },
+    });
+
+    const totalComments = data.length; // Calculate the total count of comments
+    const totalCommentReplies = data.reduce(
+      (total, comment) => total + (comment.blogCommentReplies || []).length,
+      0
+    ); // Calculate the total count of comment replies
+
+    res.status(200).send({
+      status: "success",
+      data: {
+        count: totalComments + totalCommentReplies,
+        rows: data,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllForAdmin = async (req, res, next) => {
+  try {
+    const userId = req.requestor?.id || null; // Check if req.requestor is defined before using it
+
+    const data = await service.findAll({
+      ...sqquery(req.query),
+      attributes: [
+        "id",
+        "comment",
+        "createdAt",
+        "blogId",
+        "userId",
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogComment`.`id` = `blogCommentLikes`.`blogCommentId` )"
+          ),
+          "likes",
+        ],
+      ],
+      include: [
+        {
+          model: User,
+          attributes: userAdminAttributes,
+        },
+        {
+          model: BlogCommentReply,
+          required: false,
+          attributes: [
+            "id",
+            "reply",
+            "createdAt",
+            "userId",
+            [
+              sequelize.literal(
+                "(SELECT COUNT(*) FROM `blogCommentReplyLikes` WHERE `blogCommentReplies`.`id` = `blogCommentReplyLikes`.`blogCommentReplyId` )"
+              ),
+              "likes",
+            ],
+          ],
+          include: {
+            model: User,
+            attributes: userAdminAttributes,
+          },
+        },
+      ],
     });
 
     const totalComments = data.length; // Calculate the total count of comments

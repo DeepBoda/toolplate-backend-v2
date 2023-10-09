@@ -4,6 +4,7 @@ const { Op } = require("sequelize");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const User = require("../user/model");
+const { userAdminAttributes } = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -31,7 +32,7 @@ exports.getAll = async (req, res, next) => {
       distinct: true, // Add this option to ensure accurate counts
       include: {
         model: User,
-        attributes: ["id", "username", "email", "profilePic"],
+        attributes: userAdminAttributes,
       },
     });
 

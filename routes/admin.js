@@ -16,7 +16,7 @@ router.use("/tools/rating", require("../modules/toolRating/admin"));
 router.use("/toolLike", require("../modules/toolLike/admin"));
 router.use("/toolTag", require("../modules/toolTag/admin"));
 router.use("/toolCategory", require("../modules/toolCategory/admin"));
-router.use("/toolView", require("../modules/toolView/admin"));
+router.use("/tools/view", require("../modules/toolView/admin"));
 router.use("/toolWishlist", require("../modules/toolWishlist/admin"));
 router.use("/blog", require("../modules/blog/admin"));
 router.use("/category", require("../modules/category/admin"));

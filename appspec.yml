@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: /
-    destination: /root/toolplate-backend
+    destination: /root/toolplate-backend/
 file_exists_behavior: OVERWRITE
 hooks:
   ApplicationStart:

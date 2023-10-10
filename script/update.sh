@@ -4,7 +4,7 @@
 sudo chmod -R 777 /root/toolplate-backend
 
 # Grant execute permissions to the script
-chmod +x update.sh
+chmod +x /root/toolplate-backend/script/update.sh
 
 # Change to the application directory
 cd /root/toolplate-backend

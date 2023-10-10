@@ -4,6 +4,7 @@ files:
   - source: /
     destination: /root/toolplate-backend
     overwrite: true
+file_exists_behavior: OVERWRITE
 permissions:
   - object: /root/toolplate-backend
     pattern:
@@ -11,7 +12,6 @@ permissions:
     owner: ec2-user
     group: ec2-user
     mode: 777
-
 hooks:
   ApplicationStart:
     - location: script/update.sh

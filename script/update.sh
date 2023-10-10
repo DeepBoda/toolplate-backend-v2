@@ -4,6 +4,7 @@
 cd /root/toolplate-backend
 
 # Update the codebase from your repository
+git restore .
 git pull
 
 # Install dependencies

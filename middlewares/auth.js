@@ -7,7 +7,7 @@ const { cl, jwtDecoder } = require("../utils/service");
 const createHttpError = require("http-errors");
 
 exports.protectRoute = (roles) => async (req, res, next) => {
-  const { role } = req.requestor || {}; // Destructure the role from req.requestor
+  const { role } = req.requestor || {};
 
   if (!roles.includes(role)) {
     return next(createHttpError(401, "Access denied"));
@@ -46,16 +46,14 @@ exports.authMiddleware = async (req, res, next) => {
     if (requestor) {
       requestor.dataValues.role = role;
       req.requestor = requestor.toJSON();
-    } else {
-      req.requestor = null;
-    }
 
-    if (requestor) {
       cl("🧑🏻‍💻 API Call --->", {
         API: req.method + " " + req.originalUrl,
         body: req.body,
         requestor: requestor.toJSON(),
       });
+    } else {
+      req.requestor = null;
     }
 
     next();

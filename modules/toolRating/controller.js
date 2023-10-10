@@ -6,6 +6,11 @@ const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const Tool = require("../tool/model");
 const User = require("../user/model");
+const {
+  userAdminAttributes,
+  toolAdminAttributes,
+  ratingsAdminAttributes,
+} = require("../../constants/queryAttributes");
 
 exports.add = async (req, res, next) => {
   try {
@@ -56,11 +61,11 @@ exports.getAll = async (req, res, next) => {
       include: [
         {
           model: User,
-          attributes: ["id", "username", "profilePic"],
+          attributes: userAdminAttributes,
         },
         {
           model: Tool,
-          attributes: ["id", "title", "image", "price", "link"],
+          attributes: toolAdminAttributes,
         },
       ],
     });
@@ -85,75 +90,37 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-exports.getByUser = async (req, res, next) => {
+exports.getAllForAdmin = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
-      attributes: {
-        include: [
-          [
-            sequelize.fn(
-              "ROUND",
-              sequelize.literal(
-                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-              ),
-              1
-            ),
-            "ratingsAverage",
-          ],
-          [
+      attributes: [
+        ...ratingsAdminAttributes,
+        [
+          sequelize.fn(
+            "ROUND",
             sequelize.literal(
-              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+              `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
             ),
-            "totalRatings",
-          ],
+            1
+          ),
+          "ratingsAverage",
         ],
-      },
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+          ),
+          "totalRatings",
+        ],
+      ],
       include: [
         {
           model: User,
-          attributes: ["id", "username", "profilePic"],
+          attributes: userAdminAttributes,
         },
         {
           model: Tool,
-          attributes: {
-            include: [
-              [
-                sequelize.literal(
-                  "(SELECT COUNT(*) FROM `toolViews` WHERE `tool`.`id` = `toolViews`.`toolId` )"
-                ),
-                "views",
-              ],
-              [
-                sequelize.literal(
-                  "(SELECT COUNT(*) FROM `toolLikes` WHERE `tool`.`id` = `toolLikes`.`toolId` )"
-                ),
-                "likes",
-              ],
-              [
-                sequelize.literal(
-                  "(SELECT COUNT(*) FROM `toolWishlists` WHERE `tool`.`id` = `toolWishlists`.`toolId` )"
-                ),
-                "wishlists",
-              ],
-              // [
-              //   sequelize.fn(
-              //     "ROUND",
-              //     sequelize.literal(
-              //       `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
-              //     ),
-              //     1
-              //   ),
-              //   "ratingsAverage",
-              // ],
-              // [
-              //   sequelize.literal(
-              //     `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id)`
-              //   ),
-              //   "totalRatings",
-              // ],
-            ],
-          },
+          attributes: toolAdminAttributes,
         },
       ],
     });

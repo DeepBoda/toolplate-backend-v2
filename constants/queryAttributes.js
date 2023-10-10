@@ -1,6 +1,19 @@
 "use strict";
 
 exports.AdminAttributes = ["id", "name", "email"];
+exports.userAdminAttributes = ["username", "email", "profilePic"];
+
+exports.blogAdminAttributes = ["title", "image", "alt"];
+exports.toolAdminAttributes = ["title", "image", "price"];
+exports.ratingsAdminAttributes = [
+  "id",
+  "rating",
+  "title",
+  "review",
+  "createdAt",
+  "toolId",
+  "userId",
+];
 
 exports.toolAttributes = [
   "id",
@@ -31,5 +44,6 @@ exports.blogAttributes = [
   "comments",
   "wishlists",
 ];
+
 exports.tagAttributes = ["name"];
 exports.categoryAttributes = ["name"];

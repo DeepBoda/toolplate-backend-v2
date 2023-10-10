@@ -10,10 +10,11 @@ chmod +x update.sh
 cd /root/toolplate-backend
 
 # Update the codebase from your repository
+git restore .
 git pull
 
 # Install dependencies
-npm install
+npm i
 
 # Restart the application using PM2 (replace with your app name)
 pm2 restart "toolplate-backend"

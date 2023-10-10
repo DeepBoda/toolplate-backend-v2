@@ -53,8 +53,8 @@ app.use(
   })
 );
 
-// Enable compression middleware
-app.use(compression());
+// Apply compression only if response size is above 1KB
+app.use(compression({ threshold: 1024 }));
 
 // Enhance security with helmet middleware
 app.use(
@@ -69,8 +69,11 @@ const allowedIPs = isProduction
   : ["192.168.1.100", "127.0.0.1", "::1", "13.126.138.220", "15.207.242.14"];
 
 // Middleware for checking allowed IPs
+app.set("trust proxy", true);
 function checkAllowedIP(req, res, next) {
   const clientIP = req.ip; // Get the client's IP address
+  // console.log("IP: ", req.ip);
+  // console.log("IPS: ", req.ips);
 
   if (allowedIPs.includes(clientIP)) {
     next(); // Allow the request to proceed to the next middleware
@@ -81,8 +84,8 @@ function checkAllowedIP(req, res, next) {
 
 // Define your routes
 const indexRouter = require("./routes");
+// app.use("/", checkAllowedIP, indexRouter);
 app.use("/", indexRouter);
-// app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
 app.use((req, res, next) => {
@@ -129,11 +132,10 @@ if (force) {
     });
 }
 
-// Error handler
+// Error handler for the entire app
 app.use((err, req, res, next) => {
-  // Handle Sequelize errors
+  // Handle specific error types
   if (err.name === "SequelizeUniqueConstraintError") {
-    // Handle unique constraint errors (e.g., duplicate data)
     err.status = 409;
     let msg = "";
 
@@ -143,7 +145,6 @@ app.use((err, req, res, next) => {
 
     err.message = msg;
   } else if (err.name === "SequelizeValidationError") {
-    // Handle validation errors
     err.status = 400;
     let msg = "";
 
@@ -163,7 +164,6 @@ app.use((err, req, res, next) => {
     return res.status(401).json({
       status: 401,
       message: "Unauthorized attempt, login again!",
-      // token: req.header("Authorization"),
     });
   }
 
@@ -174,32 +174,39 @@ app.use((err, req, res, next) => {
   });
 
   app.use((err, req, res, next) => {
-    // Logging the error to the slack
-    // if (err.status >= 500 || res.statusCode >= 500) {
-    //   responseInClientSlack({
-    //     attachments: [
-    //       {
-    //         title: `error`,
-    //         text: `\n\nstatusCode: ${err?.status} \n\nMessage : ${err?.message}\n\n stack: ${err?.stack} \n\n user:${req?.requestor?.id}`,
-    //         color: "#FF0000",
-    //       },
-    //     ],
-    //   });
-    // }
+    try {
+      // // Conditional Logging
+      // if (err.status >= 500 || res.statusCode >= 500) {
+      //   // Assuming responseInClientSlack returns a promise
+      //    responseInClientSlack({
+      //     attachments: [
+      //       {
+      //         title: `error`,
+      //         text: `\n\nstatusCode: ${err?.status} \n\nMessage : ${err?.message}\n\n stack: ${err?.stack} \n\n user:${req?.requestor?.id}`,
+      //         color: "#FF0000",
+      //       },
+      //     ],
+      //   });
+      // }
 
-    // Logging error
-    logService.create({
-      method: req.method,
-      url: req.url,
-      statusCode: err.status || res.statusCode,
-      message: err.message || "Something went wrong!",
-      payload: {
-        params: req.params,
-        body: req.body,
-        query: req.query,
-      },
-      userId: req?.requestor?.id,
-    });
+      // Assuming logService.create returns a promise
+      logService.create({
+        method: req.method,
+        url: req.url,
+        statusCode: err.status || res.statusCode,
+        message: err.message || "Something went wrong!",
+        payload: {
+          params: req.params,
+          body: req.body,
+          query: req.query,
+        },
+        userId: req?.requestor?.id,
+      });
+    } catch (logError) {
+      // Handle errors that occur during logging gracefully.
+      // You might choose to log these errors to your server logs.
+      console.error("Error while logging:", logError);
+    }
 
     // Re-throw the error to let the subsequent error-handling middleware handle it
     throw err;

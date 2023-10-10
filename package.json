@@ -1,6 +1,6 @@
 {
   "name": "toolplate.ai",
-  "version": "1.0.0",
+  "version": "0.0",
   "description": "Toolplate.ai- An extensive Directory of AI tools, reviews and news!",
   "main": "app.js",
   "private": true,

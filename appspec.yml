@@ -1,5 +1,14 @@
-version: 1.0
+version: 0.0
 os: linux
+files:
+  - source: /
+    destination: /root/toolplate-backend
+permissions:
+  - object: /root/toolplate-backend
+    pattern:
+      - "**/*"
+    owner: ec2-user
+    group: ec2-user
 hooks:
   ApplicationStart:
     - location: script/update.sh

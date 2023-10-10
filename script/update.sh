@@ -4,9 +4,10 @@
 sudo chmod -R 777 /root/toolplate-backend
 
 # Grant execute permissions to the script
-chmod +x /root/toolplate-backend/script/update.sh
+chmod +x update.sh
 
 # Change to the application directory
+sudo su
 cd /root/toolplate-backend
 
 # Update the codebase from your repository

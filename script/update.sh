@@ -9,6 +9,10 @@ chmod +x update.sh
 # Change to the application directory
 cd /root/toolplate-backend
 
+# Update the codebase from your repository
+git restore .
+git pull
+
 # Install dependencies
 npm install
 

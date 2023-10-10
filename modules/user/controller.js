@@ -330,13 +330,32 @@ exports.updateFCM = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const users = await service.findAndCountAll({
-      ...sqquery(req.query, {}, ["username", "email"]),
-    });
+    const [users, blocked, joined] = await Promise.all([
+      service.findAndCountAll({
+        ...sqquery({ ...req.query }, {}, ["username", "email"]),
+      }),
+      service.count({
+        ...sqquery({ ...req.query }, { isBlocked: true }, [
+          "username",
+          "email",
+        ]),
+      }),
+      service.count({
+        ...sqquery(
+          { ...req.query },
+          {},
+          ["username", "email"],
+          [],
+          ["group", "limit"]
+        ),
+        group: [sequelize.fn("date", sequelize.col("createdAt"))],
+        limit: 5,
+      }),
+    ]);
 
     res.status(200).send({
       status: "success",
-      data: users,
+      data: { blocked, ...users, joined },
     });
   } catch (error) {
     console.error(error);

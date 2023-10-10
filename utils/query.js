@@ -32,11 +32,19 @@ exports.sqquery = (
   const sortBy = q.sortBy || "DESC";
   const search = q?.search || "";
 
-  excludeFields.push("page", "sort", "limit", "fields", "sortBy", "search");
+  let where = { ...dateFilter(q), ...filter };
 
+  excludeFields.push(
+    "page",
+    "sort",
+    "limit",
+    "fields",
+    "sortBy",
+    "search",
+    "startDate",
+    "endDate"
+  );
   excludeFields.forEach((el) => delete q[el]);
-
-  let where = { ...filter };
 
   Object.entries(q).forEach(([key, value]) => {
     if (typeof value === "object") {

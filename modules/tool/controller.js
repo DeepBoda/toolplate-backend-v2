@@ -56,15 +56,15 @@ exports.add = async (req, res, next) => {
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(bodyData);
 
-    // Send a push notification with the blog title and body
-    const topic =
-      process.env.NODE_ENV === "production"
-        ? process.env.TOPIC
-        : process.env.DEV_TOPIC;
-    const title = tool.title;
-    const body = "Hot on Toolplate- check it now!";
-    const click_action = `tool/${tool.slug}`;
-    pushNotificationTopic(topic, title, body, click_action, 1);
+    // // Send a push notification with the blog title and body
+    // const topic =
+    //   process.env.NODE_ENV === "production"
+    //     ? process.env.TOPIC
+    //     : process.env.DEV_TOPIC;
+    // const title = tool.title;
+    // const body = "Hot on Toolplate- check it now!";
+    // const click_action = `tool/${tool.slug}`;
+    // pushNotificationTopic(topic, title, body, click_action, 1);
 
     // Check if Previews uploaded and if got URLs
     if (req.files.previews) {

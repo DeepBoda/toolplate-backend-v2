@@ -1,5 +1,6 @@
 "use strict";
 const { Op, where } = require("sequelize");
+const stringSimilarity = require("string-similarity");
 const sequelize = require("../../config/db");
 const Sequelize = require("sequelize");
 const createError = require("http-errors");
@@ -15,6 +16,7 @@ const {
   toolAttributes,
   tagAttributes,
   categoryAttributes,
+  promptToolAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
@@ -380,26 +382,104 @@ exports.search = async (req, res, next) => {
 
 exports.promptSearch = async (req, res, next) => {
   try {
-    const promptTool = await suggestTool(req.query.search);
+    const searchQuery = req.query.search;
 
-    // prompt tool array search in elastic search and find id
-
-    //from id find tool in database and send to API
-
-    const data = await service.findAll({
+    const ourTools = await service.findAll({
       where: {
-        [Sequelize.Op.or]: promptTool.map((name) => ({
-          title: {
-            [Sequelize.Op.like]: `%${name}%`,
-          },
-        })),
+        title: {
+          [Op.like]: `%${searchQuery}%`,
+        },
       },
+      attributes: promptToolAttributes,
     });
-    res.status(200).send({
-      status: "success",
-      promptTool,
-      data,
-    });
+
+    if (ourTools.length > 0) {
+      res.status(200).send({
+        status: "success",
+        // promptTools,
+        results: ourTools,
+      });
+    } else {
+      // Suggest tools based on the search query
+      const promptTools = await suggestTool([searchQuery]);
+
+      // Fetch tools data
+      const tools = await service.findAll({
+        attributes: promptToolAttributes,
+      });
+
+      const toolTitles = tools.map((tool) => tool.title.toLowerCase());
+
+      const results = [];
+
+      // Find the best matching tool for each prompt
+      promptTools.forEach((prompt) => {
+        const matches = toolTitles.map((title, index) => ({
+          item: tools[index],
+          similarity: stringSimilarity.compareTwoStrings(
+            prompt.toLowerCase(),
+            title
+          ),
+        }));
+
+        // Filter matches with similarity >= 0.5
+        const bestMatch = matches
+          .filter((match) => match.similarity >= 0.5)
+          .sort((a, b) => b.similarity - a.similarity);
+
+        // If there are matches, add the first one to the results
+        if (bestMatch.length > 0) {
+          results.push(bestMatch[0].item);
+        }
+      });
+
+      if (results.length > 0) {
+        // Find the categories of the first result
+        const categories = await toolCategoryService.findAll({
+          where: { toolId: results[0].id },
+          attributes: ["categoryId"],
+        });
+
+        if (categories.length > 0) {
+          const categoryIds = categories.map((category) => category.categoryId);
+
+          // Find related tools with the same category IDs
+          const relatedTools = await service.findAll({
+            where: {
+              id: { [Op.notIn]: results.map((result) => result.id) },
+            },
+            include: [
+              {
+                model: ToolCategory,
+                where: { categoryId: { [Op.in]: categoryIds } },
+              },
+            ],
+          });
+
+          // Implement your own sorting criteria for related tools
+          relatedTools.sort((a, b) => b.views - a.views);
+
+          // Format related tools data
+          const formattedRelatedTools = relatedTools.map((tool) => ({
+            id: tool.id,
+            title: tool.title,
+            description: tool.description,
+            image: tool.image,
+            price: tool.price,
+            slug: tool.slug,
+          }));
+
+          // Append the related tools to the results
+          results.push(...formattedRelatedTools);
+        }
+      }
+
+      res.status(200).send({
+        status: "success",
+        // promptTools,
+        results,
+      });
+    }
   } catch (error) {
     next(error);
   }

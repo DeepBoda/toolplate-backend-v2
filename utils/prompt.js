@@ -1,9 +1,9 @@
-"use strict";
 const OpenAI = require("openai");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_APIKEY,
 });
+
 function extractToolNames(response) {
   const toolNameRegex = /\d+\.\s([^:]+)/g;
   const matches = response.match(toolNameRegex);
@@ -15,19 +15,30 @@ function extractToolNames(response) {
   }
 }
 
-exports.suggestTool = async (prompt) => {
-  const chatCompletion = await openai.chat.completions.create({
-    messages: [
-      {
-        role: "user",
-        content: "I want AI tool list for" + prompt,
-      },
-    ],
-    model: "gpt-3.5-turbo",
-  });
+exports.suggestTool = async (prompts) => {
+  try {
+    // Concatenate all prompts into a single string
+    const combinedPrompts = prompts.join(" ");
 
-  console.log(chatCompletion.choices);
-  const assistantResponse = chatCompletion.choices[0].message.content;
-  const toolNames = extractToolNames(assistantResponse);
-  return toolNames;
+    // Create a single API request for all prompts
+    const chatCompletion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: `I want AI tools list for ${combinedPrompts}`,
+        },
+      ],
+      model: "gpt-3.5-turbo",
+    });
+
+    // Extract tool names from the response
+    const toolNames = extractToolNames(
+      chatCompletion.choices[0].message.content
+    );
+
+    return toolNames;
+  } catch (error) {
+    console.error("Error suggesting AI tools:", error);
+    throw error;
+  }
 };

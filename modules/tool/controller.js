@@ -296,12 +296,10 @@ exports.getBySlug = async (req, res, next) => {
       { where: { id: data.id } }
     );
     // Create an entry for the tool view
-    if (req.requestor) {
-      viewService.create({
-        toolId: data.id,
-        userId: req.requestor?.id ?? null,
-      });
-    }
+    viewService.create({
+      toolId: data.id,
+      userId: req.requestor?.id ?? null,
+    });
 
     res.status(200).send({
       status: "success",

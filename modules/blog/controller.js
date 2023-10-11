@@ -270,12 +270,10 @@ exports.getBySlug = async (req, res, next) => {
       { where: { id: data.id } }
     );
 
-    if (req.requestor) {
-      view = viewService.create({
-        blogId: data.id,
-        userId: req.requestor?.id ?? null,
-      });
-    }
+    viewService.create({
+      blogId: data.id,
+      userId: req.requestor?.id ?? null,
+    });
 
     res.status(200).send({
       status: "success",

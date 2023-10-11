@@ -344,6 +344,41 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
+exports.overview = async (req, res, next) => {
+  try {
+    const [users, blocked, joined] = await Promise.all([
+      service.findAndCountAll({
+        ...sqquery({ ...req.query }, {}, ["username", "email"]),
+      }),
+      service.count({
+        ...sqquery({ ...req.query }, { isBlocked: true }, [
+          "username",
+          "email",
+        ]),
+      }),
+      service.count({
+        ...sqquery(
+          { ...req.query },
+          {},
+          ["username", "email"],
+          [],
+          ["group", "limit"]
+        ),
+        group: [sequelize.fn("date", sequelize.col("createdAt"))],
+        limit: 5,
+      }),
+    ]);
+
+    res.status(200).send({
+      status: "success",
+      data: { blocked, ...users, joined },
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 exports.getById = async (req, res, next) => {
   try {
     const user = await service.findOne({

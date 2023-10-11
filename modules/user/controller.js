@@ -330,6 +330,22 @@ exports.updateFCM = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
+    const users = await service.findAndCountAll({
+      ...sqquery(req.query, {}, ["username", "email"]),
+    });
+
+    res.status(200).send({
+      status: "success",
+      data: users,
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
+exports.overview = async (req, res, next) => {
+  try {
     const [users, blocked, joined] = await Promise.all([
       service.findAndCountAll({
         ...sqquery({ ...req.query }, {}, ["username", "email"]),

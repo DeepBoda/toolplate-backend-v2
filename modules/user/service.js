@@ -10,27 +10,27 @@ exports.bulkCreate = async (data) => {
 };
 
 exports.findOne = async (conditions) => {
-  return Model.findOne({ where: conditions });
+  return Model.findOne(conditions);
 };
 
 exports.findAll = async (conditions) => {
-  return Model.findAll({ where: conditions });
+  return Model.findAll(conditions);
 };
 
 exports.findAndCountAll = async (conditions) => {
-  return Model.findAndCountAll({ where: conditions });
+  return Model.findAndCountAll(conditions);
 };
 
 exports.update = async (data, conditions) => {
-  return Model.update(data, { where: conditions });
+  return Model.update(data, conditions);
 };
 
 exports.delete = async (conditions) => {
-  return Model.destroy({ where: conditions });
+  return Model.destroy(conditions);
 };
 
 exports.count = async (conditions) => {
-  return Model.count({ where: conditions });
+  return Model.count(conditions);
 };
 
 exports.findOrCreate = async (data) => {

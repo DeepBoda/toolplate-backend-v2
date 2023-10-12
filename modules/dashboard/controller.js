@@ -1,29 +1,62 @@
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
 const userService = require("../user/service");
-const toolViewService = require("../toolView/service");
-const blogViewService = require("../blogView/service");
 const toolService = require("../tool/service");
 const blogService = require("../blog/service");
+const toolViewService = require("../toolView/service");
+const blogViewService = require("../blogView/service");
+const toolLikeService = require("../toolLike/service");
+const blogLikeService = require("../blogLike/service");
+const toolWishlistService = require("../toolWishlist/service");
+const blogWishlistService = require("../blogWishlist/service");
+const toolRatingService = require("../toolRating/service");
+const blogCommentService = require("../blogComment/service");
+const blogCommentReplyService = require("../blogCommentReply/service");
 
 exports.overview = async (req, res, next) => {
   try {
-    const [noOfUser, userStatics, userMonthStatics] = await Promise.all([
+    const [
+      users,
+      tools,
+      blogs,
+      toolViews,
+      blogViews,
+      toolLikes,
+      blogLikes,
+      toolWishlists,
+      blogWishlists,
+      toolRatings,
+      blogComments,
+      blogCommentReplies,
+    ] = await Promise.all([
       userService.count(),
-      userService.count({
-        group: [sequelize.fn("date", sequelize.col("createdAt"))],
-        limit: 5,
-      }),
-      userService.count({
-        group: [sequelize.fn("month", sequelize.col("createdAt"))],
-      }),
+      toolService.count(),
+      blogService.count(),
+      toolViewService.count(),
+      blogViewService.count(),
+      toolLikeService.count(),
+      blogLikeService.count(),
+      toolWishlistService.count(),
+      blogWishlistService.count(),
+      toolRatingService.count(),
+      blogCommentService.count(),
+      blogCommentReplyService.count(),
     ]);
     res.status(200).json({
       status: "success",
       data: {
-        noOfUser,
-        userStatics,
-        userMonthStatics,
+        users,
+        tools,
+        blogs,
+        toolViews,
+        blogViews,
+        toolLikes,
+        blogLikes,
+        toolWishlists,
+        blogWishlists,
+        toolRatings,
+        blogComments,
+        blogCommentReplies,
       },
     });
   } catch (error) {

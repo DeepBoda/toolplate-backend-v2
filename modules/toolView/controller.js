@@ -29,9 +29,7 @@ exports.getAll = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {
-        userId: {
-          [Op.ne]: null, // Filter out rows where userId is null
-        },
+        userId: { [Op.ne]: null },
       }),
       distinct: true, // Add this option to ensure accurate counts
       include: [

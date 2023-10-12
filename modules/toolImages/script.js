@@ -16,7 +16,7 @@ const imageResize = async () => {
       console.log(toolImages[i].id);
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -36,7 +36,7 @@ const toolPreviewToToolImage = async () => {
       await service.bulkCreate(data);
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 imageResize();

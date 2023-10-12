@@ -797,7 +797,7 @@ const makeSLug = async (req, res, next) => {
       allTool[i].save();
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 // makeSLug();

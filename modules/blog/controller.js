@@ -263,7 +263,6 @@ exports.getBySlug = async (req, res, next) => {
 
       redisService.set(cacheKey, data);
     }
-    console.log(data);
 
     service.update(
       { views: sequelize.literal("views + 1") },
@@ -616,7 +615,7 @@ const makeSLug = async (req, res, next) => {
       allBlog[i].save();
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 // makeSLug();

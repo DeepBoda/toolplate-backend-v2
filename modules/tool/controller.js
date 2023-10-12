@@ -303,7 +303,7 @@ exports.getBySlug = async (req, res, next) => {
       userId: req.requestor?.id ?? null,
     });
     console.log("tool===<>", data.id);
-    console.log("user===<>", req.requestor?.id);
+    console.log("user===<>", req.requestor);
     console.log("view<======>", view);
 
     res.status(200).send({

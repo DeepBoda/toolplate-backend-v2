@@ -3,6 +3,9 @@ const sequelize = require("../../config/db");
 const userService = require("../user/service");
 const toolService = require("../tool/service");
 const blogService = require("../blog/service");
+const categoryService = require("../category/service");
+const tagService = require("../tag/service");
+const notificationService = require("../notification/service");
 const toolViewService = require("../toolView/service");
 const blogViewService = require("../blogView/service");
 const toolLikeService = require("../toolLike/service");
@@ -19,6 +22,9 @@ exports.overview = async (req, res, next) => {
       users,
       tools,
       blogs,
+      categories,
+      tags,
+      notifications,
       toolViews,
       blogViews,
       toolLikes,
@@ -32,6 +38,9 @@ exports.overview = async (req, res, next) => {
       userService.count(),
       toolService.count(),
       blogService.count(),
+      categoryService.count(),
+      tagService.count(),
+      notificationService.count(),
       toolViewService.count(),
       blogViewService.count(),
       toolLikeService.count(),
@@ -48,6 +57,9 @@ exports.overview = async (req, res, next) => {
         users,
         tools,
         blogs,
+        categories,
+        tags,
+        notifications,
         toolViews,
         blogViews,
         toolLikes,

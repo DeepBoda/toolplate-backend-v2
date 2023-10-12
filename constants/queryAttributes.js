@@ -13,6 +13,7 @@ exports.promptToolAttributes = [
   "image",
   "price",
   "slug",
+  "ratingsAverage",
 ];
 
 exports.ratingsAdminAttributes = [

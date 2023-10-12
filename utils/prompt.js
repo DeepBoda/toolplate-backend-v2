@@ -25,7 +25,7 @@ exports.suggestTool = async (prompts) => {
       messages: [
         {
           role: "user",
-          content: `I want AI tools list for ${combinedPrompts}`,
+          content: `What are the best Ai tools for doing the following task:\n\n ${combinedPrompts}`,
         },
       ],
       model: "gpt-3.5-turbo",

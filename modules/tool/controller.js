@@ -100,6 +100,7 @@ exports.add = async (req, res, next) => {
     await Promise.all([
       toolCategoryService.bulkCreate(categoryBulkInsertData),
       toolTagService.bulkCreate(tagBulkInsertData),
+      redisService.del(`toolsForPrompt`),
     ]);
 
     res.status(200).json({
@@ -311,6 +312,7 @@ exports.getBySlug = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getDynamicBySlug = async (req, res, next) => {
   try {
     // let data = await redisService.get(`oneTool`);
@@ -339,6 +341,26 @@ exports.getDynamicBySlug = async (req, res, next) => {
     });
 
     // redisService.set(`oneTool`, data);
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.createView = async (req, res, next) => {
+  try {
+    service.update(
+      { views: sequelize.literal("views + 1") },
+      { where: { id: data.id } }
+    );
+    viewService.create({
+      toolId: data.id,
+      userId: req.requestor?.id ?? null,
+    });
 
     res.status(200).send({
       status: "success",
@@ -383,34 +405,57 @@ exports.search = async (req, res, next) => {
 exports.promptSearch = async (req, res, next) => {
   try {
     const searchQuery = req.query.search;
+    const userId = req.requestor ? req.requestor.id : null;
 
-    const ourTools = await service.findAll({
-      where: {
-        title: {
-          [Op.like]: `%${searchQuery}%`,
-        },
-      },
-      attributes: promptToolAttributes,
+    let tools = await redisService.get(`toolsForPrompt`);
+    if (!tools) {
+      tools = await service.findAll({
+        attributes: [
+          ...promptToolAttributes,
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+            ),
+            "isWishlisted",
+          ],
+        ],
+        include: [
+          {
+            model: ToolCategory,
+            attributes: ["categoryId"],
+            include: {
+              model: Category,
+              attributes: categoryAttributes,
+            },
+          },
+        ],
+      });
+      redisService.set(`toolsForPrompt`, tools);
+    }
+
+    const toolTitles = tools.map((tool) => tool.title.toLowerCase());
+    const results = [];
+
+    toolTitles.forEach((title, index) => {
+      const similarity = stringSimilarity.compareTwoStrings(
+        searchQuery.toLowerCase(),
+        title
+      );
+
+      if (similarity >= 0.7) {
+        results.push(tools[index]);
+      }
     });
 
-    if (ourTools.length > 0) {
-      res.status(200).send({
-        status: "success",
-        // promptTools,
-        results: ourTools,
-      });
-    } else {
+    if (results.length === 0) {
       // Suggest tools based on the search query
       const promptTools = await suggestTool([searchQuery]);
-
-      // Fetch tools data
-      const tools = await service.findAll({
-        attributes: promptToolAttributes,
-      });
-
-      const toolTitles = tools.map((tool) => tool.title.toLowerCase());
-
-      const results = [];
 
       // Find the best matching tool for each prompt
       promptTools.forEach((prompt) => {
@@ -433,53 +478,61 @@ exports.promptSearch = async (req, res, next) => {
         }
       });
 
-      if (results.length > 0) {
-        // Find the categories of the first result
-        const categories = await toolCategoryService.findAll({
-          where: { toolId: results[0].id },
-          attributes: ["categoryId"],
+      // Get a unique list of category IDs from the initial tools
+      const categoryIds = Array.from(
+        new Set(
+          tools
+            .map((tool) => tool.toolCategories.map((c) => c.categoryId))
+            .flat()
+        )
+      );
+
+      if (categoryIds.length > 0) {
+        // Find related tools with the same category IDs
+        const relatedTools = await service.findAll({
+          where: {
+            id: { [Op.notIn]: results.map((result) => result.id) },
+          },
+          attributes: [
+            ...promptToolAttributes,
+            [
+              sequelize.literal(
+                `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+              ),
+              "isLiked",
+            ],
+            [
+              sequelize.literal(
+                `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+              ),
+              "isWishlisted",
+            ],
+          ],
+          include: [
+            {
+              model: ToolCategory,
+              where: { categoryId: { [Op.in]: categoryIds } },
+              attributes: ["categoryId"],
+              include: {
+                model: Category,
+                attributes: categoryAttributes,
+              },
+            },
+          ],
         });
 
-        if (categories.length > 0) {
-          const categoryIds = categories.map((category) => category.categoryId);
+        // Implement your own sorting criteria for related tools
+        relatedTools.sort((a, b) => b.views - a.views);
 
-          // Find related tools with the same category IDs
-          const relatedTools = await service.findAll({
-            where: {
-              id: { [Op.notIn]: results.map((result) => result.id) },
-            },
-            include: [
-              {
-                model: ToolCategory,
-                where: { categoryId: { [Op.in]: categoryIds } },
-              },
-            ],
-          });
-
-          // Implement your own sorting criteria for related tools
-          relatedTools.sort((a, b) => b.views - a.views);
-
-          // Format related tools data
-          const formattedRelatedTools = relatedTools.map((tool) => ({
-            id: tool.id,
-            title: tool.title,
-            description: tool.description,
-            image: tool.image,
-            price: tool.price,
-            slug: tool.slug,
-          }));
-
-          // Append the related tools to the results
-          results.push(...formattedRelatedTools);
-        }
+        // Append the related tools to the results
+        results.push(...relatedTools);
       }
-
-      res.status(200).send({
-        status: "success",
-        // promptTools,
-        results,
-      });
     }
+
+    res.status(200).send({
+      status: "success",
+      results,
+    });
   } catch (error) {
     next(error);
   }
@@ -689,6 +742,7 @@ exports.update = async (req, res, next) => {
 
     // Clear Redis cache
     redisService.del(`tool?slug=${oldToolData.slug}`);
+    redisService.del(`toolsForPrompt`);
 
     // Handle the file deletion
     if (req.files?.image && oldToolData.image) {
@@ -729,53 +783,38 @@ exports.update = async (req, res, next) => {
 
 exports.delete = async (req, res, next) => {
   try {
-    // Find the tool to get the file URLs
-    const { image, videos } = await service.findOne({
-      where: {
-        id: req.params.id,
-      },
-    });
+    const toolId = req.params.id;
+    const toolData = await service.findOne({ where: { id: toolId } });
 
-    // Delete the tool entry
-    const affectedRows = await service.delete({
-      where: {
-        id: req.params.id,
-      },
-    });
+    if (!toolData) {
+      return res
+        .status(404)
+        .send({ status: "error", message: "Tool not found" });
+    }
 
-    // Delete files from S3 if URLs are present
+    const [affectedRows] = await Promise.all([
+      service.delete({ where: { id: toolId } }),
+      toolCategoryService.delete({ where: { toolId } }),
+      toolTagService.delete({ where: { toolId } }),
+      toolImageService.delete({ where: { toolId } }),
+    ]);
+
     const filesToDelete = [];
-    if (image) filesToDelete.push(image);
-    if (videos) filesToDelete.push(...videos);
+    if (toolData.image) filesToDelete.push(toolData.image);
+    if (toolData.videos) filesToDelete.push(...toolData.videos);
 
-    if (filesToDelete.length > 0) deleteFilesFromS3(filesToDelete);
-
-    // Delete associated categories and tags & images.
-    await toolCategoryService.delete({
-      where: {
-        toolId: req.params.id,
-      },
-    });
-    await toolTagService.delete({
-      where: {
-        toolId: req.params.id,
-      },
-    });
-    await toolImageService.delete({
-      where: {
-        toolId: req.params.id,
-      },
-    });
-
-    // Send the response
     res.status(200).send({
       status: "success",
-      data: {
-        affectedRows,
-      },
+      data: { affectedRows },
     });
+
+    if (filesToDelete.length > 0) {
+      deleteFilesFromS3(filesToDelete);
+    }
+
+    // Clear Redis cache
+    redisService.del(`toolsForPrompt`);
   } catch (error) {
-    // Handle errors here
     console.error(error);
     next(error);
   }

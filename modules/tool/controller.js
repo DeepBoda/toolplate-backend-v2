@@ -297,11 +297,14 @@ exports.getBySlug = async (req, res, next) => {
       { views: sequelize.literal("views + 1") },
       { where: { id: data.id } }
     );
-    // Create an entry for the tool view
-    viewService.create({
+
+    const view = viewService.create({
       toolId: data.id,
       userId: req.requestor?.id ?? null,
     });
+    console.log("tool===<>", data.id);
+    console.log("user===<>", req.requestor?.id);
+    console.log("view<======>", view);
 
     res.status(200).send({
       status: "success",

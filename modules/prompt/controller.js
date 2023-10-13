@@ -10,7 +10,7 @@ const { usersqquery, sqquery } = require("../../utils/query");
 
 const {
   categoryAttributes,
-  promptToolAttributes,
+  toolAttributes,
 } = require("../../constants/queryAttributes");
 const ToolCategory = require("../toolCategory/model");
 const Category = require("../category/model");
@@ -32,7 +32,7 @@ exports.promptSearch = async (req, res, next) => {
       if (!tools) {
         tools = await toolService.findAll({
           attributes: [
-            ...promptToolAttributes,
+            ...toolAttributes,
             [
               sequelize.literal(
                 `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
@@ -118,7 +118,7 @@ exports.promptSearch = async (req, res, next) => {
               id: { [Op.notIn]: results.map((result) => result.id) },
             },
             attributes: [
-              ...promptToolAttributes,
+              ...toolAttributes,
               [
                 sequelize.literal(
                   `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`

@@ -6,17 +6,6 @@ exports.userAdminAttributes = ["username", "email", "profilePic"];
 exports.blogAdminAttributes = ["title", "image", "alt"];
 exports.toolAdminAttributes = ["title", "image", "price"];
 
-exports.promptToolAttributes = [
-  "id",
-  "title",
-  "description",
-  "image",
-  "price",
-  "slug",
-  "views",
-  "ratingsAverage",
-];
-
 exports.ratingsAdminAttributes = [
   "id",
   "rating",

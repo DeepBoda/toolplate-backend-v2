@@ -72,4 +72,4 @@ const updateBlogCounts = async () => {
   }
 };
 
-// updateBlogCounts();
+updateBlogCounts();

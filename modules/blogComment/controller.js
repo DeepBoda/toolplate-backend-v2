@@ -108,8 +108,6 @@ exports.getAll = async (req, res, next) => {
 
 exports.getAllForAdmin = async (req, res, next) => {
   try {
-    const userId = req.requestor?.id || null; // Check if req.requestor is defined before using it
-
     const data = await service.findAll({
       ...sqquery(req.query),
       attributes: [
@@ -129,6 +127,7 @@ exports.getAllForAdmin = async (req, res, next) => {
         {
           model: User,
           attributes: userAdminAttributes,
+          paranoid: false, // Include soft-deleted users
         },
         {
           model: BlogCommentReply,
@@ -148,6 +147,7 @@ exports.getAllForAdmin = async (req, res, next) => {
           include: {
             model: User,
             attributes: userAdminAttributes,
+            paranoid: false, // Include soft-deleted users
           },
         },
       ],

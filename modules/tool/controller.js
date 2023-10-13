@@ -294,16 +294,6 @@ exports.getBySlug = async (req, res, next) => {
       redisService.set(cacheKey, data);
     }
 
-    service.update(
-      { views: sequelize.literal("views + 1") },
-      { where: { id: data.id } }
-    );
-
-    const view = viewService.create({
-      toolId: data.id,
-      userId: req.requestor?.id ?? null,
-    });
-
     res.status(200).send({
       status: "success",
       data,
@@ -353,18 +343,21 @@ exports.getDynamicBySlug = async (req, res, next) => {
 
 exports.createView = async (req, res, next) => {
   try {
+    // Use await with service.update
     service.update(
       { views: sequelize.literal("views + 1") },
-      { where: { id: data.id } }
+      { where: { id: req.params.id } }
     );
+
+    // Create the view record
     viewService.create({
-      toolId: data.id,
-      userId: req.requestor?.id ?? null,
+      toolId: req.params.id,
+      userId: req.requestor?.id || null,
     });
 
+    // Send the response with a status code of 200 and a success message
     res.status(200).send({
       status: "success",
-      data,
     });
   } catch (error) {
     next(error);

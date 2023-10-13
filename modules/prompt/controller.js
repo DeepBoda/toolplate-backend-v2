@@ -241,6 +241,14 @@ exports.delete = async (req, res, next) => {
 
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
+
+    // Send the response
+    res.status(200).json({
+      status: "success",
+      data: {
+        affectedRows,
+      },
+    });
   } catch (error) {
     // Pass error to the next middleware
     next(error);

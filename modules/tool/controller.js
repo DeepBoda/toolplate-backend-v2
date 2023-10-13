@@ -97,6 +97,7 @@ exports.add = async (req, res, next) => {
       toolCategoryService.bulkCreate(categoryBulkInsertData),
       toolTagService.bulkCreate(tagBulkInsertData),
       redisService.del(`toolsForPrompt`),
+      redisService.hDel(`prompt=*`),
     ]);
 
     res.status(200).json({
@@ -596,6 +597,7 @@ exports.update = async (req, res, next) => {
     // Clear Redis cache
     redisService.del(`tool?slug=${oldToolData.slug}`);
     redisService.del(`toolsForPrompt`);
+    redisService.hDel(`prompt=*`);
 
     // Handle the file deletion
     if (req.files?.image && oldToolData.image) {
@@ -667,6 +669,7 @@ exports.delete = async (req, res, next) => {
 
     // Clear Redis cache
     redisService.del(`toolsForPrompt`);
+    redisService.hDel(`prompt=*`);
   } catch (error) {
     console.error(error);
     next(error);

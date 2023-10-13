@@ -6,7 +6,6 @@ const {authMiddleware,protectRoute} = require("../../middlewares/auth");
 
 router.use( authMiddleware);
 router.route("/").get(authMiddleware, tool.getAll);
-router.route("/prompt").get(tool.promptSearch);
 router.route("/search").get(tool.search);
 router.route("/data/:slug").get(tool.getDynamicBySlug);
 router.route("/view/:id").get(authMiddleware, tool.createView);

@@ -230,24 +230,56 @@ exports.update = async (req, res, next) => {
 
 exports.delete = async (req, res, next) => {
   try {
-    const affectedRows = await service.delete({
-      where: {
-        id: req.params.id,
-      },
-    });
-    await reply.delete({
-      where: {
-        id: req.params.id,
-      },
-    });
+    // Find the data before deletion
+    const [data, replies] = await Promise.all([
+      service.findOne({
+        where: {
+          id: req.params.id,
+        },
+      }),
+      reply.count({
+        where: {
+          id: req.params.id,
+        },
+      }),
+    ]);
 
-    res.status(200).send({
-      status: "success",
-      data: {
-        affectedRows,
-      },
-    });
+    if (data && replies) {
+      // Delete the data
+      const [affectedRows] = await Promise.all([
+        service.delete({
+          where: {
+            id: req.params.id,
+          },
+        }),
+        reply.delete({
+          where: {
+            id: req.params.id,
+          },
+        }),
+      ]);
+      // Update the blog's comments count
+      blogService.update(
+        { comments: sequelize.literal(`comments - ${replies + 1}`) },
+        { where: { id: data.blogId } }
+      );
+
+      // Send the response with a status code of 200 and affected rows count
+      res.status(200).send({
+        status: "success",
+        data: {
+          affectedRows,
+        },
+      });
+    } else {
+      // Return a 404 response if the data doesn't exist
+      res.status(404).send({
+        status: "error",
+        message: "Data not found.",
+      });
+    }
   } catch (error) {
+    // Handle any errors
     next(error);
   }
 };

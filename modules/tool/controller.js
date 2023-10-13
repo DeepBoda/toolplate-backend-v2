@@ -1,8 +1,6 @@
 "use strict";
 const { Op } = require("sequelize");
-const stringSimilarity = require("string-similarity");
 const sequelize = require("../../config/db");
-const Sequelize = require("sequelize");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
@@ -16,7 +14,6 @@ const {
   toolAttributes,
   tagAttributes,
   categoryAttributes,
-  promptToolAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
@@ -28,7 +25,6 @@ const toolTagService = require("../toolTag/service");
 const Tag = require("../tag/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
-const { suggestTool } = require("../../utils/prompt");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {

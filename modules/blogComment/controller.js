@@ -244,7 +244,7 @@ exports.delete = async (req, res, next) => {
       }),
     ]);
 
-    if (data && replies) {
+    if (data) {
       // Delete the data
       const [affectedRows] = await Promise.all([
         service.delete({

@@ -67,4 +67,4 @@ const updateToolCounts = async () => {
     console.error("Error updating tools counts:", error);
   }
 };
-// updateToolCounts();
+updateToolCounts();

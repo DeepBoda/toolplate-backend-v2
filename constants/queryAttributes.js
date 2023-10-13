@@ -13,6 +13,7 @@ exports.promptToolAttributes = [
   "image",
   "price",
   "slug",
+  "views",
   "ratingsAverage",
 ];
 
@@ -56,5 +57,5 @@ exports.blogAttributes = [
   "wishlists",
 ];
 
-exports.tagAttributes = ["name"];
-exports.categoryAttributes = ["name"];
+exports.tagAttributes = ["id", "name"];
+exports.categoryAttributes = ["id", "name"];

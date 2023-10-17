@@ -21,16 +21,99 @@ exports.promptSearch = async (req, res, next) => {
     const searchQuery = req.query.search;
     const userId = req.requestor ? req.requestor.id : null;
 
-    let results = await redisService.get(`prompt=${searchQuery}`);
-    if (!results) {
-      service.create({
-        search: searchQuery,
-        userId,
+    // let results = await redisService.get(`prompt=${searchQuery}`);
+    // if (!results) {
+    service.create({
+      search: searchQuery,
+      userId,
+    });
+
+    // let tools = await redisService.get(`toolsForPrompt`);
+    // if (!tools) {
+    let tools = await toolService.findAll({
+      attributes: [
+        ...toolAttributes,
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+    // redisService.set(`toolsForPrompt`, tools);
+    // }
+
+    const toolTitles = tools.map((tool) => tool.title.toLowerCase());
+    results = [];
+
+    toolTitles.forEach((title, index) => {
+      const similarity = stringSimilarity.compareTwoStrings(
+        searchQuery.toLowerCase(),
+        title
+      );
+
+      if (similarity >= 0.7) {
+        results.push(tools[index]);
+      }
+    });
+
+    if (results.length === 0) {
+      // Suggest tools based on the search query
+      const promptTools = await suggestTool([searchQuery]);
+
+      // Find the best matching tool for each prompt
+      promptTools.forEach((prompt) => {
+        const matches = toolTitles.map((title, index) => ({
+          item: tools[index],
+          similarity: stringSimilarity.compareTwoStrings(
+            prompt.toLowerCase(),
+            title
+          ),
+        }));
+
+        // Filter matches with similarity >= 0.5
+        const bestMatch = matches
+          .filter((match) => match.similarity >= 0.5)
+          .sort((a, b) => b.similarity - a.similarity);
+
+        // If there are matches, add the first one to the results
+        if (bestMatch.length > 0) {
+          results.push(bestMatch[0].item);
+        }
       });
 
-      let tools = await redisService.get(`toolsForPrompt`);
-      if (!tools) {
-        tools = await toolService.findAll({
+      // Get a unique list of category IDs from the initial tools
+      const categoryIds = Array.from(
+        new Set(
+          results
+            .map((tool) => tool.toolCategories.map((c) => c.categoryId))
+            .flat()
+        )
+      );
+
+      if (categoryIds.length > 0) {
+        // Find related tools with the same category IDs
+        const relatedTools = await toolService.findAll({
+          where: {
+            id: { [Op.notIn]: results.map((result) => result.id) },
+          },
           attributes: [
             ...toolAttributes,
             [
@@ -49,6 +132,7 @@ exports.promptSearch = async (req, res, next) => {
           include: [
             {
               model: ToolCategory,
+              where: { categoryId: { [Op.in]: categoryIds } },
               attributes: ["categoryId"],
               include: {
                 model: Category,
@@ -57,103 +141,16 @@ exports.promptSearch = async (req, res, next) => {
             },
           ],
         });
-        redisService.set(`toolsForPrompt`, tools);
+
+        // Implement your own sorting criteria for related tools
+        relatedTools.sort((a, b) => b.views - a.views);
+
+        // Append the related tools to the results
+        results.push(...relatedTools);
       }
-
-      const toolTitles = tools.map((tool) => tool.title.toLowerCase());
-      results = [];
-
-      toolTitles.forEach((title, index) => {
-        const similarity = stringSimilarity.compareTwoStrings(
-          searchQuery.toLowerCase(),
-          title
-        );
-
-        if (similarity >= 0.7) {
-          results.push(tools[index]);
-        }
-      });
-
-      if (results.length === 0) {
-        // Suggest tools based on the search query
-        const promptTools = await suggestTool([searchQuery]);
-        console.log("promptTools : ", promptTools);
-        // Find the best matching tool for each prompt
-        promptTools.forEach((prompt) => {
-          const matches = toolTitles.map((title, index) => ({
-            item: tools[index],
-            similarity: stringSimilarity.compareTwoStrings(
-              prompt.toLowerCase(),
-              title
-            ),
-          }));
-
-          // Filter matches with similarity >= 0.5
-          const bestMatch = matches
-            .filter((match) => match.similarity >= 0.5)
-            .sort((a, b) => b.similarity - a.similarity);
-
-          // If there are matches, add the first one to the results
-          if (bestMatch.length > 0) {
-            results.push(bestMatch[0].item);
-          }
-        });
-        console.log("results: ", results);
-
-        // Get a unique list of category IDs from the initial tools
-        const categoryIds = Array.from(
-          new Set(
-            results
-              .map((tool) => tool.toolCategories.map((c) => c.categoryId))
-              .flat()
-          )
-        );
-
-        console.log("cat ids : ", categoryIds);
-
-        if (categoryIds.length > 0) {
-          // Find related tools with the same category IDs
-          const relatedTools = await toolService.findAll({
-            where: {
-              id: { [Op.notIn]: results.map((result) => result.id) },
-            },
-            attributes: [
-              ...toolAttributes,
-              [
-                sequelize.literal(
-                  `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-                ),
-                "isLiked",
-              ],
-              [
-                sequelize.literal(
-                  `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
-                ),
-                "isWishlisted",
-              ],
-            ],
-            include: [
-              {
-                model: ToolCategory,
-                where: { categoryId: { [Op.in]: categoryIds } },
-                attributes: ["categoryId"],
-                include: {
-                  model: Category,
-                  attributes: categoryAttributes,
-                },
-              },
-            ],
-          });
-
-          // Implement your own sorting criteria for related tools
-          relatedTools.sort((a, b) => b.views - a.views);
-
-          // Append the related tools to the results
-          results.push(...relatedTools);
-        }
-      }
-      redisService.set(`prompt=${searchQuery}`, results);
     }
+    // redisService.set(`prompt=${searchQuery}`, results);
+    // }
     res.status(200).send({
       status: "success",
       results,

@@ -2,6 +2,7 @@
 
 const sequelize = require("../../config/db");
 const service = require("./service");
+const redisService = require("../../utils/redis");
 const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
@@ -30,20 +31,24 @@ exports.add = async (req, res, next) => {
         { wishlists: sequelize.literal("wishlists  - 1") },
         { where: { id: req.body.toolId } }
       );
-      res.status(200).json({
-        status: "success",
-        message: "Tool removed from wishlist!.",
-      });
+      redisService.del(`toolsForPrompt`),
+        redisService.hDel(`prompt=*`),
+        res.status(200).json({
+          status: "success",
+          message: "Tool removed from wishlist!.",
+        });
     } else {
       await service.create(req.body);
       toolService.update(
         { wishlists: sequelize.literal("wishlists  + 1") },
         { where: { id: req.body.toolId } }
       );
-      res.status(200).json({
-        status: "success",
-        message: "Tool added to wishlist!.",
-      });
+      redisService.del(`toolsForPrompt`),
+        redisService.hDel(`prompt=*`),
+        res.status(200).json({
+          status: "success",
+          message: "Tool added to wishlist!.",
+        });
     }
   } catch (error) {
     console.error(error);

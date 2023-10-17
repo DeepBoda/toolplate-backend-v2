@@ -61,7 +61,7 @@ exports.promptSearch = async (req, res, next) => {
     // }
 
     const toolTitles = tools.map((tool) => tool.title.toLowerCase());
-    results = [];
+    const results = [];
 
     toolTitles.forEach((title, index) => {
       const similarity = stringSimilarity.compareTwoStrings(

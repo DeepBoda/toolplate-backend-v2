@@ -31,24 +31,22 @@ exports.add = async (req, res, next) => {
         { wishlists: sequelize.literal("wishlists  - 1") },
         { where: { id: req.body.toolId } }
       );
-      redisService.del(`toolsForPrompt`),
-        redisService.hDel(`prompt=*`),
-        res.status(200).json({
-          status: "success",
-          message: "Tool removed from wishlist!.",
-        });
+
+      res.status(200).json({
+        status: "success",
+        message: "Tool removed from wishlist!.",
+      });
     } else {
       await service.create(req.body);
       toolService.update(
         { wishlists: sequelize.literal("wishlists  + 1") },
         { where: { id: req.body.toolId } }
       );
-      redisService.del(`toolsForPrompt`),
-        redisService.hDel(`prompt=*`),
-        res.status(200).json({
-          status: "success",
-          message: "Tool added to wishlist!.",
-        });
+
+      res.status(200).json({
+        status: "success",
+        message: "Tool added to wishlist!.",
+      });
     }
   } catch (error) {
     console.error(error);

@@ -96,8 +96,6 @@ exports.add = async (req, res, next) => {
     await Promise.all([
       toolCategoryService.bulkCreate(categoryBulkInsertData),
       toolTagService.bulkCreate(tagBulkInsertData),
-      redisService.del(`toolsForPrompt`),
-      redisService.hDel(`prompt=*`),
     ]);
 
     res.status(200).json({

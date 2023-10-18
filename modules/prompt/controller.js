@@ -75,8 +75,12 @@ exports.promptSearch = async (req, res, next) => {
     });
 
     if (results.length === 0) {
-      // Suggest tools based on the search query
-      const promptTools = await suggestTool([searchQuery]);
+      let promptTools = await redisService.get(`promptTools=${searchQuery}`);
+      if (!promptTools) {
+        // Suggest tools based on the search query
+        promptTools = await suggestTool([searchQuery]);
+        redisService.set(`promptTools=${searchQuery}`, results);
+      }
 
       // Find the best matching tool for each prompt
       promptTools.forEach((prompt) => {

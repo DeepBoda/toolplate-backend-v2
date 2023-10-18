@@ -26,24 +26,22 @@ exports.likeTool = async (req, res, next) => {
         { likes: sequelize.literal("likes  - 1") },
         { where: { id: req.body.toolId } }
       );
-      redisService.del(`toolsForPrompt`),
-        redisService.hDel(`prompt=*`),
-        res.status(200).json({
-          status: "success",
-          message: "You removed like!.",
-        });
+
+      res.status(200).json({
+        status: "success",
+        message: "You removed like!.",
+      });
     } else {
       await service.create(req.body);
       toolService.update(
         { likes: sequelize.literal("likes  + 1") },
         { where: { id: req.body.toolId } }
       );
-      redisService.del(`toolsForPrompt`),
-        redisService.hDel(`prompt=*`),
-        res.status(200).json({
-          status: "success",
-          message: "Liked tool 🫣!.",
-        });
+
+      res.status(200).json({
+        status: "success",
+        message: "Liked tool 🫣!.",
+      });
     }
   } catch (error) {
     console.error(error);

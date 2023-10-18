@@ -40,7 +40,7 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
-      ...sqquery(req.query),
+      ...sqquery(req.query, {}, ["title", "body"]),
       include: {
         model: Admin,
         attributes: AdminAttributes,

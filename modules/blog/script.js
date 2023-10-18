@@ -17,7 +17,7 @@ const imageResize = async () => {
       console.log(blog[i].id);
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 const resizeImageDelete = async () => {
@@ -37,7 +37,7 @@ const resizeImageDelete = async () => {
 
     deleteFilesFromS3(deleteFiles);
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -72,4 +72,4 @@ const updateBlogCounts = async () => {
   }
 };
 
-// updateBlogCounts();
+updateBlogCounts();

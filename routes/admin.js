@@ -11,6 +11,7 @@ router.use("/users", require("../modules/user/admin"));
 router.use("/dashboard", require("../modules/dashboard/admin"));
 router.use("/appConfig", require("../modules/appConfig/admin"));
 router.use("/notification", require("../modules/notification/admin"));
+router.use("/prompt", require("../modules/prompt/admin"));
 router.use("/tool", require("../modules/tool/admin"));
 router.use("/tools/preview", require("../modules/toolImages/admin"));
 router.use("/tools/rating", require("../modules/toolRating/admin"));

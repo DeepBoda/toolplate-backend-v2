@@ -4,15 +4,19 @@ const service = require("./service");
 const blogService = require("../blog/service");
 const commentService = require("../blogComment/service");
 const { usersqquery, sqquery } = require("../../utils/query");
+const BlogComment = require("../blogComment/model");
 
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
-    const data = await service.create(req.body);
 
-    const comment = await commentService.findOne({
-      where: { id: req.body.blogCommentId },
-    });
+    const [data, comment] = await Promise.all([
+      service.create(req.body),
+
+      commentService.findOne({
+        where: { id: req.body.blogCommentId },
+      }),
+    ]);
 
     blogService.update(
       { comments: sequelize.literal("comments  + 1") },
@@ -83,18 +87,37 @@ exports.update = async (req, res, next) => {
 
 exports.delete = async (req, res, next) => {
   try {
-    const affectedRows = await service.delete({
+    const data = await service.findOne({
       where: {
         id: req.params.id,
       },
+      include: { model: BlogComment },
     });
 
-    res.status(200).send({
-      status: "success",
-      data: {
-        affectedRows,
-      },
-    });
+    if (data) {
+      const affectedRows = await service.delete({
+        where: {
+          id: req.params.id,
+        },
+      });
+      blogService.update(
+        { comments: sequelize.literal("comments  - 1") },
+        { where: { id: data.blogComment.blogId } }
+      );
+
+      res.status(200).send({
+        status: "success",
+        data: {
+          affectedRows,
+        },
+      });
+    } else {
+      // Return a 404 response if the data doesn't exist
+      res.status(404).send({
+        status: "error",
+        message: "Data not found.",
+      });
+    }
   } catch (error) {
     next(error);
   }

@@ -176,6 +176,6 @@ exports.refillElasticData = async (req, res, next) => {
       status: "success",
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };

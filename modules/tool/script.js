@@ -13,7 +13,7 @@ const imageResize = async () => {
       console.log(tool[i].id);
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 const resizeImageDelete = async () => {
@@ -30,7 +30,7 @@ const resizeImageDelete = async () => {
 
     await deleteFilesFromS3(deleteFiles);
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 // imageResize();
@@ -67,4 +67,4 @@ const updateToolCounts = async () => {
     console.error("Error updating tools counts:", error);
   }
 };
-// updateToolCounts();
+updateToolCounts();

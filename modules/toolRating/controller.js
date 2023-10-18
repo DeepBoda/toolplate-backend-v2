@@ -18,7 +18,7 @@ exports.add = async (req, res, next) => {
     const data = await service.create(req.body);
     toolService.update(
       {
-        totalRatings: sequelize.literal("totalRatings  + 1"),
+        totalRatings: sequelize.literal(`totalRatings  + 1`),
         ratingsAverage: sequelize.fn(
           "ROUND",
           sequelize.literal(
@@ -175,18 +175,45 @@ exports.update = async (req, res, next) => {
 
 exports.delete = async (req, res, next) => {
   try {
-    const affectedRows = await service.delete({
+    const data = await service.findOne({
       where: {
         id: req.params.id,
       },
     });
 
-    res.status(200).send({
-      status: "success",
-      data: {
-        affectedRows,
-      },
-    });
+    if (data) {
+      const affectedRows = await service.delete({
+        where: {
+          id: req.params.id,
+        },
+      });
+      toolService.update(
+        {
+          totalRatings: sequelize.literal(`totalRatings  - 1`),
+          ratingsAverage: sequelize.fn(
+            "ROUND",
+            sequelize.literal(
+              `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tools.id AND deletedAt is null)`
+            ),
+            1
+          ),
+        },
+        { where: { id: data.toolId } }
+      );
+
+      res.status(200).send({
+        status: "success",
+        data: {
+          affectedRows,
+        },
+      });
+    } else {
+      // Return a 404 response if the data doesn't exist
+      res.status(404).send({
+        status: "error",
+        message: "Data not found.",
+      });
+    }
   } catch (error) {
     next(error);
   }

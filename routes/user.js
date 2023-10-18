@@ -3,6 +3,7 @@ const router = express.Router();
 
 router.use("/appConfig", require("../modules/appConfig"));
 router.use("/users", require("../modules/user"));
+router.use("/prompt", require("../modules/prompt"));
 router.use("/category", require("../modules/category"));
 router.use("/tag", require("../modules/tag"));
 router.use("/tool", require("../modules/tool"));

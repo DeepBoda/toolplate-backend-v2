@@ -1,8 +1,6 @@
 "use strict";
-const { Op, where } = require("sequelize");
-const stringSimilarity = require("string-similarity");
+const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
-const Sequelize = require("sequelize");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
@@ -16,7 +14,6 @@ const {
   toolAttributes,
   tagAttributes,
   categoryAttributes,
-  promptToolAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
@@ -28,7 +25,6 @@ const toolTagService = require("../toolTag/service");
 const Tag = require("../tag/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
-const { suggestTool } = require("../../utils/prompt");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -293,16 +289,6 @@ exports.getBySlug = async (req, res, next) => {
       redisService.set(cacheKey, data);
     }
 
-    service.update(
-      { views: sequelize.literal("views + 1") },
-      { where: { id: data.id } }
-    );
-    // Create an entry for the tool view
-    viewService.create({
-      toolId: data.id,
-      userId: req.requestor?.id ?? null,
-    });
-
     res.status(200).send({
       status: "success",
       data,
@@ -311,6 +297,7 @@ exports.getBySlug = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getDynamicBySlug = async (req, res, next) => {
   try {
     // let data = await redisService.get(`oneTool`);
@@ -349,6 +336,29 @@ exports.getDynamicBySlug = async (req, res, next) => {
   }
 };
 
+exports.createView = async (req, res, next) => {
+  try {
+    // Use await with service.update
+    service.update(
+      { views: sequelize.literal("views + 1") },
+      { where: { id: req.params.id } }
+    );
+
+    // Create the view record
+    viewService.create({
+      toolId: req.params.id,
+      userId: req.requestor?.id || null,
+    });
+
+    // Send the response with a status code of 200 and a success message
+    res.status(200).send({
+      status: "success",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.search = async (req, res, next) => {
   try {
     const [tools, blogs] = await Promise.all([
@@ -375,111 +385,6 @@ exports.search = async (req, res, next) => {
       tools,
       blogs,
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.promptSearch = async (req, res, next) => {
-  try {
-    const searchQuery = req.query.search;
-
-    const ourTools = await service.findAll({
-      where: {
-        title: {
-          [Op.like]: `%${searchQuery}%`,
-        },
-      },
-      attributes: promptToolAttributes,
-    });
-
-    if (ourTools.length > 0) {
-      res.status(200).send({
-        status: "success",
-        // promptTools,
-        results: ourTools,
-      });
-    } else {
-      // Suggest tools based on the search query
-      const promptTools = await suggestTool([searchQuery]);
-
-      // Fetch tools data
-      const tools = await service.findAll({
-        attributes: promptToolAttributes,
-      });
-
-      const toolTitles = tools.map((tool) => tool.title.toLowerCase());
-
-      const results = [];
-
-      // Find the best matching tool for each prompt
-      promptTools.forEach((prompt) => {
-        const matches = toolTitles.map((title, index) => ({
-          item: tools[index],
-          similarity: stringSimilarity.compareTwoStrings(
-            prompt.toLowerCase(),
-            title
-          ),
-        }));
-
-        // Filter matches with similarity >= 0.5
-        const bestMatch = matches
-          .filter((match) => match.similarity >= 0.5)
-          .sort((a, b) => b.similarity - a.similarity);
-
-        // If there are matches, add the first one to the results
-        if (bestMatch.length > 0) {
-          results.push(bestMatch[0].item);
-        }
-      });
-
-      if (results.length > 0) {
-        // Find the categories of the first result
-        const categories = await toolCategoryService.findAll({
-          where: { toolId: results[0].id },
-          attributes: ["categoryId"],
-        });
-
-        if (categories.length > 0) {
-          const categoryIds = categories.map((category) => category.categoryId);
-
-          // Find related tools with the same category IDs
-          const relatedTools = await service.findAll({
-            where: {
-              id: { [Op.notIn]: results.map((result) => result.id) },
-            },
-            include: [
-              {
-                model: ToolCategory,
-                where: { categoryId: { [Op.in]: categoryIds } },
-              },
-            ],
-          });
-
-          // Implement your own sorting criteria for related tools
-          relatedTools.sort((a, b) => b.views - a.views);
-
-          // Format related tools data
-          const formattedRelatedTools = relatedTools.map((tool) => ({
-            id: tool.id,
-            title: tool.title,
-            description: tool.description,
-            image: tool.image,
-            price: tool.price,
-            slug: tool.slug,
-          }));
-
-          // Append the related tools to the results
-          results.push(...formattedRelatedTools);
-        }
-      }
-
-      res.status(200).send({
-        status: "success",
-        // promptTools,
-        results,
-      });
-    }
   } catch (error) {
     next(error);
   }
@@ -689,6 +594,8 @@ exports.update = async (req, res, next) => {
 
     // Clear Redis cache
     redisService.del(`tool?slug=${oldToolData.slug}`);
+    redisService.del(`toolsForPrompt`);
+    redisService.hDel(`prompt=*`);
 
     // Handle the file deletion
     if (req.files?.image && oldToolData.image) {
@@ -729,53 +636,39 @@ exports.update = async (req, res, next) => {
 
 exports.delete = async (req, res, next) => {
   try {
-    // Find the tool to get the file URLs
-    const { image, videos } = await service.findOne({
-      where: {
-        id: req.params.id,
-      },
-    });
+    const toolId = req.params.id;
+    const toolData = await service.findOne({ where: { id: toolId } });
 
-    // Delete the tool entry
-    const affectedRows = await service.delete({
-      where: {
-        id: req.params.id,
-      },
-    });
+    if (!toolData) {
+      return res
+        .status(404)
+        .send({ status: "error", message: "Tool not found" });
+    }
 
-    // Delete files from S3 if URLs are present
+    const [affectedRows] = await Promise.all([
+      service.delete({ where: { id: toolId } }),
+      toolCategoryService.delete({ where: { toolId } }),
+      toolTagService.delete({ where: { toolId } }),
+      toolImageService.delete({ where: { toolId } }),
+    ]);
+
     const filesToDelete = [];
-    if (image) filesToDelete.push(image);
-    if (videos) filesToDelete.push(...videos);
+    if (toolData.image) filesToDelete.push(toolData.image);
+    if (toolData.videos) filesToDelete.push(...toolData.videos);
 
-    if (filesToDelete.length > 0) deleteFilesFromS3(filesToDelete);
-
-    // Delete associated categories and tags & images.
-    await toolCategoryService.delete({
-      where: {
-        toolId: req.params.id,
-      },
-    });
-    await toolTagService.delete({
-      where: {
-        toolId: req.params.id,
-      },
-    });
-    await toolImageService.delete({
-      where: {
-        toolId: req.params.id,
-      },
-    });
-
-    // Send the response
     res.status(200).send({
       status: "success",
-      data: {
-        affectedRows,
-      },
+      data: { affectedRows },
     });
+
+    if (filesToDelete.length > 0) {
+      deleteFilesFromS3(filesToDelete);
+    }
+
+    // Clear Redis cache
+    redisService.del(`toolsForPrompt`);
+    redisService.hDel(`prompt=*`);
   } catch (error) {
-    // Handle errors here
     console.error(error);
     next(error);
   }
@@ -797,7 +690,7 @@ const makeSLug = async (req, res, next) => {
       allTool[i].save();
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 // makeSLug();

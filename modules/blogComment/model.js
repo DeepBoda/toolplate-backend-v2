@@ -23,7 +23,6 @@ Blog.hasMany(BlogComment, {
 });
 BlogComment.belongsTo(Blog);
 
-// without login blog can be accessible so userId not required
 User.hasMany(BlogComment, {
   foreignKey: {
     allowNull: false,

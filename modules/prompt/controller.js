@@ -21,15 +21,24 @@ exports.promptSearch = async (req, res, next) => {
     const searchQuery = req.query.search;
     const userId = req.requestor ? req.requestor.id : null;
 
-    // let results = await redisService.get(`prompt=${searchQuery}`);
-    // if (!results) {
+    // Initialize the 'results' array.
+    let results = [];
+
+    // Check if the searchQuery is empty or invalid.
+    if (!searchQuery) {
+      return res.status(400).send({
+        status: "error",
+        message: "Invalid search query",
+      });
+    }
+
+    // Create a 'search' record (if needed).
     service.create({
       search: searchQuery,
       userId,
     });
 
-    // let tools = await redisService.get(`toolsForPrompt`);
-    // if (!tools) {
+    // Fetch tools from the database.
     let tools = await toolService.findAll({
       attributes: [
         ...toolAttributes,
@@ -57,22 +66,29 @@ exports.promptSearch = async (req, res, next) => {
         },
       ],
     });
-    // redisService.set(`toolsForPrompt`, tools);
-    // }
 
     const toolTitles = tools.map((tool) => tool.title.toLowerCase());
-    const results = [];
 
-    toolTitles.forEach((title, index) => {
-      const similarity = stringSimilarity.compareTwoStrings(
+    // Find exact matches (similarity 1.0) and add to results.
+    results = tools.filter(
+      (tool) => tool.title.toLowerCase() === searchQuery.toLowerCase()
+    );
+
+    // Calculate similarity scores for each tool title.
+    const matches = toolTitles.map((title, index) => ({
+      item: tools[index],
+      similarity: stringSimilarity.compareTwoStrings(
         searchQuery.toLowerCase(),
         title
-      );
+      ),
+    }));
 
-      if (similarity >= 0.7) {
-        results.push(tools[index]);
-      }
-    });
+    // Filter matches with similarity >= 0.7 and add to results.
+    results.push(
+      ...matches
+        .filter((match) => match.similarity >= 0.7)
+        .map((match) => match.item)
+    );
 
     if (results.length === 0) {
       let promptTools = await redisService.get(`PromptTools=${searchQuery}`);
@@ -160,6 +176,7 @@ exports.promptSearch = async (req, res, next) => {
       results,
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };

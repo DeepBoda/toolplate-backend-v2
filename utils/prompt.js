@@ -17,15 +17,16 @@ function extractToolNames(response) {
 
 exports.suggestTool = async (prompts) => {
   try {
-    // Concatenate all prompts into a single string
-    const combinedPrompts = prompts.join(" ");
-
     // Create a single API request for all prompts
     const chatCompletion = await openai.chat.completions.create({
       messages: [
         {
+          role: "system",
+          content: "You are a helpful assistant that suggests AI tools.",
+        },
+        {
           role: "user",
-          content: `What are the best Ai tools for doing the following task:\n\n ${combinedPrompts}`,
+          content: `Give me the best Ai tools for following: ${prompts}`,
         },
       ],
       model: "gpt-3.5-turbo",

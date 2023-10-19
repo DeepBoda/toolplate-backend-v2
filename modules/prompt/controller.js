@@ -69,11 +69,6 @@ exports.promptSearch = async (req, res, next) => {
 
     const toolTitles = tools.map((tool) => tool.title.toLowerCase());
 
-    // Find exact matches (similarity 1.0) and add to results.
-    results = tools.filter(
-      (tool) => tool.title.toLowerCase() === searchQuery.toLowerCase()
-    );
-
     // Calculate similarity scores for each tool title.
     const matches = toolTitles.map((title, index) => ({
       item: tools[index],
@@ -83,10 +78,10 @@ exports.promptSearch = async (req, res, next) => {
       ),
     }));
 
-    // Filter matches with similarity >= 0.7 and add to results.
+    // Filter matches with similarity > 0.6 and add to results.
     results.push(
       ...matches
-        .filter((match) => match.similarity >= 0.7)
+        .filter((match) => match.similarity > 0.6)
         .map((match) => match.item)
     );
 
@@ -108,14 +103,15 @@ exports.promptSearch = async (req, res, next) => {
           ),
         }));
 
-        // Filter matches with similarity >= 0.5
-        const bestMatch = matches
-          .filter((match) => match.similarity >= 0.5)
-          .sort((a, b) => b.similarity - a.similarity);
+        // Filter matches with similarity > 0.5 and add to results, avoiding duplicates.
+        const bestMatch = matches.filter((match) => match.similarity > 0.5);
 
-        // If there are matches, add the first one to the results
-        if (bestMatch.length > 0) {
-          results.push(bestMatch[0].item);
+        if (bestMatch) {
+          bestMatch.forEach((match) => {
+            if (!results.some((result) => result.id === match.item.id)) {
+              results.push(match.item);
+            }
+          });
         }
       });
 

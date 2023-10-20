@@ -15,11 +15,8 @@ exports.cl = (tag, message = "", level = "info") => {
   }
 };
 
-exports.jwtDecoder = async (req) => {
+exports.jwtDecoder = async (token) => {
   try {
-    if (!req.headers.authorization)
-      throw new Error("JWT Token is required", 400);
-    const token = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
   } catch (error) {

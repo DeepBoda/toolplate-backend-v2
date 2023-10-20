@@ -78,7 +78,7 @@ exports.verifyOTP = async (req, res, next) => {
     }
 
     // Create the user in Firebase Authentication
-    const firebaseUser = createFirebaseUser(decodedToken);
+    const firebaseUser = await createFirebaseUser(decodedToken);
     console.log("firebaseUser : ", firebaseUser);
 
     // Get the user's UUID & profilePic from Firebase User
@@ -123,7 +123,7 @@ exports.socialAuth = async (req, res, next) => {
     }
 
     // Verify the user exist in Firebase and token is perfect
-    const firebaseUser = verifyFirebaseUserToken(firebase_token);
+    const firebaseUser = await verifyFirebaseUserToken(firebase_token);
     console.log("firebaseUser : social : ", firebaseUser);
 
     if (!firebaseUser || !firebaseUser.email) {

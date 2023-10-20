@@ -3,14 +3,18 @@ const sequelize = require("../../config/db");
 const bcryptjs = require("bcryptjs");
 const crypto = require("crypto");
 const createError = require("http-errors");
-const jwt = require("jsonwebtoken");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const admin = require("../../config/firebaseConfig"); // Firebase Admin SDK instance
-const otpGenerator = require("otp-generator");
-const { generateProfilePic } = require("../../middlewares/generateProfile");
 const { sendOTP } = require("../../utils/mail");
+const {
+  getJwtToken,
+  generateOTP,
+  jwtDecoderForBody,
+  createFirebaseUser,
+  verifyFirebaseUserToken,
+  deleteFirebaseUser,
+} = require("../../utils/service");
 
 // Signup route
 exports.signup = async (req, res, next) => {
@@ -27,22 +31,13 @@ exports.signup = async (req, res, next) => {
     }
 
     // Generate a 6-digit OTP
-    const OTP = otpGenerator.generate(6, {
-      lowerCaseAlphabets: false,
-      upperCaseAlphabets: false,
-      specialChars: false,
-    });
-    // console.log("OTP: ", OTP);
+    const OTP = generateOTP();
 
     // Generate JWT token and send response
-    const token = jwt.sign(
-      {
-        ...req.body,
-        OTP,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIREIN }
-    );
+    const token = getJwtToken({
+      ...req.body,
+      OTP,
+    });
 
     // Send the email with the OTP
     await sendOTP({ email, username, OTP });
@@ -61,65 +56,50 @@ exports.signup = async (req, res, next) => {
 // OTP verification route
 exports.verifyOTP = async (req, res, next) => {
   try {
-    const { otp } = req.body;
-
-    const decodedToken = jwt.decode(req.body.token);
-
+    const decodedToken = await jwtDecoderForBody(req.body.token);
+    console.log(decodedToken);
     if (
       !decodedToken ||
       !decodedToken.username ||
       !decodedToken.email ||
       !decodedToken.OTP
     ) {
-      throw createError(400, "Invalid token or missing data");
+      throw createError(400, "Invalid token or missing data!");
     }
 
     // Compare the entered OTP with the OTP from the token
     const isOTPValid = crypto.timingSafeEqual(
-      Buffer.from(otp),
-      Buffer.from(decodedToken.OTP)
+      Buffer.from(req.body.otp),
+      Buffer.from(decodedToken.OTP.toString())
     );
 
     if (!isOTPValid) {
       throw createError(400, "Invalid OTP");
     }
 
-    // Generate the profile picture URL using the username
-    let profilePicUrl;
-    try {
-      profilePicUrl = await generateProfilePic(decodedToken.username);
-    } catch (error) {
-      console.error("Error generating profile picture:", error);
-      profilePicUrl = "https://cdn.toolplate.ai/logo/ai_profile.png";
-    }
-
     // Create the user in Firebase Authentication
-    const firebaseUser = await admin.auth().createUser({
-      email: decodedToken.email,
-      password: decodedToken.password,
-      displayName: decodedToken.username,
-    });
-    // Get the user's UUID from Firebase
-    const uid = firebaseUser.uid;
+    const firebaseUser = createFirebaseUser(decodedToken);
+    console.log("firebaseUser : ", firebaseUser);
 
-    // Create the user in your local database and store the FCM token and profilePicUrl
+    // Get the user's UUID & profilePic from Firebase User
+    const uid = firebaseUser.uid;
+    const profilePic =
+      firebaseUser.photoURL || "https://cdn.toolplate.ai/logo/ai_profile.png";
+
+    // Create the user in your local database
     const user = await service.create({
       username: decodedToken.username,
       email: decodedToken.email,
       password: decodedToken.password,
       uid,
-      profilePic: profilePicUrl, // Store the generated profile picture URL in your local database
+      profilePic,
     });
 
     // Generate JWT token and send response
-    const token = jwt.sign(
-      {
-        id: user.id,
-        role: "User",
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIREIN }
-    );
+    const token = getJwtToken({
+      id: user.id,
+      role: "User",
+    });
 
     res.status(200).json({
       status: "success",
@@ -142,32 +122,24 @@ exports.socialAuth = async (req, res, next) => {
       throw createError(400, "Invalid request. Missing firebase_token.");
     }
 
-    const firebaseUser = await admin.auth().verifyIdToken(firebase_token);
+    // Verify the user exist in Firebase and token is perfect
+    const firebaseUser = verifyFirebaseUserToken(firebase_token);
+    console.log("firebaseUser : social : ", firebaseUser);
 
     if (!firebaseUser || !firebaseUser.email) {
       throw createError(400, "Invalid firebase_token or missing email.");
     }
-
-    const { email, name, uid } = firebaseUser;
+    const { email, name, uid, picture } = firebaseUser;
 
     let user = await service.findOne({ where: { email } });
 
     if (!user) {
-      // Generate the profile picture URL using the username
-      let profilePicUrl;
-      try {
-        profilePicUrl = await generateProfilePic(name.toUpperCase());
-      } catch (error) {
-        console.error("Error generating profile picture:", error);
-        profilePicUrl = "https://cdn.toolplate.ai/logo/ai_profile.png";
-      }
-
       // Create the user in the local database
       user = await service.create({
         username: name,
         email,
         uid,
-        profilePic: profilePicUrl,
+        profilePic: picture,
       });
     }
 
@@ -178,14 +150,11 @@ exports.socialAuth = async (req, res, next) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: "User",
-      },
-      process.env.JWT_SECRET
-    );
+    const token = getJwtToken({
+      id: user.id,
+      email: user.email,
+      role: "User",
+    });
 
     res.status(200).json({
       status: 200,
@@ -226,14 +195,10 @@ exports.login = async (req, res, next) => {
       });
 
     // Generate JWT token and send response
-    const token = jwt.sign(
-      {
-        id: user.id,
-        role: "User",
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIREIN }
-    );
+    const token = getJwtToken({
+      id: user.id,
+      role: "User",
+    });
 
     res.status(200).json({
       status: "success",
@@ -440,12 +405,7 @@ exports.deleteById = async (req, res, next) => {
     }
 
     // Now, delete the user from Firebase Authentication
-    try {
-      await admin.auth().deleteUser(user.uid);
-      console.log("Firebase User deleted.");
-    } catch (firebaseError) {
-      console.error("Error deleting Firebase User: ", firebaseError);
-    }
+    deleteFirebaseUser(user.uid);
 
     // Delete the user from your database
     const affectedRows = await service.delete({

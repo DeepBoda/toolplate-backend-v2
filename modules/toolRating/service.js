@@ -14,6 +14,9 @@ exports.findAll = async (conditions) => {
 exports.findAndCountAll = async (conditions) => {
   return Model.findAndCountAll(conditions);
 };
+exports.findOrCreate = async (data) => {
+  return await Model.findOrCreate(data);
+};
 
 exports.update = async (data, conditions) => {
   return Model.update(data, conditions);

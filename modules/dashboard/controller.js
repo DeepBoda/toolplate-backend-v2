@@ -1,5 +1,8 @@
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
+const moment = require("moment");
+const { dateFilter } = require("../../utils/service");
+
 const userService = require("../user/service");
 const toolService = require("../tool/service");
 const blogService = require("../blog/service");
@@ -18,6 +21,16 @@ const blogCommentReplyService = require("../blogCommentReply/service");
 
 exports.overview = async (req, res, next) => {
   try {
+    let { startDate, endDate } = req.query;
+    if (moment(startDate).isAfter(endDate))
+      return next(createError(200, "endDate must be larger than startDate."));
+    let query = {};
+    if (startDate && endDate)
+      query = {
+        where: {
+          ...dateFilter(req.query),
+        },
+      };
     const [
       users,
       tools,
@@ -35,21 +48,21 @@ exports.overview = async (req, res, next) => {
       blogComments,
       blogCommentReplies,
     ] = await Promise.all([
-      userService.count(),
-      toolService.count(),
-      blogService.count(),
-      categoryService.count(),
-      tagService.count(),
-      notificationService.count(),
-      toolViewService.count(),
-      blogViewService.count(),
-      toolLikeService.count(),
-      blogLikeService.count(),
-      toolWishlistService.count(),
-      blogWishlistService.count(),
-      toolRatingService.count(),
-      blogCommentService.count(),
-      blogCommentReplyService.count(),
+      userService.count(query),
+      toolService.count(query),
+      blogService.count(query),
+      categoryService.count(query),
+      tagService.count(query),
+      notificationService.count(query),
+      toolViewService.count(query),
+      blogViewService.count(query),
+      toolLikeService.count(query),
+      blogLikeService.count(query),
+      toolWishlistService.count(query),
+      blogWishlistService.count(query),
+      toolRatingService.count(query),
+      blogCommentService.count(query),
+      blogCommentReplyService.count(query),
     ]);
     res.status(200).json({
       status: "success",

@@ -67,15 +67,29 @@ app.use(
 
 // Define your IP whitelist based on the environment
 const allowedIPs = isProduction
-  ? ["192.168.1.100", "127.0.0.1", "::1", "13.235.186.84", "13.126.138.220"]
-  : ["192.168.1.100", "127.0.0.1", "::1", "13.126.138.220", "15.207.242.14"];
+  ? [
+      "192.168.1.100",
+      "127.0.0.1",
+      "::1",
+      "172.31.47.227", //ec2-private
+      "13.235.186.84", //backend-public
+      "13.126.138.220",
+    ]
+  : [
+      "192.168.1.100",
+      "127.0.0.1",
+      "::1",
+      "13.126.138.220",
+      "172.31.31.49", //ec2-private
+      "15.207.242.14", //front-back public
+    ];
 
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);
 function checkAllowedIP(req, res, next) {
   const clientIP = req.ip; // Get the client's IP address
-  // console.log("IP: ", req.ip);
-  // console.log("IPS: ", req.ips);
+  console.log("IP: ", req.ip);
+  console.log("IPS: ", req.ips);
 
   if (allowedIPs.includes(clientIP)) {
     next(); // Allow the request to proceed to the next middleware
@@ -86,8 +100,8 @@ function checkAllowedIP(req, res, next) {
 
 // Define your routes
 const indexRouter = require("./routes");
-// app.use("/", checkAllowedIP, indexRouter);
-app.use("/", indexRouter);
+app.use("/", checkAllowedIP, indexRouter);
+// app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
 app.use((req, res, next) => {

@@ -14,6 +14,9 @@ const validAPIKey =
 // Middleware to validate API key
 exports.validateAPIKey = async (req, res, next) => {
   const apiKey = req.get("x-api-key"); // Assuming API key is in headers
+  if (!apiKey) {
+    throw new Error("API key is missing.");
+  }
   console.log("apiKey: ", apiKey);
   const keys = apiKey.split("-");
   const finalKey =

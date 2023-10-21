@@ -13,38 +13,40 @@ const validAPIKey =
 
 // Middleware to validate API key
 exports.validateAPIKey = async (req, res, next) => {
-  const apiKey = req.get("x-api-key"); // Assuming API key is in headers
-  if (!apiKey) {
-    throw new Error("API key is missing.");
-  }
-  console.log("apiKey: ", apiKey);
-  const keys = apiKey.split("-");
-  const finalKey =
-    keys[8] +
-    "2110" +
-    keys[1] +
-    "-" +
-    keys[2] +
-    "toolplate" +
-    keys[8] +
-    "+" +
-    keys[7] +
-    "ai" +
-    keys[6] +
-    "1828" +
-    keys[9] +
-    "-" +
-    keys[8] +
-    "tst" +
-    keys[9] +
-    "-" +
-    keys[6];
-  console.log("finalKey: ", finalKey);
+  try {
+    const apiKey = req.get("x-api-key"); // Assuming API key is in headers
+    console.log("apiKey: ", apiKey);
+    const keys = apiKey.split("-");
+    const finalKey =
+      keys[8] +
+      "2110" +
+      keys[1] +
+      "-" +
+      keys[2] +
+      "toolplate" +
+      keys[8] +
+      "+" +
+      keys[7] +
+      "ai" +
+      keys[6] +
+      "1828" +
+      keys[9] +
+      "-" +
+      keys[8] +
+      "tst" +
+      keys[9] +
+      "-" +
+      keys[6];
+    console.log("finalKey: ", finalKey);
 
-  if (finalKey === validAPIKey) {
-    next();
-  } else {
-    res.status(401).json({ error: "Unauthorized" });
+    if (finalKey === validAPIKey) {
+      next();
+    } else {
+      res.status(401).json({ error: "Unauthorized" });
+    }
+  } catch {
+    console.error("Error in fetching api key:\n", error);
+    return next(error);
   }
 };
 

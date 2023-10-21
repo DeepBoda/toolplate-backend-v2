@@ -15,6 +15,9 @@ const validAPIKey =
 exports.validateAPIKey = async (req, res, next) => {
   try {
     const apiKey = req.get("x-api-key"); // Assuming API key is in headers
+    if (!apiKey) {
+      res.status(401).json({ error: "Invalid or missing API key." });
+    }
     console.log("apiKey: ", apiKey);
     const keys = apiKey.split("-");
     const finalKey =

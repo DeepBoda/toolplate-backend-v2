@@ -16,7 +16,7 @@ exports.validateAPIKey = async (req, res, next) => {
   try {
     const apiKey = req.get("x-api-key"); // Assuming API key is in headers
     if (!apiKey) {
-      res.status(401).json({ error: "Invalid or missing API key." });
+      return next(createHttpError(401, "Invalid or missing API key"));
     }
     console.log("apiKey: ", apiKey);
     const keys = apiKey.split("-");
@@ -48,8 +48,7 @@ exports.validateAPIKey = async (req, res, next) => {
       res.status(401).json({ error: "Unauthorized" });
     }
   } catch (error) {
-    console.error("Error in fetching api key:\n", error);
-    return next(error);
+    res.status(400).json({ error: error.message });
   }
 };
 

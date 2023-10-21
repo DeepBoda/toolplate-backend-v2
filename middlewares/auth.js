@@ -44,7 +44,7 @@ exports.validateAPIKey = async (req, res, next) => {
     } else {
       res.status(401).json({ error: "Unauthorized" });
     }
-  } catch {
+  } catch (error) {
     console.error("Error in fetching api key:\n", error);
     return next(error);
   }

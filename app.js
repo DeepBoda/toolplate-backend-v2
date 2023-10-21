@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const createError = require("http-errors");
 const cors = require("cors");
@@ -16,6 +17,7 @@ const isProduction = process.env.NODE_ENV === "production";
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use(bodyParser.json());
 // Middleware for parsing cookies
 app.use(cookieParser());
 

@@ -1,10 +1,23 @@
 "use strict";
 
-const jwt = require("jsonwebtoken");
+const createHttpError = require("http-errors");
 const adminService = require("../modules/admin/service");
 const userService = require("../modules/user/service");
 const { cl, jwtDecoder } = require("../utils/service");
-const createHttpError = require("http-errors");
+
+// Generated 32 char 64 bit api keys
+const validAPIKeys = [process.env.API_KEY, process.env.API_KEY_DEV];
+
+// Middleware to validate API key
+exports.validateAPIKey = async (req, res, next) => {
+  const apiKey = req.get("x-api-key"); // Assuming API key is in headers
+
+  if (validAPIKeys.includes(apiKey)) {
+    next();
+  } else {
+    res.status(401).json({ error: "Unauthorized" });
+  }
+};
 
 exports.protectRoute = (roles) => async (req, res, next) => {
   const { role } = req.requestor || {};

@@ -7,6 +7,7 @@ const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const { sendOTP } = require("../../utils/mail");
+const { generateProfilePic } = require("../../middlewares/generateProfile");
 const {
   getJwtToken,
   generateOTP,
@@ -81,10 +82,18 @@ exports.verifyOTP = async (req, res, next) => {
     const firebaseUser = await createFirebaseUser(decodedToken);
     console.log("firebaseUser : ", firebaseUser);
 
+    // Generate the profile picture URL using the username
+    let profilePicUrl;
+    try {
+      profilePicUrl = await generateProfilePic(decodedToken.username);
+    } catch (error) {
+      console.error("Error generating profile picture:", error);
+      profilePicUrl = "https://cdn.toolplate.ai/logo/ai_profile.png";
+    }
+
     // Get the user's UUID & profilePic from Firebase User
     const uid = firebaseUser.uid;
-    const profilePic =
-      firebaseUser.photoURL || "https://cdn.toolplate.ai/logo/ai_profile.png";
+    const profilePic = firebaseUser.photoURL || profilePicUrl;
 
     // Create the user in your local database
     const user = await service.create({
@@ -134,12 +143,21 @@ exports.socialAuth = async (req, res, next) => {
     let user = await service.findOne({ where: { email } });
 
     if (!user) {
+      // Generate the profile picture URL using the username
+      let profilePicUrl;
+      try {
+        profilePicUrl = await generateProfilePic(name);
+      } catch (error) {
+        console.error("Error generating profile picture:", error);
+        profilePicUrl = "https://cdn.toolplate.ai/logo/ai_profile.png";
+      }
+
       // Create the user in the local database
       user = await service.create({
         username: name,
         email,
         uid,
-        profilePic: picture,
+        profilePic: picture || profilePicUrl,
       });
     }
 

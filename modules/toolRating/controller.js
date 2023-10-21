@@ -15,6 +15,19 @@ const {
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
+
+    const exist = await service.findOne({
+      where: {
+        userId: req.body.userId,
+        toolId: req.body.toolId,
+      },
+    });
+    if (exist) {
+      res.status(201).json({
+        status: "success",
+        message: "",
+      });
+    }
     const data = await service.create(req.body);
     toolService.update(
       {

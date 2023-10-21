@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const createError = require("http-errors");
 const cors = require("cors");
@@ -16,6 +17,7 @@ const isProduction = process.env.NODE_ENV === "production";
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use(bodyParser.json());
 // Middleware for parsing cookies
 app.use(cookieParser());
 
@@ -65,15 +67,13 @@ app.use(
 
 // Define your IP whitelist based on the environment
 const allowedIPs = isProduction
-  ? ["192.168.1.100", "127.0.0.1", "::1", "13.235.186.84", "13.126.138.220"]
-  : ["192.168.1.100", "127.0.0.1", "::1", "13.126.138.220", "15.207.242.14"];
+  ? ["13.126.237.126", "13.235.186.84"]
+  : ["0.0.0.0", "::1", "15.207.242.14"];
 
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);
 function checkAllowedIP(req, res, next) {
   const clientIP = req.ip; // Get the client's IP address
-  // console.log("IP: ", req.ip);
-  // console.log("IPS: ", req.ips);
 
   if (allowedIPs.includes(clientIP)) {
     next(); // Allow the request to proceed to the next middleware

@@ -1,6 +1,7 @@
 "use strict";
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
+const admin = require("../config/firebaseConfig");
 const moment = require("moment");
 
 exports.cl = (tag, message = "", level = "info") => {
@@ -14,15 +15,20 @@ exports.cl = (tag, message = "", level = "info") => {
   }
 };
 
-exports.jwtDecoder = async (req) => {
+exports.jwtDecoder = async (token) => {
   try {
-    if (!req.headers.authorization)
-      throw new Error("JWT Token is required", 401);
-    const token = req.headers.authorization.split(" ")[1];
-    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
   } catch (error) {
-    throw new Error("Enter Valid Jwt Token", 401);
+    throw new Error("Enter Valid Jwt Token", 400);
+  }
+};
+exports.jwtDecoderForBody = async (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded;
+  } catch (error) {
+    throw new Error("Invalid token or missing data", 400);
   }
 };
 
@@ -30,6 +36,12 @@ exports.getJwtToken = (data) => {
   return jwt.sign(data, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIREIN,
   });
+};
+
+exports.generateOTP = () => {
+  const OTP = Math.floor(100000 + Math.random() * 900000);
+  this.cl("OTP", OTP);
+  return OTP;
 };
 
 exports.dateFilter = (query, dateColumn = "createdAt") => {
@@ -45,4 +57,35 @@ exports.dateFilter = (query, dateColumn = "createdAt") => {
   }
 
   return dateFilter;
+};
+
+exports.createFirebaseUser = async (decodedToken) => {
+  try {
+    const firebaseUser = await admin.auth().createUser({
+      email: decodedToken.email,
+      password: decodedToken.password,
+      displayName: decodedToken.username,
+    });
+    return firebaseUser;
+  } catch (error) {
+    throw new Error("Error creating Firebase user");
+  }
+};
+
+exports.verifyFirebaseUserToken = async (firebase_token) => {
+  try {
+    const firebaseUser = await admin.auth().verifyIdToken(firebase_token);
+    return firebaseUser;
+  } catch (error) {
+    throw new Error("Error verifying Firebase user token");
+  }
+};
+
+exports.deleteFirebaseUser = async (uid) => {
+  try {
+    await admin.auth().deleteUser(uid);
+    console.log("Firebase User deleted.");
+  } catch (error) {
+    throw new Error("Error deleting Firebase user");
+  }
 };

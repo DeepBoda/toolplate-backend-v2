@@ -1,10 +1,34 @@
 "use strict";
 
-const jwt = require("jsonwebtoken");
+const createHttpError = require("http-errors");
 const adminService = require("../modules/admin/service");
 const userService = require("../modules/user/service");
 const { cl, jwtDecoder } = require("../utils/service");
-const createHttpError = require("http-errors");
+
+// Generated 32 char 64 bit api keys
+const validAPIKey =
+  process.env.NODE_ENV === "production"
+    ? process.env.API_KEY
+    : process.env.API_KEY_DEV;
+
+// Middleware to validate API key
+exports.validateAPIKey = async (req, res, next) => {
+  try {
+    const apiKey = req.get("x-api-key"); // Assuming API key is in headers
+    if (!apiKey) {
+      return next(createHttpError(401, "Invalid or missing key"));
+    }
+    console.log("apiKey: ", apiKey);
+
+    if (apiKey === validAPIKey) {
+      next();
+    } else {
+      res.status(401).json({ error: "Unauthorized" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 exports.protectRoute = (roles) => async (req, res, next) => {
   const { role } = req.requestor || {};
@@ -18,13 +42,12 @@ exports.protectRoute = (roles) => async (req, res, next) => {
 
 exports.authMiddleware = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
-
   try {
     let requestor = null;
     let role = null;
 
     if (token) {
-      const jwtUser = jwt.verify(token, process.env.JWT_SECRET);
+      const jwtUser = await jwtDecoder(token);
 
       if (jwtUser.role === "Admin") {
         requestor = await adminService.findOne({
@@ -42,7 +65,6 @@ exports.authMiddleware = async (req, res, next) => {
         role = "User";
       }
     }
-
     if (requestor) {
       requestor.dataValues.role = role;
       req.requestor = requestor.toJSON();

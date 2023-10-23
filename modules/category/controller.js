@@ -6,6 +6,7 @@ const toolCategoryService = require("../toolCategory/service");
 const blogCategoryService = require("../blogCategory/service");
 
 const { usersqquery, sqquery } = require("../../utils/query");
+const { categoryAdminAttributes } = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -46,9 +47,10 @@ exports.getAll = async (req, res, next) => {
 exports.getAllForAdmin = async (req, res, next) => {
   try {
     // If the categories is not found in the cache
-    const data = await service.findAndCountAll(
-      sqquery(req.query, {}, ["name"])
-    );
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query, {}, ["name"]),
+      attributes: categoryAdminAttributes,
+    });
 
     res.status(200).send({
       status: "success",

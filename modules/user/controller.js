@@ -16,6 +16,7 @@ const {
   verifyFirebaseUserToken,
   deleteFirebaseUser,
 } = require("../../utils/service");
+const { userAllAdminAttributes } = require("../../constants/queryAttributes");
 
 // Signup route
 exports.signup = async (req, res, next) => {
@@ -315,6 +316,7 @@ exports.getAll = async (req, res, next) => {
   try {
     const users = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["username", "email"]),
+      attributes: userAllAdminAttributes,
     });
 
     res.status(200).send({

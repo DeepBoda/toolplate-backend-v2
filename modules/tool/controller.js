@@ -14,6 +14,7 @@ const {
   toolAttributes,
   tagAttributes,
   categoryAttributes,
+  toolAllAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
@@ -183,8 +184,6 @@ exports.getAll = async (req, res, next) => {
 
 exports.getAllForAdmin = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`tools`);
-    // if (!data)
     const { categoryIds, ...query } = req.query;
 
     const where = {};
@@ -198,27 +197,11 @@ exports.getAllForAdmin = async (req, res, next) => {
         [Op.in]: categoryIdArray,
       };
     }
-    const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
       ...sqquery(query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
-            ),
-            "isWishlisted",
-          ],
-        ],
-      },
+      attributes: toolAllAdminAttributes,
       include: [
         {
           model: ToolCategory,
@@ -240,8 +223,6 @@ exports.getAllForAdmin = async (req, res, next) => {
         },
       ],
     });
-
-    // redisService.set(`tools`, data);
 
     res.status(200).send({
       status: "success",

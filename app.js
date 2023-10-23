@@ -84,9 +84,9 @@ function checkAllowedIP(req, res, next) {
 }
 
 // Define your routes
-// const indexRouter = require("./routes");
+const indexRouter = require("./routes");
 app.use("/", checkAllowedIP, indexRouter);
-app.use("/", indexRouter);
+// app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
 app.use((req, res, next) => {

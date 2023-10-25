@@ -73,22 +73,19 @@ const allowedIPs = isProduction
 
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);
-function checkAllowedIP(req, res, next) {
+app.use((req, res, next) => {
   const clientIP = req.ip; // Get the client's IP address
-  const IPs = req.ips; // Get the client's IP address
-  console.log("request : ", req);
-  console.log("User IP : ", req.ip);
-  console.log("IPs : ", req.ips);
+  console.log("req : ", req);
+  console.log("client IP: ", clientIP);
   if (allowedIPs.includes(clientIP)) {
     next(); // Allow the request to proceed to the next middleware
   } else {
     res.status(403).send("Access denied. Your IP is not whitelisted.");
   }
-}
+});
 
 // Define your routes
 const indexRouter = require("./routes");
-// app.use("/", checkAllowedIP, indexRouter);
 app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error

@@ -72,8 +72,8 @@ app.use(validateAPIKey);
 // Define your IP whitelist based on the environment
 const allowedIPs = isProduction
   ? ["13.126.237.126", "13.235.186.84"]
-  : ["15.207.242.14"];
-// : ["0.0.0.0", "::1", "15.207.242.14"];
+  : ["0.0.0.0", "::1", "15.207.242.14", "localhost"];
+// : ["15.207.242.14"];
 
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);

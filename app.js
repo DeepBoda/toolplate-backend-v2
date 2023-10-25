@@ -68,8 +68,8 @@ app.use(
 // Define your IP whitelist based on the environment
 const allowedIPs = isProduction
   ? ["13.126.237.126", "13.235.186.84"]
-  : ["0.0.0.0", "::1", "15.207.242.14"];
-// : ["15.207.242.14"];
+  : ["15.207.242.14"];
+// : ["0.0.0.0", "::1", "15.207.242.14"];
 
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);
@@ -85,8 +85,8 @@ function checkAllowedIP(req, res, next) {
 
 // Define your routes
 const indexRouter = require("./routes");
-// app.use("/", checkAllowedIP, indexRouter);
-app.use("/", indexRouter);
+app.use("/", checkAllowedIP, indexRouter);
+// app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
 app.use((req, res, next) => {

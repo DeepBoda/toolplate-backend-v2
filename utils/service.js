@@ -17,7 +17,7 @@ exports.cl = async (tag, message = "", level = "info") => {
 
 exports.jwtDecoder = async (token) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
   } catch (error) {
     throw new Error("Enter Valid Jwt Token", 400);
@@ -25,7 +25,7 @@ exports.jwtDecoder = async (token) => {
 };
 exports.jwtDecoderForBody = async (token) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
   } catch (error) {
     throw new Error("Invalid token or missing data", 400);

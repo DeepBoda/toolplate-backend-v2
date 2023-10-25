@@ -65,10 +65,6 @@ app.use(
   })
 );
 
-// Middleware for API key validation
-const { validateAPIKey } = require("./middlewares/auth");
-app.use(validateAPIKey);
-
 // Define your IP whitelist based on the environment
 const allowedIPs = isProduction
   ? ["13.126.237.126", "13.235.186.84"]
@@ -87,6 +83,10 @@ app.use((req, res, next) => {
     res.status(403).send("Access denied. Your IP is not whitelisted.");
   }
 });
+
+// Middleware for API key validation
+const { validateAPIKey } = require("./middlewares/auth");
+app.use(validateAPIKey);
 
 // Define your routes
 const indexRouter = require("./routes");

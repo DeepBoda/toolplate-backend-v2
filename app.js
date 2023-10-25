@@ -75,7 +75,10 @@ const allowedIPs = isProduction
 app.set("trust proxy", true);
 function checkAllowedIP(req, res, next) {
   const clientIP = req.ip; // Get the client's IP address
-  console.log("User IP: ", req.ip);
+  const IPs = req.ips; // Get the client's IP address
+  console.log("request : ", req);
+  console.log("User IP : ", req.ip);
+  console.log("IPs : ", req.ips);
   if (allowedIPs.includes(clientIP)) {
     next(); // Allow the request to proceed to the next middleware
   } else {

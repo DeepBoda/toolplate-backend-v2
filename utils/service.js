@@ -33,9 +33,11 @@ exports.jwtDecoderForBody = async (token) => {
 };
 
 exports.getJwtToken = async (data) => {
-  return jwt.sign(data, process.env.JWT_SECRET, {
+  const token = await jwt.sign(data, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIREIN,
   });
+  console.log("token: ", token);
+  return token;
 };
 
 exports.generateOTP = async () => {

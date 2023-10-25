@@ -27,18 +27,8 @@ const sequelize = require("./config/db");
 
 // Configure CORS
 const frontendDomains = isProduction
-  ? [
-      "https://toolplate.ai",
-      "https://www.toolplate.ai",
-      "https://admin.toolplate.ai",
-    ]
-  : [
-      "https://new-toolplate-website.vercel.app",
-      "https://tool-plate-dashboard-git-staging-care-taker.vercel.app",
-      "https://test.toolplate.ai",
-      "http://localhost:3000",
-      "http://localhost:3001",
-    ];
+  ? process.env.PROD_CORS_ORIGINS.split(",")
+  : process.env.DEV_CORS_ORIGINS.split(",");
 
 app.use(
   cors({
@@ -67,9 +57,8 @@ app.use(
 
 // Define your IP whitelist based on the environment
 const allowedIPs = isProduction
-  ? ["13.126.237.126", "13.235.186.84"]
-  : ["110.224.131.55", "15.207.242.14"];
-// : ["15.207.242.14"];
+  ? process.env.PROD_ALLOWED_IPS.split(",")
+  : process.env.DEV_ALLOWED_IPS.split(",");
 
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);

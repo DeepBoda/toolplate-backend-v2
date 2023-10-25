@@ -4,7 +4,7 @@ const { Op } = require("sequelize");
 const admin = require("../config/firebaseConfig");
 const moment = require("moment");
 
-exports.cl = (tag, message = "", level = "info") => {
+exports.cl = async (tag, message = "", level = "info") => {
   if (process.env.log == 1) {
     const types = {
       debug: console.debug,
@@ -32,19 +32,19 @@ exports.jwtDecoderForBody = async (token) => {
   }
 };
 
-exports.getJwtToken = (data) => {
+exports.getJwtToken = async (data) => {
   return jwt.sign(data, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIREIN,
   });
 };
 
-exports.generateOTP = () => {
+exports.generateOTP = async () => {
   const OTP = Math.floor(100000 + Math.random() * 900000);
   this.cl("OTP", OTP);
   return OTP;
 };
 
-exports.dateFilter = (query, dateColumn = "createdAt") => {
+exports.dateFilter = async (query, dateColumn = "createdAt") => {
   const dateFilter = {};
   const { startDate, endDate } = query;
   if (startDate) {

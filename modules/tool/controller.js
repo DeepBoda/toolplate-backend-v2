@@ -9,7 +9,10 @@ const viewService = require("../toolView/service");
 const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { toolSize, toolPreviewSize } = require("../../constants");
-const { resizeAndUploadImage } = require("../../utils/imageResize");
+const {
+  resizeAndUploadImage,
+  resizeAndUploadWebP,
+} = require("../../utils/imageResize");
 const {
   toolAttributes,
   tagAttributes,
@@ -72,8 +75,10 @@ exports.add = async (req, res, next) => {
 
       // Bulk insert the records into the ToolImage table
       const toolPreviews = await toolImageService.bulkCreate(previews);
+
       toolPreviews.forEach((e) => {
         resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+        resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
       });
     }
 
@@ -105,7 +110,10 @@ exports.add = async (req, res, next) => {
     });
 
     // Resize and upload the tool icons
-    resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
+    await Promise.all([
+      resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`),
+      resizeAndUploadWebP(toolSize, tool.image, `tool_${tool.id}`),
+    ]);
   } catch (error) {
     console.error(error);
     next(error);
@@ -548,7 +556,10 @@ exports.update = async (req, res, next) => {
     // Check if Image (logo) uploaded and if got URL
     if (req.files?.image) {
       req.body.image = req.files.image[0].location;
-      resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`);
+      await Promise.all([
+        resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`),
+        resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`),
+      ]);
     }
 
     // Check if Videos uploaded and if got URLs

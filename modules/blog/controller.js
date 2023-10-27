@@ -22,7 +22,10 @@ const Category = require("../category/model");
 const BlogTag = require("../blogTag/model");
 const blogTagService = require("../blogTag/service");
 const Tag = require("../tag/model");
-const { resizeAndUploadImage } = require("../../utils/imageResize");
+const {
+  resizeAndUploadImage,
+  resizeAndUploadWebP,
+} = require("../../utils/imageResize");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -83,7 +86,10 @@ exports.add = async (req, res, next) => {
     });
 
     // Resize and upload the blog image
-    resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`);
+    await Promise.all([
+      resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`),
+      resizeAndUploadWebP(blogResizeImageSize, blog.image, `blog_${blog.id}`),
+    ]);
   } catch (error) {
     console.error(error);
     next(error);
@@ -486,7 +492,10 @@ exports.update = async (req, res, next) => {
       body.image = file.location;
 
       // Resize and upload the image (if needed)
-      resizeAndUploadImage(blogResizeImageSize, file.location, `blog_${id}`);
+      await Promise.all([
+        resizeAndUploadImage(blogResizeImageSize, file.location, `blog_${id}`),
+        resizeAndUploadWebP(blogResizeImageSize, file.location, `blog_${id}`),
+      ]);
     }
 
     // Create slug URL based on title

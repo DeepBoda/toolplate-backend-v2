@@ -67,3 +67,59 @@ exports.resizeAndUploadImage = async (
     return false;
   }
 };
+
+exports.resizeAndUploadWebP = async (sizes, originalImageS3Link, keyPrefix) => {
+  try {
+    // Fetch the original image from the provided S3 link (assuming it's a publicly accessible URL)
+    const response = await axios.get(originalImageS3Link, {
+      responseType: "arraybuffer",
+    });
+    const originalImageBuffer = Buffer.from(response.data, "binary");
+
+    const pipeline = sharp(originalImageBuffer).webp({
+      quality: 90, // Adjust the quality as needed (0-100)
+      alphaQuality: 100, // For images with transparency
+      lossless: false, // Set to true for lossless compression (ignores quality)
+      smartSubsample: true, // Better quality downscaling at lower sizes
+    });
+
+    const resizePromises = sizes.map(async (size) => {
+      const sizePipeline = pipeline
+        .clone()
+        .resize(size.width, size.height, {
+          fit: "inside",
+          withoutEnlargement: true,
+          progressive: true,
+          kernel: sharp.kernel.lanczos3,
+        })
+        .sharpen();
+      const resizedBuffer = await sizePipeline.toBuffer();
+      return { size, buffer: resizedBuffer };
+    });
+
+    const resizedImages = await Promise.all(resizePromises);
+
+    const uploadPromises = sizes.map(async (size, index) => {
+      const resizedBuffer = resizedImages[index].buffer;
+      return s3Client.putObject({
+        Bucket: process.env.BUCKET,
+        Key: `${keyPrefix}_${size.width}_${size.height}.webp`,
+        Body: resizedBuffer,
+        ACL: "public-read",
+        ContentType: "image/webp",
+        Metadata: {
+          "Cache-Control": "public, max-age=31536000",
+          "Content-Disposition": `inline; filename="${keyPrefix}_toolplate.webp"`,
+        },
+      });
+    });
+
+    await Promise.all(uploadPromises);
+    console.log("WebP images resized and uploaded successfully");
+
+    return true;
+  } catch (err) {
+    console.error("Error resizing and uploading WebP images", err);
+    return false;
+  }
+};

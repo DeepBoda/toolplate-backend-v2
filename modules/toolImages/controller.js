@@ -2,7 +2,10 @@
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { toolPreviewSize } = require("../../constants");
-const { resizeAndUploadImage } = require("../../utils/imageResize");
+const {
+  resizeAndUploadImage,
+  resizeAndUploadWebP,
+} = require("../../utils/imageResize");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 
 // ------------- Only Admin can Create, Get or Delete --------------
@@ -18,8 +21,9 @@ exports.add = async (req, res, next) => {
 
       // Bulk insert the records into the ToolImage table
       toolPreviews = await service.bulkCreate(previews);
-      toolPreviews.map((e) => {
+      toolPreviews.forEach((e) => {
         resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+        resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
       });
     }
 

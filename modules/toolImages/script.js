@@ -1,6 +1,9 @@
 "use strict";
 const { toolPreviewSize } = require("../../constants");
-const { resizeAndUploadImage } = require("../../utils/imageResize");
+const {
+  resizeAndUploadImage,
+  resizeAndUploadWebP,
+} = require("../../utils/imageResize");
 const service = require("./service");
 const toolService = require("../tool/service");
 const imageResize = async () => {
@@ -8,11 +11,17 @@ const imageResize = async () => {
     const toolImages = await service.findAll();
 
     for (let i in toolImages) {
-      await resizeAndUploadImage(
-        toolPreviewSize,
-        toolImages[i].image,
-        `toolPreview_${toolImages[i].id}`
-      );
+      await Promise.all([
+        resizeAndUploadImage(
+          toolImages[i].image,
+          `toolPreview_${toolImages[i].id}`
+        ),
+        resizeAndUploadWebP(
+          toolPreviewSize,
+          toolImages[i].image,
+          `toolPreview_${toolImages[i].id}`
+        ),
+      ]);
       console.log(toolImages[i].id);
     }
   } catch (error) {

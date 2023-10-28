@@ -61,17 +61,17 @@ const allowedIPs = isProduction
   : process.env.DEV_ALLOWED_IPS.split(",");
 
 // Middleware for checking allowed IPs
-// app.set("trust proxy", true);
-// app.use((req, res, next) => {
-//   const clientIP = req.ip; // Get the client's IP address
-//   // console.log("req : ", req);
-//   console.log("client IP: ", clientIP);
-//   if (allowedIPs.includes(clientIP)) {
-//     next(); // Allow the request to proceed to the next middleware
-//   } else {
-//     res.status(403).send("Access denied. Your IP is not whitelisted.");
-//   }
-// });
+app.set("trust proxy", true);
+app.use((req, res, next) => {
+  const clientIP = req.ip; // Get the client's IP address
+  // console.log("req : ", req);
+  console.log("client IP: ", clientIP);
+  if (allowedIPs.includes(clientIP)) {
+    next(); // Allow the request to proceed to the next middleware
+  } else {
+    res.status(403).send("Access denied. Your IP is not whitelisted.");
+  }
+});
 
 // Middleware for API key validation
 const { validateAPIKey } = require("./middlewares/auth");

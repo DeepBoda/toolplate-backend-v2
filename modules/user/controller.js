@@ -16,6 +16,7 @@ const {
   verifyFirebaseUserToken,
   deleteFirebaseUser,
 } = require("../../utils/service");
+const { userAllAdminAttributes } = require("../../constants/queryAttributes");
 
 // Signup route
 exports.signup = async (req, res, next) => {
@@ -35,10 +36,7 @@ exports.signup = async (req, res, next) => {
     const OTP = generateOTP();
 
     // Generate JWT token and send response
-    const token = getJwtToken({
-      ...req.body,
-      OTP,
-    });
+    const token = await getJwtToken({ ...req.body, OTP });
 
     // Send the email with the OTP
     await sendOTP({ email, username, OTP });
@@ -105,10 +103,7 @@ exports.verifyOTP = async (req, res, next) => {
     });
 
     // Generate JWT token and send response
-    const token = getJwtToken({
-      id: user.id,
-      role: "User",
-    });
+    const token = await getJwtToken({ id: user.id, role: "User" });
 
     res.status(200).json({
       status: "success",
@@ -168,7 +163,7 @@ exports.socialAuth = async (req, res, next) => {
       });
     }
 
-    const token = getJwtToken({
+    const token = await getJwtToken({
       id: user.id,
       email: user.email,
       role: "User",
@@ -213,10 +208,7 @@ exports.login = async (req, res, next) => {
       });
 
     // Generate JWT token and send response
-    const token = getJwtToken({
-      id: user.id,
-      role: "User",
-    });
+    const token = await getJwtToken({ id: user.id, role: "User" });
 
     res.status(200).json({
       status: "success",
@@ -315,6 +307,7 @@ exports.getAll = async (req, res, next) => {
   try {
     const users = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["username", "email"]),
+      attributes: userAllAdminAttributes,
     });
 
     res.status(200).send({

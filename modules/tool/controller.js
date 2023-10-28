@@ -9,11 +9,15 @@ const viewService = require("../toolView/service");
 const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { toolSize, toolPreviewSize } = require("../../constants");
-const { resizeAndUploadImage } = require("../../utils/imageResize");
+const {
+  resizeAndUploadImage,
+  resizeAndUploadWebP,
+} = require("../../utils/imageResize");
 const {
   toolAttributes,
   tagAttributes,
   categoryAttributes,
+  toolAllAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
@@ -71,8 +75,10 @@ exports.add = async (req, res, next) => {
 
       // Bulk insert the records into the ToolImage table
       const toolPreviews = await toolImageService.bulkCreate(previews);
+
       toolPreviews.forEach((e) => {
         resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+        resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
       });
     }
 
@@ -104,7 +110,10 @@ exports.add = async (req, res, next) => {
     });
 
     // Resize and upload the tool icons
-    resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
+    await Promise.all([
+      resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`),
+      resizeAndUploadWebP(toolSize, tool.image, `tool_${tool.id}`),
+    ]);
   } catch (error) {
     console.error(error);
     next(error);
@@ -183,8 +192,6 @@ exports.getAll = async (req, res, next) => {
 
 exports.getAllForAdmin = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`tools`);
-    // if (!data)
     const { categoryIds, ...query } = req.query;
 
     const where = {};
@@ -198,27 +205,11 @@ exports.getAllForAdmin = async (req, res, next) => {
         [Op.in]: categoryIdArray,
       };
     }
-    const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
       ...sqquery(query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
-            ),
-            "isWishlisted",
-          ],
-        ],
-      },
+      attributes: toolAllAdminAttributes,
       include: [
         {
           model: ToolCategory,
@@ -240,8 +231,6 @@ exports.getAllForAdmin = async (req, res, next) => {
         },
       ],
     });
-
-    // redisService.set(`tools`, data);
 
     res.status(200).send({
       status: "success",
@@ -567,7 +556,10 @@ exports.update = async (req, res, next) => {
     // Check if Image (logo) uploaded and if got URL
     if (req.files?.image) {
       req.body.image = req.files.image[0].location;
-      resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`);
+      await Promise.all([
+        resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`),
+        resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`),
+      ]);
     }
 
     // Check if Videos uploaded and if got URLs

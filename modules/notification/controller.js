@@ -2,7 +2,10 @@
 
 const service = require("./service");
 const { sendNotificationToTopic } = require("../../service/lambda");
-const { AdminAttributes } = require("../../constants/queryAttributes");
+const {
+  AdminAttributes,
+  notificationAdminAttributes,
+} = require("../../constants/queryAttributes");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { pushNotificationTopic } = require("../../service/firebase");
 const Admin = require("../admin/model");
@@ -41,6 +44,7 @@ exports.getAll = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["title", "body"]),
+      attributes: notificationAdminAttributes,
       include: {
         model: Admin,
         attributes: AdminAttributes,

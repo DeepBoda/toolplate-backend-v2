@@ -27,18 +27,8 @@ const sequelize = require("./config/db");
 
 // Configure CORS
 const frontendDomains = isProduction
-  ? [
-      "https://toolplate.ai",
-      "https://www.toolplate.ai",
-      "https://admin.toolplate.ai",
-    ]
-  : [
-      "https://new-toolplate-website.vercel.app",
-      "https://tool-plate-dashboard-git-staging-care-taker.vercel.app",
-      "https://test.toolplate.ai",
-      "http://localhost:3000",
-      "http://localhost:3001",
-    ];
+  ? process.env.PROD_CORS_ORIGINS.split(",")
+  : process.env.DEV_CORS_ORIGINS.split(",");
 
 app.use(
   cors({
@@ -67,25 +57,28 @@ app.use(
 
 // Define your IP whitelist based on the environment
 const allowedIPs = isProduction
-  ? ["13.126.237.126", "13.235.186.84"]
-  : ["15.207.242.14"];
-// : ["0.0.0.0", "::1", "15.207.242.14"];
+  ? process.env.PROD_ALLOWED_IPS.split(",")
+  : process.env.DEV_ALLOWED_IPS.split(",");
 
 // Middleware for checking allowed IPs
-app.set("trust proxy", true);
-function checkAllowedIP(req, res, next) {
-  const clientIP = req.ip; // Get the client's IP address
-  console.log("User IP: ", req.ip);
-  if (allowedIPs.includes(clientIP)) {
-    next(); // Allow the request to proceed to the next middleware
-  } else {
-    res.status(403).send("Access denied. Your IP is not whitelisted.");
-  }
-}
+// app.set("trust proxy", true);
+// app.use((req, res, next) => {
+//   const clientIP = req.ip; // Get the client's IP address
+//   // console.log("req : ", req);
+//   console.log("client IP: ", clientIP);
+//   if (allowedIPs.includes(clientIP)) {
+//     next(); // Allow the request to proceed to the next middleware
+//   } else {
+//     res.status(403).send("Access denied. Your IP is not whitelisted.");
+//   }
+// });
+
+// Middleware for API key validation
+const { validateAPIKey } = require("./middlewares/auth");
+app.use(validateAPIKey);
 
 // Define your routes
-// const indexRouter = require("./routes");
-app.use("/", checkAllowedIP, indexRouter);
+const indexRouter = require("./routes");
 app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error

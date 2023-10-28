@@ -6,6 +6,7 @@ const toolTagService = require("../toolTag/service");
 const blogTagService = require("../blogTag/service");
 
 const { usersqquery, sqquery } = require("../../utils/query");
+const { tagAdminAttributes } = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -48,10 +49,10 @@ exports.getAll = async (req, res, next) => {
 exports.getAllForAdmin = async (req, res, next) => {
   try {
     // If the tags is not found in the cache
-
-    const data = await service.findAndCountAll(
-      sqquery(req.query, {}, ["name"])
-    );
+    const data = await service.findAndCountAll({
+      ...sqquery(req.query, {}, ["name"]),
+      attributes: tagAdminAttributes,
+    });
 
     res.status(200).send({
       status: "success",

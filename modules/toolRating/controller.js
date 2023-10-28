@@ -15,25 +15,38 @@ const {
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor.id;
-    const data = await service.create(req.body);
-    toolService.update(
-      {
-        totalRatings: sequelize.literal(`totalRatings  + 1`),
-        ratingsAverage: sequelize.fn(
-          "ROUND",
-          sequelize.literal(
-            `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tools.id AND deletedAt is null)`
-          ),
-          1
-        ),
+    const exist = await service.findOne({
+      where: {
+        toolId: req.body.toolId,
+        userId: req.body.userId,
       },
-      { where: { id: req.body.toolId } }
-    );
-
-    res.status(200).json({
-      status: "success",
-      data,
     });
+    if (exist) {
+      res.status(403).json({
+        status: "error",
+        message: "Hey! You've already left a review for this tool.",
+      });
+    } else {
+      const data = await service.create(req.body);
+      toolService.update(
+        {
+          totalRatings: sequelize.literal(`totalRatings  + 1`),
+          ratingsAverage: sequelize.fn(
+            "ROUND",
+            sequelize.literal(
+              `(SELECT IFNULL(IFNULL(AVG(rating), 0), 0) FROM toolRatings WHERE toolRatings.toolId = tools.id AND deletedAt is null)`
+            ),
+            1
+          ),
+        },
+        { where: { id: req.body.toolId } }
+      );
+
+      res.status(200).json({
+        status: "success",
+        data,
+      });
+    }
   } catch (error) {
     console.error(error);
     next(error);

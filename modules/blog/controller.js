@@ -13,6 +13,7 @@ const {
   blogAttributes,
   tagAttributes,
   categoryAttributes,
+  blogAllAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const BlogCategory = require("../blogCategory/model");
@@ -21,7 +22,10 @@ const Category = require("../category/model");
 const BlogTag = require("../blogTag/model");
 const blogTagService = require("../blogTag/service");
 const Tag = require("../tag/model");
-const { resizeAndUploadImage } = require("../../utils/imageResize");
+const {
+  resizeAndUploadImage,
+  resizeAndUploadWebP,
+} = require("../../utils/imageResize");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -82,7 +86,10 @@ exports.add = async (req, res, next) => {
     });
 
     // Resize and upload the blog image
-    resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`);
+    await Promise.all([
+      resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`),
+      resizeAndUploadWebP(blogResizeImageSize, blog.image, `blog_${blog.id}`),
+    ]);
   } catch (error) {
     console.error(error);
     next(error);
@@ -162,8 +169,6 @@ exports.getAll = async (req, res, next) => {
 
 exports.getAllForAdmin = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`blogs`);
-    // if (!data)
     const { categoryIds, ...query } = req.query;
 
     const where = {};
@@ -177,27 +182,10 @@ exports.getAllForAdmin = async (req, res, next) => {
         [Op.in]: categoryIdArray,
       };
     }
-    const userId = req.requestor ? req.requestor.id : null;
-
     const data = await service.findAndCountAll({
       ...sqquery(query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
-            ),
-            "isWishlisted",
-          ],
-        ],
-      },
+      attributes: blogAllAdminAttributes,
       include: [
         {
           model: BlogCategory,
@@ -219,8 +207,6 @@ exports.getAllForAdmin = async (req, res, next) => {
         },
       ],
     });
-
-    // redisService.set(`blogs`, data);
 
     res.status(200).send({
       status: "success",
@@ -506,7 +492,10 @@ exports.update = async (req, res, next) => {
       body.image = file.location;
 
       // Resize and upload the image (if needed)
-      resizeAndUploadImage(blogResizeImageSize, file.location, `blog_${id}`);
+      await Promise.all([
+        resizeAndUploadImage(blogResizeImageSize, file.location, `blog_${id}`),
+        resizeAndUploadWebP(blogResizeImageSize, file.location, `blog_${id}`),
+      ]);
     }
 
     // Create slug URL based on title

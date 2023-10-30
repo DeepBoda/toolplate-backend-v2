@@ -6,7 +6,7 @@ const {authMiddleware,protectRoute} = require("../../middlewares/auth");
 
 router.use( authMiddleware);
 router.route("/").get(FAQ.getAll);
-router.route("/:id").get(FAQ.getById);
+router.route("/:toolId").get(FAQ.getById);
 
 
 

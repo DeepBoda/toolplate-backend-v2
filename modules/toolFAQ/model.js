@@ -10,7 +10,15 @@ const ToolFAQ = sequelize.define("toolFAQ", {
     primaryKey: true,
   },
   faqs: {
-    type: DataTypes.JSON,
+    type: DataTypes.TEXT,
+    get: function () {
+      return this.getDataValue("faqs")
+        ? JSON.parse(this.getDataValue("faqs"))
+        : [];
+    },
+    set: function (val) {
+      return this.setDataValue("faqs", JSON.stringify(val));
+    },
   },
 });
 
@@ -22,5 +30,4 @@ Tool.hasOne(ToolFAQ, {
 });
 ToolFAQ.belongsTo(Tool);
 
-// ToolFAQ.sync({ alter: true });
 module.exports = ToolFAQ;

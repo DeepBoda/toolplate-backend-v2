@@ -7,25 +7,30 @@ const { usersqquery, sqquery } = require("../../utils/query");
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    const data = await service.create(req.body);
+    let [data, created] = await service.findOrCreate({
+      where: { toolId: req.params.toolId },
+      defaults: req.body,
+    });
+
+    if (!created) {
+      await service.update(req.body, {
+        where: {
+          toolId: req.params.toolId,
+        },
+      });
+      data = await service.findOne({
+        where: { toolId: req.params.toolId },
+      });
+    }
 
     res.status(200).json({
       status: "success",
       data,
     });
   } catch (error) {
-    if (error instanceof Sequelize.UniqueConstraintError) {
-      // Send a custom response for duplicate entry
-      res.status(400).json({
-        status: "error",
-        message:
-          "Duplicate entry. ToolFAQ with the same Tool Id already exists.",
-      });
-    } else {
-      // Handle other errors
-      console.error(error);
-      next(error);
-    }
+    // Handle other errors
+    console.error(error);
+    next(error);
   }
 };
 

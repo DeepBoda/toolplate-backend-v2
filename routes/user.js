@@ -12,6 +12,7 @@ router.use("/tools/rating", require("../modules/toolRating"));
 router.use("/toolLike", require("../modules/toolLike"));
 router.use("/toolWishlist", require("../modules/toolWishlist"));
 router.use("/blog", require("../modules/blog"));
+router.use("/blogs/faq", require("../modules/blogFAQ"));
 router.use("/blogLike", require("../modules/blogLike"));
 router.use("/comment", require("../modules/blogComment"));
 router.use("/blogWishlist", require("../modules/blogWishlist"));

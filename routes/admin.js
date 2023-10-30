@@ -22,6 +22,7 @@ router.use("/toolCategory", require("../modules/toolCategory/admin"));
 router.use("/tools/view", require("../modules/toolView/admin"));
 router.use("/toolWishlist", require("../modules/toolWishlist/admin"));
 router.use("/blog", require("../modules/blog/admin"));
+router.use("/blogs/faq", require("../modules/blogFAQ/admin"));
 router.use("/category", require("../modules/category/admin"));
 router.use("/blogCategory", require("../modules/blogCategory/admin"));
 router.use("/tag", require("../modules/tag/admin"));

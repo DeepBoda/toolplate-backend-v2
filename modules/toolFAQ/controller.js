@@ -1,7 +1,7 @@
 "use strict";
 
 const service = require("./service");
-
+const Sequelize = require("sequelize");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 // ------------- Only Admin can Create --------------
@@ -14,8 +14,18 @@ exports.add = async (req, res, next) => {
       data,
     });
   } catch (error) {
-    console.error(error);
-    next(error);
+    if (error instanceof Sequelize.UniqueConstraintError) {
+      // Send a custom response for duplicate entry
+      res.status(400).json({
+        status: "error",
+        message:
+          "Duplicate entry. ToolFAQ with the same Tool Id already exists.",
+      });
+    } else {
+      // Handle other errors
+      console.error(error);
+      next(error);
+    }
   }
 };
 
@@ -36,7 +46,7 @@ exports.getById = async (req, res, next) => {
   try {
     const data = await service.findOne({
       where: {
-        id: req.params.id,
+        toolId: req.params.toolId,
       },
     });
 
@@ -55,7 +65,7 @@ exports.update = async (req, res, next) => {
     // Update the tool data
     const [affectedRows] = await service.update(req.body, {
       where: {
-        id: req.params.id,
+        toolId: req.params.toolId,
       },
     });
 
@@ -76,7 +86,7 @@ exports.delete = async (req, res, next) => {
   try {
     const affectedRows = await service.delete({
       where: {
-        id: req.params.id,
+        toolId: req.params.toolId,
       },
     });
 

@@ -17,6 +17,7 @@ const ToolFAQ = sequelize.define("toolFAQ", {
 Tool.hasOne(ToolFAQ, {
   foreignKey: {
     allowNull: false,
+    unique: true,
   },
 });
 ToolFAQ.belongsTo(Tool);

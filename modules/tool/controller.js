@@ -1,6 +1,7 @@
 "use strict";
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
+const moment = require("moment");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
@@ -57,6 +58,7 @@ exports.add = async (req, res, next) => {
     const tool = await service.create(bodyData);
 
     // // Send a push notification with the blog title and body
+    // if (blog.createdAt == blog.release) {
     // const topic =
     //   process.env.NODE_ENV === "production"
     //     ? process.env.TOPIC
@@ -65,6 +67,7 @@ exports.add = async (req, res, next) => {
     // const body = "Hot on Toolplate- check it now!";
     // const click_action = `tool/${tool.slug}`;
     // pushNotificationTopic(topic, title, body, click_action, 1);
+    // }
 
     // Check if Previews uploaded and if got URLs
     if (req.files.previews) {
@@ -140,7 +143,15 @@ exports.getAll = async (req, res, next) => {
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
-      ...sqquery(query, {}, ["title"]),
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...toolAttributes,
@@ -207,7 +218,73 @@ exports.getAllForAdmin = async (req, res, next) => {
     }
 
     const data = await service.findAndCountAll({
-      ...sqquery(query, {}, ["title"]),
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: toolAllAdminAttributes,
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+        {
+          model: ToolTag,
+          attributes: ["tagId"],
+          include: {
+            model: Tag,
+            attributes: tagAttributes,
+          },
+        },
+      ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getScheduledForAdmin = async (req, res, next) => {
+  try {
+    const { categoryIds, ...query } = req.query;
+
+    const where = {};
+
+    if (categoryIds) {
+      // Split the comma-separated categoryIds into an array
+      const categoryIdArray = categoryIds.split(",").map(Number);
+
+      // Use the `Op.in` operator to find tools that match any of the specified categoryIds
+      where["$toolCategories.categoryId$"] = {
+        [Op.in]: categoryIdArray,
+      };
+    }
+
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.gt]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: toolAllAdminAttributes,
       include: [
@@ -354,7 +431,10 @@ exports.search = async (req, res, next) => {
       service.findAll({
         where: {
           title: {
-            [Op.like]: `${req.query.title}%`,
+            [Op.like]: `%${req.query.title}%`,
+          },
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
           },
         },
         attributes: ["id", "image", "title", "description", "slug"],
@@ -363,6 +443,9 @@ exports.search = async (req, res, next) => {
         where: {
           title: {
             [Op.like]: `%${req.query.title}%`,
+          },
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
           },
         },
         attributes: ["id", "image", "title", "description", "slug"],
@@ -471,6 +554,9 @@ exports.getRelatedTools = async (req, res, next) => {
           { "$toolCategories.categoryId$": { [Op.in]: categoryIds } },
           { "$toolTags.tagId$": { [Op.in]: tagIds } },
         ],
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
       },
       attributes: [
         ...toolAttributes,

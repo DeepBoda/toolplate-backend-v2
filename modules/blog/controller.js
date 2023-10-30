@@ -1,6 +1,7 @@
 "use strict";
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
+const moment = require("moment");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
@@ -48,14 +49,16 @@ exports.add = async (req, res, next) => {
     const blog = await service.create(bodyData);
 
     // Send a push notification with the blog title and body
-    const topic =
-      process.env.NODE_ENV === "production"
-        ? process.env.TOPIC
-        : process.env.DEV_TOPIC;
-    const title = blog.title;
-    const body = "Hot on Toolplate- check it now!";
-    const click_action = `blog/${blog.slug}`;
-    pushNotificationTopic(topic, title, body, click_action, 1);
+    if (blog.createdAt == blog.release) {
+      const topic =
+        process.env.NODE_ENV === "production"
+          ? process.env.TOPIC
+          : process.env.DEV_TOPIC;
+      const title = blog.title;
+      const body = "Hot on Toolplate- check it now!";
+      const click_action = `blog/${blog.slug}`;
+      pushNotificationTopic(topic, title, body, click_action, 1);
+    }
 
     // Get the comma-separated `categories` and `tags` IDs
     const categoryIds = categories.split(",").map(Number);
@@ -113,10 +116,19 @@ exports.getAll = async (req, res, next) => {
         [Op.in]: categoryIdArray,
       };
     }
+
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
-      ...sqquery(query, {}, ["title"]),
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...blogAttributes,
@@ -183,7 +195,72 @@ exports.getAllForAdmin = async (req, res, next) => {
       };
     }
     const data = await service.findAndCountAll({
-      ...sqquery(query, {}, ["title"]),
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: blogAllAdminAttributes,
+      include: [
+        {
+          model: BlogCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+        {
+          model: BlogTag,
+          attributes: ["tagId"],
+          include: {
+            model: Tag,
+            attributes: tagAttributes,
+          },
+        },
+      ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getScheduledForAdmin = async (req, res, next) => {
+  try {
+    const { categoryIds, ...query } = req.query;
+
+    const where = {};
+
+    if (categoryIds) {
+      // Split the comma-separated categoryIds into an array
+      const categoryIdArray = categoryIds.split(",").map(Number);
+
+      // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
+      where["$blogCategories.categoryId$"] = {
+        [Op.in]: categoryIdArray,
+      };
+    }
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.gt]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: blogAllAdminAttributes,
       include: [
@@ -400,6 +477,9 @@ exports.getRelatedBlogs = async (req, res, next) => {
           { "$blogCategories.categoryId$": { [Op.in]: categoryIds } },
           { "$blogTags.tagId$": { [Op.in]: tagIds } },
         ],
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
       },
       attributes: [
         ...blogAttributes,

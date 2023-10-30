@@ -25,6 +25,7 @@ exports.toolAttributes = [
   "wishlists",
   "ratingsAverage",
   "totalRatings",
+  "release",
 ];
 exports.blogAttributes = [
   "id",
@@ -39,6 +40,7 @@ exports.blogAttributes = [
   "views",
   "comments",
   "wishlists",
+  "release",
 ];
 
 exports.categoryAttributes = ["id", "name"];
@@ -59,6 +61,7 @@ exports.toolAllAdminAttributes = [
   "wishlists",
   "ratingsAverage",
   "totalRatings",
+  "release",
 ];
 exports.blogAllAdminAttributes = [
   "id",
@@ -72,6 +75,7 @@ exports.blogAllAdminAttributes = [
   "views",
   "comments",
   "wishlists",
+  "release",
 ];
 
 exports.categoryAdminAttributes = ["id", "name", "createdAt"];

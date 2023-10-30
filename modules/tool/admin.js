@@ -18,6 +18,7 @@ router
     joiValidator(toolSchema.create),
     tool.add
   );
+router.route("/scheduled").get(tool.getScheduledForAdmin);
 router
   .route("/:id")
   .get(tool.getForAdmin)

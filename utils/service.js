@@ -39,13 +39,13 @@ exports.getJwtToken = async (data) => {
   return token;
 };
 
-exports.generateOTP = async () => {
+exports.generateOTP = () => {
   const OTP = Math.floor(100000 + Math.random() * 900000);
   this.cl("OTP", OTP);
   return OTP;
 };
 
-exports.dateFilter = async (query, dateColumn = "createdAt") => {
+exports.dateFilter = (query, dateColumn = "createdAt") => {
   const dateFilter = {};
   const { startDate, endDate } = query;
   if (startDate) {

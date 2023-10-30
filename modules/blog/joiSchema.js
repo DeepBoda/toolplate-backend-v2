@@ -10,6 +10,7 @@ module.exports = {
     overview: Joi.string().required(),
     categories: Joi.string().required(),
     tags: Joi.string().required(),
+    release: Joi.date(),
   }),
   update: Joi.object().keys({
     title: Joi.string(),

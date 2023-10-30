@@ -12,6 +12,7 @@ module.exports = {
     videos: Joi.array().allow(null),
     categories: Joi.string().required(),
     tags: Joi.string().required(),
+    release: Joi.date(),
   }),
   update: Joi.object().keys({
     title: Joi.string(),

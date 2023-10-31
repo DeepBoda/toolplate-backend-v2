@@ -2,15 +2,22 @@
 
 const service = require("./service");
 const redisService = require("../../utils/redis");
+const slugify = require("slugify");
 const toolCategoryService = require("../toolCategory/service");
 const blogCategoryService = require("../blogCategory/service");
-
 const { usersqquery, sqquery } = require("../../utils/query");
 const { categoryAdminAttributes } = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    // Create slug URL based on name
+    req.body.slug = slugify(req.body.name, {
+      replacement: "-", // Replace spaces with hyphens
+      lower: true, // Convert to lowercase
+      remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+    });
+
     const data = await service.create(req.body);
     redisService.del(`categories`);
 
@@ -81,6 +88,15 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
+    // Create slug URL based on name
+    if (req.body.name) {
+      req.body.slug = slugify(req.body.name, {
+        replacement: "-", // Replace spaces with hyphens
+        lower: true, // Convert to lowercase
+        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+      });
+    }
+
     // Update the blog data
     const [affectedRows] = await service.update(req.body, {
       where: {
@@ -136,3 +152,24 @@ exports.delete = async (req, res, next) => {
     next(error);
   }
 };
+
+const makeSLug = async (req, res, next) => {
+  try {
+    const categories = await service.findAll({
+      attributes: ["id", "name"],
+    });
+
+    for (let i in categories) {
+      let slug = slugify(categories[i].name, {
+        replacement: "-", // replace spaces with hyphens
+        lower: true, // convert to lowercase
+        remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
+      });
+      categories[i].slug = slug;
+      categories[i].save();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+// makeSLug();

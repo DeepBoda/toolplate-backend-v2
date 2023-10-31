@@ -20,6 +20,8 @@ const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const BlogCategory = require("../blogCategory/model");
 const blogCategoryService = require("../blogCategory/service");
 const Category = require("../category/model");
+const categoryService = require("../category/service");
+
 const BlogTag = require("../blogTag/model");
 const blogTagService = require("../blogTag/service");
 const Tag = require("../tag/model");
@@ -326,6 +328,76 @@ exports.getBySlug = async (req, res, next) => {
 
       redisService.set(cacheKey, data);
     }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getByCategorySlug = async (req, res, next) => {
+  try {
+    const category = await categoryService.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+
+    const where = {};
+
+    where["$blogCategories.categoryId$"] = category.id;
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        req.query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: [
+        ...blogAttributes,
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
+      include: [
+        {
+          model: BlogCategory,
+          attributes: ["categoryId"],
+          ...req.query,
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+        {
+          model: BlogTag,
+          attributes: ["tagId"],
+          include: {
+            model: Tag,
+            attributes: tagAttributes,
+          },
+        },
+      ],
+    });
 
     res.status(200).send({
       status: "success",

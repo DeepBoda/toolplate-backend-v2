@@ -24,5 +24,6 @@ module.exports = {
     videos: Joi.array(),
     categories: Joi.string(),
     tags: Joi.string(),
+    release: Joi.date(),
   }),
 };

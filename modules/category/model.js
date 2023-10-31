@@ -14,6 +14,9 @@ const Category = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    slug: {
+      type: DataTypes.STRING,
+    },
   },
   {
     paranoid: true,

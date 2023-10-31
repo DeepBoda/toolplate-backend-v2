@@ -21,5 +21,6 @@ module.exports = {
     overview: Joi.string(),
     categories: Joi.string(),
     tags: Joi.string(),
+    release: Joi.date(),
   }),
 };

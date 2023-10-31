@@ -43,8 +43,8 @@ exports.blogAttributes = [
   "release",
 ];
 
-exports.categoryAttributes = ["id", "name"];
-exports.tagAttributes = ["id", "name"];
+exports.categoryAttributes = ["id", "name", "slug"];
+exports.tagAttributes = ["id", "name", "slug"];
 
 exports.toolAdminAttributes = ["title", "image", "price"];
 exports.blogAdminAttributes = ["title", "image", "alt"];
@@ -78,8 +78,8 @@ exports.blogAllAdminAttributes = [
   "release",
 ];
 
-exports.categoryAdminAttributes = ["id", "name", "createdAt"];
-exports.tagAdminAttributes = ["id", "name", "createdAt"];
+exports.categoryAdminAttributes = ["id", "name", "slug", "createdAt"];
+exports.tagAdminAttributes = ["id", "name", "slug", "createdAt"];
 
 exports.ratingsAdminAttributes = [
   "id",

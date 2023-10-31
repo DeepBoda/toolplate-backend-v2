@@ -2,15 +2,22 @@
 
 const service = require("./service");
 const redisService = require("../../utils/redis");
+const slugify = require("slugify");
 const toolTagService = require("../toolTag/service");
 const blogTagService = require("../blogTag/service");
-
 const { usersqquery, sqquery } = require("../../utils/query");
 const { tagAdminAttributes } = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    // Create slug URL based on name
+    req.body.slug = slugify(req.body.name, {
+      replacement: "-", // Replace spaces with hyphens
+      lower: true, // Convert to lowercase
+      remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+    });
+
     const data = await service.create(req.body);
     redisService.del(`tags`);
 
@@ -83,6 +90,15 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
+    // Create slug URL based on name
+    if (req.body.name) {
+      req.body.slug = slugify(req.body.name, {
+        replacement: "-", // Replace spaces with hyphens
+        lower: true, // Convert to lowercase
+        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+      });
+    }
+
     // Update the blog data
     const [affectedRows] = await service.update(req.body, {
       where: {
@@ -138,3 +154,24 @@ exports.delete = async (req, res, next) => {
     next(error);
   }
 };
+
+const makeSLug = async (req, res, next) => {
+  try {
+    const tags = await service.findAll({
+      attributes: ["id", "name"],
+    });
+
+    for (let i in tags) {
+      let slug = slugify(tags[i].name, {
+        replacement: "-", // replace spaces with hyphens
+        lower: true, // convert to lowercase
+        remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
+      });
+      tags[i].slug = slug;
+      tags[i].save();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+// makeSLug();

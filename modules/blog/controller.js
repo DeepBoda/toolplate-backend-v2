@@ -12,7 +12,6 @@ const { blogResizeImageSize } = require("../../constants");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   blogAttributes,
-  tagAttributes,
   categoryAttributes,
   blogAllAdminAttributes,
 } = require("../../constants/queryAttributes");
@@ -21,10 +20,6 @@ const BlogCategory = require("../blogCategory/model");
 const blogCategoryService = require("../blogCategory/service");
 const Category = require("../category/model");
 const categoryService = require("../category/service");
-
-const BlogTag = require("../blogTag/model");
-const blogTagService = require("../blogTag/service");
-const Tag = require("../tag/model");
 const {
   resizeAndUploadImage,
   resizeAndUploadWebP,
@@ -45,7 +40,7 @@ exports.add = async (req, res, next) => {
       remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
     });
 
-    const { categories, tags, ...bodyData } = req.body;
+    const { categories, ...bodyData } = req.body;
 
     // Create the new blog entry in the `blog` table
     const blog = await service.create(bodyData);
@@ -62,9 +57,8 @@ exports.add = async (req, res, next) => {
       pushNotificationTopic(topic, title, body, click_action, 1);
     }
 
-    // Get the comma-separated `categories` and `tags` IDs
+    // Get the comma-separated `categories`  IDs
     const categoryIds = categories.split(",").map(Number);
-    const tagIds = tags.split(",").map(Number);
 
     // Create an array of objects for bulk insert in `blogCategory` table
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
@@ -72,17 +66,8 @@ exports.add = async (req, res, next) => {
       categoryId,
     }));
 
-    // Create an array of objects for bulk insert in `blogTag` table
-    const tagBulkInsertData = tagIds.map((tagId) => ({
-      blogId: blog.id,
-      tagId,
-    }));
-
-    // Use bulk create operations for `blogCategory` and `blogTag`
-    await Promise.all([
-      blogCategoryService.bulkCreate(categoryBulkInsertData),
-      blogTagService.bulkCreate(tagBulkInsertData),
-    ]);
+    // Use bulk create operations for `blogCategory`
+    blogCategoryService.bulkCreate(categoryBulkInsertData);
 
     // Send the HTTP response with a success status and the created blog entry
     res.status(200).json({
@@ -147,27 +132,16 @@ exports.getAll = async (req, res, next) => {
           "isWishlisted",
         ],
       ],
-      include: [
-        {
-          model: BlogCategory,
-          attributes: ["categoryId"],
-          ...query,
-          where,
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
+      include: {
+        model: BlogCategory,
+        attributes: ["categoryId"],
+        ...query,
+        where,
+        include: {
+          model: Category,
+          attributes: categoryAttributes,
         },
-        {
-          model: BlogTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
-      ],
-      // },
+      },
     });
 
     // redisService.set(`blogs`, data);
@@ -208,26 +182,16 @@ exports.getAllForAdmin = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: blogAllAdminAttributes,
-      include: [
-        {
-          model: BlogCategory,
-          attributes: ["categoryId"],
-          ...query,
-          where,
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
+      include: {
+        model: BlogCategory,
+        attributes: ["categoryId"],
+        ...query,
+        where,
+        include: {
+          model: Category,
+          attributes: categoryAttributes,
         },
-        {
-          model: BlogTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
-      ],
+      },
     });
 
     res.status(200).send({
@@ -276,14 +240,6 @@ exports.getScheduledForAdmin = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: BlogTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -313,14 +269,6 @@ exports.getBySlug = async (req, res, next) => {
             include: {
               model: Category,
               attributes: categoryAttributes,
-            },
-          },
-          {
-            model: BlogTag,
-            attributes: ["tagId"],
-            include: {
-              model: Tag,
-              attributes: tagAttributes,
             },
           },
         ],
@@ -386,14 +334,6 @@ exports.getByCategorySlug = async (req, res, next) => {
           include: {
             model: Category,
             attributes: categoryAttributes,
-          },
-        },
-        {
-          model: BlogTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
           },
         },
       ],
@@ -478,24 +418,14 @@ exports.getForAdmin = async (req, res, next) => {
       where: {
         id: req.params.id,
       },
-      include: [
-        {
-          model: BlogCategory,
-          attributes: ["categoryId"],
-          include: {
-            model: Category,
-            attributes: ["id", "name"],
-          },
+      include: {
+        model: BlogCategory,
+        attributes: ["categoryId"],
+        include: {
+          model: Category,
+          attributes: ["id", "name"],
         },
-        {
-          model: BlogTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: ["id", "name"],
-          },
-        },
-      ],
+      },
     });
 
     // redisService.set(`oneBlog`, data);
@@ -515,16 +445,10 @@ exports.getRelatedBlogs = async (req, res, next) => {
     const openedBlog = await service.findOne({
       where: { id: req.params.id },
       attributes: blogAttributes,
-      include: [
-        {
-          model: BlogCategory,
-          attributes: ["categoryId"],
-        },
-        {
-          model: BlogTag,
-          attributes: ["tagId"],
-        },
-      ],
+      include: {
+        model: BlogCategory,
+        attributes: ["categoryId"],
+      },
     });
 
     if (!openedBlog) {
@@ -536,19 +460,13 @@ exports.getRelatedBlogs = async (req, res, next) => {
       (blogCategory) => blogCategory.categoryId
     );
 
-    // Find blogs that have the same tags as the opened blog
-    const tagIds = openedBlog.blogTags.map((blogTag) => blogTag.tagId);
-
     const userId = req.requestor ? req.requestor.id : null;
-    // Find blogs with the same category or tag IDs
+    // Find blogs with the same category
     const relatedBlogs = await service.findAll({
       // ...sqquery(req.query),
       where: {
         id: { [Op.ne]: req.params.id },
-        [Op.or]: [
-          { "$blogCategories.categoryId$": { [Op.in]: categoryIds } },
-          { "$blogTags.tagId$": { [Op.in]: tagIds } },
-        ],
+        "$blogCategories.categoryId$": { [Op.in]: categoryIds },
         release: {
           [Op.lte]: moment(), // Less than or equal to the current date
         },
@@ -572,14 +490,6 @@ exports.getRelatedBlogs = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: BlogTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -588,18 +498,13 @@ exports.getRelatedBlogs = async (req, res, next) => {
       const commonCategories = blog.blogCategories.filter((blogCategory) =>
         categoryIds.includes(blogCategory.categoryId)
       );
-      const commonTags = blog.blogTags.filter((blogTag) =>
-        tagIds.includes(blogTag.tagId)
-      );
+
       const totalCategories = categoryIds.length;
-      const totalTags = tagIds.length;
       const matchingCategories = commonCategories.length;
-      const matchingTags = commonTags.length;
 
       // Calculate matching percentage
       blog.dataValues.matchingPercentage =
-        ((matchingCategories + matchingTags) / (totalCategories + totalTags)) *
-        100;
+        (matchingCategories / totalCategories) * 100;
     });
 
     // Sort blogs based on matching percentage in descending order
@@ -659,7 +564,7 @@ exports.update = async (req, res, next) => {
       });
     }
 
-    const { categories, tags, ...updatedData } = body;
+    const { categories, ...updatedData } = body;
 
     // Update the blog data
     const [affectedRows] = await service.update(updatedData, { where: { id } });
@@ -670,15 +575,11 @@ exports.update = async (req, res, next) => {
     // Clear Redis cache
     redisService.del(`blog?slug=${oldBlogData.slug}`);
 
-    // Handle categories and tags updates
+    // Handle categories  updates
     const categoryIds = categories.split(",").map(Number);
-    const tagIds = tags.split(",").map(Number);
 
-    // Delete existing associations with categories and tags
-    await Promise.all([
-      blogCategoryService.delete({ where: { blogId: id } }),
-      blogTagService.delete({ where: { blogId: id } }),
-    ]);
+    // Delete existing associations with categories
+    await blogCategoryService.delete({ where: { blogId: id } });
 
     // Create an array of objects for bulk insert in `blogCategory` table
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
@@ -686,17 +587,8 @@ exports.update = async (req, res, next) => {
       categoryId,
     }));
 
-    // Create an array of objects for bulk insert in `blogTag` table
-    const tagBulkInsertData = tagIds.map((tagId) => ({
-      blogId: id,
-      tagId,
-    }));
-
     // Use bulk create operations for `blogCategory` and `blogTag`
-    await Promise.all([
-      blogCategoryService.bulkCreate(categoryBulkInsertData),
-      blogTagService.bulkCreate(tagBulkInsertData),
-    ]);
+    await blogCategoryService.bulkCreate(categoryBulkInsertData);
 
     // Handle the file deletion
     if (file && oldBlogData?.image) {
@@ -727,14 +619,8 @@ exports.delete = async (req, res, next) => {
     // Delete the file from S3 if an image URL is present
     if (image) deleteFilesFromS3([image]);
 
-    // Delete associated categories and tags
-    await blogCategoryService.delete({
-      where: {
-        blogId: req.params.id,
-      },
-    });
-
-    await blogTagService.delete({
+    // Delete associated categories
+    blogCategoryService.delete({
       where: {
         blogId: req.params.id,
       },

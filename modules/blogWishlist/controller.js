@@ -6,7 +6,6 @@ const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   blogAttributes,
-  tagAttributes,
   categoryAttributes,
   userAdminAttributes,
   blogAdminAttributes,

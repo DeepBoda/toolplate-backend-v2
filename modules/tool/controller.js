@@ -26,9 +26,6 @@ const categoryService = require("../category/service");
 const ToolCategory = require("../toolCategory/model");
 const toolCategoryService = require("../toolCategory/service");
 const Category = require("../category/model");
-const ToolTag = require("../toolTag/model");
-const toolTagService = require("../toolTag/service");
-const Tag = require("../tag/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
 

@@ -1,18 +1,18 @@
 "use strict";
 
 const router = require("express").Router();
-const blogTag = require("./controller");
-const blogTagSchema = require("./joiSchema");
+const Notification = require("./controller");
+const NotificationSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 
 router
   .route("/")
-  .get(blogTag.getAll)
-  .post(joiValidator(blogTagSchema.create), blogTag.add);
+  .get(Notification.getAll)
+  .post(joiValidator(NotificationSchema.create), Notification.add);
 router
   .route("/:id")
-  .get(blogTag.getById)
-  .patch(joiValidator(blogTagSchema.update), blogTag.update)
-  .delete(blogTag.delete);
+  .get(Notification.getById)
+  .patch(joiValidator(NotificationSchema.update), Notification.update)
+  .delete(Notification.delete);
 
 module.exports = router;

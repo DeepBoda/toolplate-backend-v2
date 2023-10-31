@@ -1,10 +1,10 @@
 version: 0.0
 os: linux
-files:
-  - source: /
-    destination: /root/toolplate-backend/
-    overwrite: true
-file_exists_behavior: OVERWRITE
+# files:
+#   - source: /
+#     destination: /root/toolplate-backend/
+#     overwrite: true
+# file_exists_behavior: OVERWRITE
 hooks:
   ApplicationStart:
     - location: script/update.sh

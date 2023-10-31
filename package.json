@@ -7,7 +7,7 @@
   "author": "Deep Boda <deep@tsttechnology.in>",
   "license": "ISC",
   "engines": {
-    "node": "20.9.0"
+    "node": "18.18.2"
   },
   "repository": {
     "type": "git",

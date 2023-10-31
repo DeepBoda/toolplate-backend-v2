@@ -1,7 +1,6 @@
 "use strict";
 
 const service = require("./service");
-const Sequelize = require("sequelize");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 // ------------- Only Admin can Create --------------

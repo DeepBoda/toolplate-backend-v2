@@ -16,7 +16,6 @@ const {
 } = require("../../utils/imageResize");
 const {
   toolAttributes,
-  tagAttributes,
   categoryAttributes,
   toolAllAdminAttributes,
 } = require("../../constants/queryAttributes");
@@ -50,7 +49,7 @@ exports.add = async (req, res, next) => {
       lower: true, // convert to lowercase
       remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
     });
-    const { categories, tags, ...bodyData } = req.body;
+    const { categories, ...bodyData } = req.body;
 
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(bodyData);
@@ -83,9 +82,8 @@ exports.add = async (req, res, next) => {
       });
     }
 
-    // Step 2: Get the comma-separated `categories` and `tags` IDs
+    // Step 2: Get the comma-separated `categories` IDs
     const categoryIds = categories.split(",").map(Number);
-    const tagIds = tags.split(",").map(Number);
 
     // Step 3: Add entries in the `toolCategory` table using bulk insert
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
@@ -93,17 +91,8 @@ exports.add = async (req, res, next) => {
       categoryId,
     }));
 
-    // Step 4: Add entries in the `toolTag` table using bulk insert
-    const tagBulkInsertData = tagIds.map((tagId) => ({
-      toolId: tool.id,
-      tagId,
-    }));
-
     // Use Promise.all to execute bulk inserts concurrently
-    await Promise.all([
-      toolCategoryService.bulkCreate(categoryBulkInsertData),
-      toolTagService.bulkCreate(tagBulkInsertData),
-    ]);
+    toolCategoryService.bulkCreate(categoryBulkInsertData);
 
     res.status(200).json({
       status: "success",
@@ -177,14 +166,6 @@ exports.getAll = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -238,14 +219,6 @@ exports.getAllForAdmin = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -296,14 +269,6 @@ exports.getScheduledForAdmin = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -337,14 +302,6 @@ exports.getBySlug = async (req, res, next) => {
             include: {
               model: Category,
               attributes: categoryAttributes,
-            },
-          },
-          {
-            model: ToolTag,
-            attributes: ["tagId"],
-            include: {
-              model: Tag,
-              attributes: tagAttributes,
             },
           },
         ],
@@ -410,14 +367,6 @@ exports.getByCategorySlug = async (req, res, next) => {
           include: {
             model: Category,
             attributes: categoryAttributes,
-          },
-        },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
           },
         },
       ],
@@ -552,14 +501,6 @@ exports.getForAdmin = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -588,14 +529,6 @@ exports.getRelatedTools = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -608,20 +541,14 @@ exports.getRelatedTools = async (req, res, next) => {
       (toolCategory) => toolCategory.categoryId
     );
 
-    // Find tools that have the same tags as the opened tool
-    const tagIds = openedTool.toolTags.map((toolTag) => toolTag.tagId);
-
     const userId = req.requestor ? req.requestor.id : null;
 
-    // Find tools with the same category or tag IDs
+    // Find tools with the same category  IDs
     const relatedTools = await service.findAll({
       // ...sqquery(req.query),
       where: {
         id: { [Op.ne]: req.params.id },
-        [Op.or]: [
-          { "$toolCategories.categoryId$": { [Op.in]: categoryIds } },
-          { "$toolTags.tagId$": { [Op.in]: tagIds } },
-        ],
+        "$toolCategories.categoryId$": { [Op.in]: categoryIds },
         release: {
           [Op.lte]: moment(), // Less than or equal to the current date
         },
@@ -651,14 +578,6 @@ exports.getRelatedTools = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -667,18 +586,14 @@ exports.getRelatedTools = async (req, res, next) => {
       const commonCategories = tool.toolCategories.filter((toolCategory) =>
         categoryIds.includes(toolCategory.categoryId)
       );
-      const commonTags = tool.toolTags.filter((toolTag) =>
-        tagIds.includes(toolTag.tagId)
-      );
+
       const totalCategories = categoryIds.length;
-      const totalTags = tagIds.length;
+
       const matchingCategories = commonCategories.length;
-      const matchingTags = commonTags.length;
 
       // Calculate matching percentage
       tool.dataValues.matchingPercentage =
-        ((matchingCategories + matchingTags) / (totalCategories + totalTags)) *
-        100;
+        (matchingCategories / totalCategories) * 100;
     });
 
     // Sort tools based on matching percentage in descending order
@@ -730,7 +645,7 @@ exports.update = async (req, res, next) => {
       });
     }
 
-    const { categories, tags, ...body } = req.body;
+    const { categories, ...body } = req.body;
 
     // Update the tool data
     const [affectedRows] = await service.update(body, { where: { id } });
@@ -753,27 +668,19 @@ exports.update = async (req, res, next) => {
       deleteFilesFromS3(filesToDelete);
     }
 
-    // Update categories and tags
+    // Update categories
     const categoryIds = categories.split(",").map(Number);
-    const tagIds = tags.split(",").map(Number);
-
     // Delete old associations
-    await Promise.all([
-      toolCategoryService.delete({ where: { toolId: id } }),
-      toolTagService.delete({ where: { toolId: id } }),
-    ]);
+    await toolCategoryService.delete({ where: { toolId: id } });
 
     // Create new associations using bulk create operations
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       toolId: id,
       categoryId,
     }));
-    const tagBulkInsertData = tagIds.map((tagId) => ({ toolId: id, tagId }));
 
-    await Promise.all([
-      toolCategoryService.bulkCreate(categoryBulkInsertData),
-      toolTagService.bulkCreate(tagBulkInsertData),
-    ]);
+     toolCategoryService.bulkCreate(categoryBulkInsertData);
+
   } catch (error) {
     console.error(error);
     next(error);
@@ -794,7 +701,6 @@ exports.delete = async (req, res, next) => {
     const [affectedRows] = await Promise.all([
       service.delete({ where: { id: toolId } }),
       toolCategoryService.delete({ where: { toolId } }),
-      toolTagService.delete({ where: { toolId } }),
       toolImageService.delete({ where: { toolId } }),
     ]);
 

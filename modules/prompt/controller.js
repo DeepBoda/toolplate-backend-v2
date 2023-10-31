@@ -196,7 +196,6 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // Try to retrieve the tags from the Redis cache
     const data = await service.findAndCountAll(
       sqquery(req.query, {}, ["search"])
     );

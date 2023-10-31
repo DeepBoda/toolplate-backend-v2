@@ -1,5 +1,4 @@
 "use strict";
-const createError = require("http-errors");
 const service = require("./service");
 const { sqquery } = require("../../utils/query");
 

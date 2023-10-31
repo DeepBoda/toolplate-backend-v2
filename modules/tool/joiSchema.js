@@ -11,7 +11,6 @@ module.exports = {
     link: Joi.string().required(),
     videos: Joi.array().allow(null),
     categories: Joi.string().required(),
-    tags: Joi.string().required(),
     release: Joi.date(),
   }),
   update: Joi.object().keys({
@@ -23,7 +22,6 @@ module.exports = {
     link: Joi.string(),
     videos: Joi.array(),
     categories: Joi.string(),
-    tags: Joi.string(),
     release: Joi.date(),
   }),
 };

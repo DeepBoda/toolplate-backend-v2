@@ -587,7 +587,7 @@ exports.update = async (req, res, next) => {
       categoryId,
     }));
 
-    // Use bulk create operations for `blogCategory` and `blogTag`
+    // Use bulk create operations for `blogCategory`
     await blogCategoryService.bulkCreate(categoryBulkInsertData);
 
     // Handle the file deletion

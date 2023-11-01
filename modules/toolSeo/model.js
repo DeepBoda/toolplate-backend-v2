@@ -2,12 +2,18 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const Tool = require("../tool/model");
-const ToolFAQ = sequelize.define("toolFAQ", {
+const ToolSeo = sequelize.define("toolSeo", {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     autoIncrement: true,
     primaryKey: true,
+  },
+  title: {
+    type: DataTypes.STRING,
+  },
+  description: {
+    type: DataTypes.TEXT,
   },
   faqs: {
     type: DataTypes.TEXT,
@@ -22,12 +28,12 @@ const ToolFAQ = sequelize.define("toolFAQ", {
   },
 });
 
-Tool.hasOne(ToolFAQ, {
+Tool.hasOne(ToolSeo, {
   foreignKey: {
     allowNull: false,
     unique: true,
   },
 });
-ToolFAQ.belongsTo(Tool);
+ToolSeo.belongsTo(Tool);
 
-module.exports = ToolFAQ;
+module.exports = ToolSeo;

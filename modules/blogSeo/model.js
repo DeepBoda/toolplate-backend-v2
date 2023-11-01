@@ -2,12 +2,18 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const Blog = require("../blog/model");
-const BlogFAQ = sequelize.define("blogFAQ", {
+const BlogSeo = sequelize.define("blogSeo", {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     autoIncrement: true,
     primaryKey: true,
+  },
+  title: {
+    type: DataTypes.STRING,
+  },
+  description: {
+    type: DataTypes.TEXT,
   },
   faqs: {
     type: DataTypes.TEXT,
@@ -22,12 +28,12 @@ const BlogFAQ = sequelize.define("blogFAQ", {
   },
 });
 
-Blog.hasOne(BlogFAQ, {
+Blog.hasOne(BlogSeo, {
   foreignKey: {
     allowNull: false,
     unique: true,
   },
 });
-BlogFAQ.belongsTo(Blog);
+BlogSeo.belongsTo(Blog);
 
-module.exports = BlogFAQ;
+module.exports = BlogSeo;

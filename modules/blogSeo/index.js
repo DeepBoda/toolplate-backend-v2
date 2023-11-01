@@ -1,12 +1,12 @@
 "use strict";
 
 const router = require("express").Router();
-const FAQ = require("./controller");
+const Seo = require("./controller");
 const {authMiddleware,protectRoute} = require("../../middlewares/auth");
 
 router.use( authMiddleware);
-router.route("/").get(FAQ.getAll);
-router.route("/:blogId").get(FAQ.getById);
+router.route("/").get(Seo.getAll);
+router.route("/:blogId").get(Seo.getById);
 
 
 

@@ -79,6 +79,7 @@ app.use(validateAPIKey);
 
 // Define your routes
 const indexRouter = require("./routes");
+const logService = require("./modules/log/service");
 app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error

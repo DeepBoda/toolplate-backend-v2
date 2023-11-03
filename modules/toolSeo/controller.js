@@ -1,6 +1,7 @@
 "use strict";
 
 const service = require("./service");
+const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 // ------------- Only Admin can Create --------------
@@ -22,6 +23,9 @@ exports.add = async (req, res, next) => {
       });
     }
 
+    redisService.del(`tools-seo`);
+    redisService.del(`tool?seo=${req.params.toolId}`);
+
     res.status(200).json({
       status: "success",
       data,
@@ -35,7 +39,14 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    // Try to retrieve the tools seo from the Redis cache
+    let data = await redisService.get(`tools-seo`);
+
+    // If the tools seo are not found in the cache
+    if (!data) {
+      data = await service.findAndCountAll(sqquery(req.query));
+      redisService.set(`tools-seo`, data);
+    }
 
     res.status(200).send({
       status: "success",
@@ -48,11 +59,17 @@ exports.getAll = async (req, res, next) => {
 
 exports.getById = async (req, res, next) => {
   try {
-    const data = await service.findOne({
-      where: {
-        toolId: req.params.toolId,
-      },
-    });
+    const cacheKey = `tool?seo=${req.params.toolId}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      const data = await service.findOne({
+        where: {
+          toolId: req.params.toolId,
+        },
+      });
+      redisService.set(cacheKey, data);
+    }
 
     res.status(200).send({
       status: "success",

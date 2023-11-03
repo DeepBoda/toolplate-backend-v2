@@ -6,8 +6,9 @@ const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
-const viewService = require("../toolView/service");
 const redisService = require("../../utils/redis");
+const seoService = require("../toolSeo/service");
+const viewService = require("../toolView/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { toolSize, toolPreviewSize } = require("../../constants");
 const {
@@ -27,6 +28,7 @@ const toolCategoryService = require("../toolCategory/service");
 const Category = require("../category/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
+const createHttpError = require("http-errors");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -91,8 +93,14 @@ exports.add = async (req, res, next) => {
       categoryId,
     }));
 
-    // Use Promise.all to execute bulk inserts concurrently
+    const seoData = {
+      toolId: tool.id,
+      title: tool.title,
+      description: tool.description,
+    };
+    //  execute bulk inserts concurrently
     toolCategoryService.bulkCreate(categoryBulkInsertData);
+    seoService.create(seoData);
 
     res.status(200).json({
       status: "success",
@@ -100,10 +108,8 @@ exports.add = async (req, res, next) => {
     });
 
     // Resize and upload the tool icons
-    await Promise.all([
-      resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`),
-      resizeAndUploadWebP(toolSize, tool.image, `tool_${tool.id}`),
-    ]);
+    resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
+    resizeAndUploadWebP(toolSize, tool.image, `tool_${tool.id}`);
   } catch (error) {
     console.error(error);
     next(error);
@@ -230,6 +236,7 @@ exports.getAllForAdmin = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getScheduledForAdmin = async (req, res, next) => {
   try {
     const { categoryIds, ...query } = req.query;
@@ -318,6 +325,7 @@ exports.getBySlug = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getByCategorySlug = async (req, res, next) => {
   try {
     const category = await categoryService.findOne({
@@ -325,6 +333,9 @@ exports.getByCategorySlug = async (req, res, next) => {
         slug: req.params.slug,
       },
     });
+    if (!category) {
+      return next(createHttpError(404, "Category not found!"));
+    }
 
     const where = {};
 
@@ -625,10 +636,8 @@ exports.update = async (req, res, next) => {
     // Check if Image (logo) uploaded and if got URL
     if (req.files?.image) {
       req.body.image = req.files.image[0].location;
-      await Promise.all([
-        resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`),
-        resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`),
-      ]);
+      resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`);
+      resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`);
     }
 
     // Check if Videos uploaded and if got URLs
@@ -679,8 +688,7 @@ exports.update = async (req, res, next) => {
       categoryId,
     }));
 
-     toolCategoryService.bulkCreate(categoryBulkInsertData);
-
+    toolCategoryService.bulkCreate(categoryBulkInsertData);
   } catch (error) {
     console.error(error);
     next(error);

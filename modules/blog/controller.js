@@ -7,6 +7,7 @@ const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
 const redisService = require("../../utils/redis");
+const seoService = require("../blogSeo/service");
 const viewService = require("../blogView/service");
 const { blogResizeImageSize } = require("../../constants");
 const { usersqquery, sqquery } = require("../../utils/query");
@@ -24,6 +25,7 @@ const {
   resizeAndUploadImage,
   resizeAndUploadWebP,
 } = require("../../utils/imageResize");
+const createHttpError = require("http-errors");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -65,9 +67,14 @@ exports.add = async (req, res, next) => {
       blogId: blog.id,
       categoryId,
     }));
-
+    const seoData = {
+      blogId: blog.id,
+      title: blog.title,
+      description: blog.description,
+    };
     // Use bulk create operations for `blogCategory`
     blogCategoryService.bulkCreate(categoryBulkInsertData);
+    seoService.create(seoData);
 
     // Send the HTTP response with a success status and the created blog entry
     res.status(200).json({
@@ -76,10 +83,8 @@ exports.add = async (req, res, next) => {
     });
 
     // Resize and upload the blog image
-    await Promise.all([
-      resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`),
-      resizeAndUploadWebP(blogResizeImageSize, blog.image, `blog_${blog.id}`),
-    ]);
+    resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`);
+    resizeAndUploadWebP(blogResizeImageSize, blog.image, `blog_${blog.id}`);
   } catch (error) {
     console.error(error);
     next(error);
@@ -292,6 +297,10 @@ exports.getByCategorySlug = async (req, res, next) => {
         slug: req.params.slug,
       },
     });
+
+    if (!category) {
+      return next(createHttpError(404, "Category not found!"));
+    }
 
     const where = {};
 
@@ -549,10 +558,8 @@ exports.update = async (req, res, next) => {
       body.image = file.location;
 
       // Resize and upload the image (if needed)
-      await Promise.all([
-        resizeAndUploadImage(blogResizeImageSize, file.location, `blog_${id}`),
-        resizeAndUploadWebP(blogResizeImageSize, file.location, `blog_${id}`),
-      ]);
+      resizeAndUploadImage(blogResizeImageSize, file.location, `blog_${id}`);
+      resizeAndUploadWebP(blogResizeImageSize, file.location, `blog_${id}`);
     }
 
     // Create slug URL based on title

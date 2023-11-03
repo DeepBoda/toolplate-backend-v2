@@ -122,6 +122,13 @@ exports.getAll = async (req, res, next) => {
     // if (!data)
     const { categoryIds, ...query } = req.query;
 
+    if (query.price && !["Free", "Freemium", "Premium"].includes(query.price)) {
+      return res.status(404).json({
+        status: "error",
+        message: "Invalid value , route not found!",
+      });
+    }
+
     const where = {};
 
     if (categoryIds) {

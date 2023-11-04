@@ -80,19 +80,19 @@ exports.getSitemap = async (req, res, next) => {
         data[key].push([
           {
             title: category.name + " Tools",
-            url: `${url}/${category.slug}`,
+            url: `${url}/tools/${category.slug}`,
           },
           {
             title: "Free " + category.name + " Tools",
-            url: `${url}/${category.slug}/free`,
+            url: `${url}/tools/${category.slug}/free`,
           },
           {
             title: "Premium " + category.name + " Tools",
-            url: `${url}/${category.slug}/premium`,
+            url: `${url}/tools/${category.slug}/premium`,
           },
           {
             title: "Freemium " + category.name + " Tools",
-            url: `${url}/${category.slug}/freemium`,
+            url: `${url}/tools/${category.slug}/freemium`,
           },
         ]);
       });

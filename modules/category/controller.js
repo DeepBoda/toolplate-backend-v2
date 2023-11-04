@@ -20,6 +20,7 @@ exports.add = async (req, res, next) => {
 
     const data = await service.create(req.body);
     redisService.del(`categories`);
+    redisService.del(`categorySitemap`);
 
     res.status(200).json({
       status: "success",
@@ -42,6 +43,60 @@ exports.getAll = async (req, res, next) => {
         usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
       );
       redisService.set(`categories`, data);
+    }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getSitemap = async (req, res, next) => {
+  try {
+    // Try to retrieve the categories from the Redis cache
+    let data = await redisService.get(`categorySitemap`);
+    if (!data) {
+      const url =
+        process.env.NODE_ENV === "production"
+          ? process.env.PROD_WEB
+          : process.env.DEV_WEB;
+
+      // If the categories are not found in the cache
+      const categories = await service.findAll(
+        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
+      );
+
+      const data = {};
+
+      // Group the data by the first letter of the category name
+      categories.forEach((category) => {
+        const key = category.name.charAt(0).toUpperCase();
+        if (!data[key]) {
+          data[key] = [];
+        }
+        data[key].push([
+          {
+            title: category.name + " Tools",
+            url: `${url}/${category.slug}`,
+          },
+          {
+            title: "Free " + category.name + " Tools",
+            url: `${url}/${category.slug}/free`,
+          },
+          {
+            title: "Premium " + category.name + " Tools",
+            url: `${url}/${category.slug}/premium`,
+          },
+          {
+            title: "Freemium " + category.name + " Tools",
+            url: `${url}/${category.slug}/freemium`,
+          },
+        ]);
+      });
+      await redisService.set(`categorySitemap`, data);
     }
 
     res.status(200).send({
@@ -106,7 +161,7 @@ exports.update = async (req, res, next) => {
       },
     });
     redisService.del(`categories`);
-
+    redisService.del(`categorySitemap`);
     // Send the response
     res.status(200).json({
       status: "success",
@@ -132,6 +187,7 @@ exports.delete = async (req, res, next) => {
       toolCategoryService.delete({ where: { categoryId: id } }),
       blogCategoryService.delete({ where: { categoryId: id } }),
       redisService.del(`categories`),
+      redisService.del(`categorySitemap`),
     ]);
 
     // Check if affectedRows is zero and return a meaningful response

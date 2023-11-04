@@ -1,19 +1,37 @@
 "use strict";
 
 const service = require("./service");
-
+const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    const data = await service.create(req.body);
+    let [data, created] = await service.findOrCreate({
+      where: { toolId: req.params.toolId },
+      defaults: req.body,
+    });
+
+    if (!created) {
+      await service.update(req.body, {
+        where: {
+          toolId: req.params.toolId,
+        },
+      });
+      data = await service.findOne({
+        where: { toolId: req.params.toolId },
+      });
+    }
+
+    redisService.del(`tools-seo`);
+    redisService.del(`tool?seo=${req.params.toolId}`);
 
     res.status(200).json({
       status: "success",
       data,
     });
   } catch (error) {
+    // Handle other errors
     console.error(error);
     next(error);
   }
@@ -21,7 +39,14 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(sqquery(req.query));
+    // Try to retrieve the tools seo from the Redis cache
+    let data = await redisService.get(`tools-seo`);
+
+    // If the tools seo are not found in the cache
+    if (!data) {
+      data = await service.findAndCountAll(sqquery(req.query));
+      redisService.set(`tools-seo`, data);
+    }
 
     res.status(200).send({
       status: "success",
@@ -34,11 +59,17 @@ exports.getAll = async (req, res, next) => {
 
 exports.getById = async (req, res, next) => {
   try {
-    const data = await service.findOne({
-      where: {
-        id: req.params.id,
-      },
-    });
+    const cacheKey = `tool?seo=${req.params.toolId}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      const data = await service.findOne({
+        where: {
+          toolId: req.params.toolId,
+        },
+      });
+      redisService.set(cacheKey, data);
+    }
 
     res.status(200).send({
       status: "success",
@@ -52,10 +83,10 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    // Update the blog data
+    // Update the tool data
     const [affectedRows] = await service.update(req.body, {
       where: {
-        id: req.params.id,
+        toolId: req.params.toolId,
       },
     });
 
@@ -67,7 +98,7 @@ exports.update = async (req, res, next) => {
       },
     });
   } catch (error) {
-    // console.error(error);
+    // Handle errors here
     next(error);
   }
 };
@@ -76,7 +107,7 @@ exports.delete = async (req, res, next) => {
   try {
     const affectedRows = await service.delete({
       where: {
-        id: req.params.id,
+        toolId: req.params.toolId,
       },
     });
 

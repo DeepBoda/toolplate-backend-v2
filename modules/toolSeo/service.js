@@ -12,9 +12,13 @@ exports.bulkCreate = async (data) => {
 exports.findOne = async (conditions) => {
   return Model.findOne(conditions);
 };
+exports.findOrCreate = async (data) => {
+  return await Model.findOrCreate(data);
+};
 exports.findAll = async (conditions) => {
   return Model.findAll(conditions);
 };
+
 exports.findAndCountAll = async (conditions) => {
   return Model.findAndCountAll(conditions);
 };

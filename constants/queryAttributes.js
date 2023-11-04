@@ -25,6 +25,7 @@ exports.toolAttributes = [
   "wishlists",
   "ratingsAverage",
   "totalRatings",
+  "release",
 ];
 exports.blogAttributes = [
   "id",
@@ -39,10 +40,10 @@ exports.blogAttributes = [
   "views",
   "comments",
   "wishlists",
+  "release",
 ];
 
-exports.categoryAttributes = ["id", "name"];
-exports.tagAttributes = ["id", "name"];
+exports.categoryAttributes = ["id", "name", "slug"];
 
 exports.toolAdminAttributes = ["title", "image", "price"];
 exports.blogAdminAttributes = ["title", "image", "alt"];
@@ -59,6 +60,7 @@ exports.toolAllAdminAttributes = [
   "wishlists",
   "ratingsAverage",
   "totalRatings",
+  "release",
 ];
 exports.blogAllAdminAttributes = [
   "id",
@@ -72,10 +74,10 @@ exports.blogAllAdminAttributes = [
   "views",
   "comments",
   "wishlists",
+  "release",
 ];
 
-exports.categoryAdminAttributes = ["id", "name", "createdAt"];
-exports.tagAdminAttributes = ["id", "name", "createdAt"];
+exports.categoryAdminAttributes = ["id", "name", "slug", "createdAt"];
 
 exports.ratingsAdminAttributes = [
   "id",

@@ -2,17 +2,25 @@
 
 const service = require("./service");
 const redisService = require("../../utils/redis");
+const slugify = require("slugify");
 const toolCategoryService = require("../toolCategory/service");
 const blogCategoryService = require("../blogCategory/service");
-
 const { usersqquery, sqquery } = require("../../utils/query");
 const { categoryAdminAttributes } = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    // Create slug URL based on name
+    req.body.slug = slugify(req.body.name, {
+      replacement: "-", // Replace spaces with hyphens
+      lower: true, // Convert to lowercase
+      remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+    });
+
     const data = await service.create(req.body);
     redisService.del(`categories`);
+    redisService.del(`categorySitemap`);
 
     res.status(200).json({
       status: "success",
@@ -31,8 +39,64 @@ exports.getAll = async (req, res, next) => {
 
     // If the categories are not found in the cache
     if (!data) {
-      data = await service.findAndCountAll(usersqquery(req.query));
+      const data = await service.findAndCountAll(
+        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
+      );
       redisService.set(`categories`, data);
+    }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getSitemap = async (req, res, next) => {
+  try {
+    // Try to retrieve the categories from the Redis cache
+    let data = await redisService.get(`categorySitemap`);
+    if (!data) {
+      const url =
+        process.env.NODE_ENV === "production"
+          ? process.env.PROD_WEB
+          : process.env.DEV_WEB;
+
+      // If the categories are not found in the cache
+      const categories = await service.findAll(
+        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
+      );
+
+      const data = {};
+
+      // Group the data by the first letter of the category name
+      categories.forEach((category) => {
+        const key = category.name.charAt(0).toUpperCase();
+        if (!data[key]) {
+          data[key] = [];
+        }
+        data[key].push([
+          {
+            title: category.name + " Tools",
+            url: `${url}/tools/${category.slug}`,
+          },
+          {
+            title: "Free " + category.name + " Tools",
+            url: `${url}/tools/${category.slug}/free`,
+          },
+          {
+            title: "Premium " + category.name + " Tools",
+            url: `${url}/tools/${category.slug}/premium`,
+          },
+          {
+            title: "Freemium " + category.name + " Tools",
+            url: `${url}/tools/${category.slug}/freemium`,
+          },
+        ]);
+      });
+      await redisService.set(`categorySitemap`, data);
     }
 
     res.status(200).send({
@@ -81,6 +145,15 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
+    // Create slug URL based on name
+    if (req.body.name) {
+      req.body.slug = slugify(req.body.name, {
+        replacement: "-", // Replace spaces with hyphens
+        lower: true, // Convert to lowercase
+        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+      });
+    }
+
     // Update the blog data
     const [affectedRows] = await service.update(req.body, {
       where: {
@@ -88,7 +161,7 @@ exports.update = async (req, res, next) => {
       },
     });
     redisService.del(`categories`);
-
+    redisService.del(`categorySitemap`);
     // Send the response
     res.status(200).json({
       status: "success",
@@ -114,6 +187,7 @@ exports.delete = async (req, res, next) => {
       toolCategoryService.delete({ where: { categoryId: id } }),
       blogCategoryService.delete({ where: { categoryId: id } }),
       redisService.del(`categories`),
+      redisService.del(`categorySitemap`),
     ]);
 
     // Check if affectedRows is zero and return a meaningful response
@@ -136,3 +210,24 @@ exports.delete = async (req, res, next) => {
     next(error);
   }
 };
+
+const makeSLug = async (req, res, next) => {
+  try {
+    const categories = await service.findAll({
+      attributes: ["id", "name"],
+    });
+
+    for (let i in categories) {
+      let slug = slugify(categories[i].name, {
+        replacement: "-", // replace spaces with hyphens
+        lower: true, // convert to lowercase
+        remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
+      });
+      categories[i].slug = slug;
+      categories[i].save();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+// makeSLug();

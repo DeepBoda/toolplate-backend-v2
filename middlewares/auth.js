@@ -72,7 +72,12 @@ exports.authMiddleware = async (req, res, next) => {
       cl("🧑🏻‍💻 API Call --->", {
         API: req.method + " " + req.originalUrl,
         body: req.body,
-        requestor: requestor.toJSON(),
+        requestor: {
+          id: req.requestor.id,
+          name: req.requestor.name || req.requestor.username,
+          email: req.requestor.email,
+          role: req.requestor.role,
+        },
       });
     } else {
       req.requestor = null;

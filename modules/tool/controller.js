@@ -1,12 +1,14 @@
 "use strict";
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
+const moment = require("moment");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
-const viewService = require("../toolView/service");
 const redisService = require("../../utils/redis");
+const seoService = require("../toolSeo/service");
+const viewService = require("../toolView/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { toolSize, toolPreviewSize } = require("../../constants");
 const {
@@ -15,20 +17,18 @@ const {
 } = require("../../utils/imageResize");
 const {
   toolAttributes,
-  tagAttributes,
   categoryAttributes,
   toolAllAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
+const categoryService = require("../category/service");
 const ToolCategory = require("../toolCategory/model");
 const toolCategoryService = require("../toolCategory/service");
 const Category = require("../category/model");
-const ToolTag = require("../toolTag/model");
-const toolTagService = require("../toolTag/service");
-const Tag = require("../tag/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
+const createHttpError = require("http-errors");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -51,12 +51,13 @@ exports.add = async (req, res, next) => {
       lower: true, // convert to lowercase
       remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
     });
-    const { categories, tags, ...bodyData } = req.body;
+    const { categories, ...bodyData } = req.body;
 
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(bodyData);
 
     // // Send a push notification with the blog title and body
+    // if (blog.createdAt == blog.release) {
     // const topic =
     //   process.env.NODE_ENV === "production"
     //     ? process.env.TOPIC
@@ -65,6 +66,7 @@ exports.add = async (req, res, next) => {
     // const body = "Hot on Toolplate- check it now!";
     // const click_action = `tool/${tool.slug}`;
     // pushNotificationTopic(topic, title, body, click_action, 1);
+    // }
 
     // Check if Previews uploaded and if got URLs
     if (req.files.previews) {
@@ -82,9 +84,8 @@ exports.add = async (req, res, next) => {
       });
     }
 
-    // Step 2: Get the comma-separated `categories` and `tags` IDs
+    // Step 2: Get the comma-separated `categories` IDs
     const categoryIds = categories.split(",").map(Number);
-    const tagIds = tags.split(",").map(Number);
 
     // Step 3: Add entries in the `toolCategory` table using bulk insert
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
@@ -92,17 +93,14 @@ exports.add = async (req, res, next) => {
       categoryId,
     }));
 
-    // Step 4: Add entries in the `toolTag` table using bulk insert
-    const tagBulkInsertData = tagIds.map((tagId) => ({
+    const seoData = {
       toolId: tool.id,
-      tagId,
-    }));
-
-    // Use Promise.all to execute bulk inserts concurrently
-    await Promise.all([
-      toolCategoryService.bulkCreate(categoryBulkInsertData),
-      toolTagService.bulkCreate(tagBulkInsertData),
-    ]);
+      title: tool.title,
+      description: tool.description,
+    };
+    //  execute bulk inserts concurrently
+    toolCategoryService.bulkCreate(categoryBulkInsertData);
+    seoService.create(seoData);
 
     res.status(200).json({
       status: "success",
@@ -110,10 +108,8 @@ exports.add = async (req, res, next) => {
     });
 
     // Resize and upload the tool icons
-    await Promise.all([
-      resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`),
-      resizeAndUploadWebP(toolSize, tool.image, `tool_${tool.id}`),
-    ]);
+    resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
+    resizeAndUploadWebP(toolSize, tool.image, `tool_${tool.id}`);
   } catch (error) {
     console.error(error);
     next(error);
@@ -125,6 +121,10 @@ exports.getAll = async (req, res, next) => {
     // let data = await redisService.get(`tools`);
     // if (!data)
     const { categoryIds, ...query } = req.query;
+
+    if (query.price && !["Free", "Freemium", "Premium"].includes(query.price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
 
     const where = {};
 
@@ -140,7 +140,15 @@ exports.getAll = async (req, res, next) => {
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
-      ...sqquery(query, {}, ["title"]),
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...toolAttributes,
@@ -166,14 +174,6 @@ exports.getAll = async (req, res, next) => {
           include: {
             model: Category,
             attributes: categoryAttributes,
-          },
-        },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
           },
         },
       ],
@@ -207,7 +207,15 @@ exports.getAllForAdmin = async (req, res, next) => {
     }
 
     const data = await service.findAndCountAll({
-      ...sqquery(query, {}, ["title"]),
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: toolAllAdminAttributes,
       include: [
@@ -221,12 +229,55 @@ exports.getAllForAdmin = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
+      ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getScheduledForAdmin = async (req, res, next) => {
+  try {
+    const { categoryIds, ...query } = req.query;
+
+    const where = {};
+
+    if (categoryIds) {
+      // Split the comma-separated categoryIds into an array
+      const categoryIdArray = categoryIds.split(",").map(Number);
+
+      // Use the `Op.in` operator to find tools that match any of the specified categoryIds
+      where["$toolCategories.categoryId$"] = {
+        [Op.in]: categoryIdArray,
+      };
+    }
+
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        query,
         {
-          model: ToolTag,
-          attributes: ["tagId"],
+          release: {
+            [Op.gt]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: toolAllAdminAttributes,
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
           include: {
-            model: Tag,
-            attributes: tagAttributes,
+            model: Category,
+            attributes: categoryAttributes,
           },
         },
       ],
@@ -264,19 +315,77 @@ exports.getBySlug = async (req, res, next) => {
               attributes: categoryAttributes,
             },
           },
-          {
-            model: ToolTag,
-            attributes: ["tagId"],
-            include: {
-              model: Tag,
-              attributes: tagAttributes,
-            },
-          },
         ],
       });
 
       redisService.set(cacheKey, data);
     }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getByCategorySlug = async (req, res, next) => {
+  try {
+    const category = await categoryService.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+    if (!category) {
+      return next(createHttpError(404, "Category not found!"));
+    }
+
+    const where = {};
+
+    where["$toolCategories.categoryId$"] = category.id;
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        req.query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: [
+        ...toolAttributes,
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...req.query,
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
 
     res.status(200).send({
       status: "success",
@@ -354,7 +463,10 @@ exports.search = async (req, res, next) => {
       service.findAll({
         where: {
           title: {
-            [Op.like]: `${req.query.title}%`,
+            [Op.like]: `%${req.query.title}%`,
+          },
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
           },
         },
         attributes: ["id", "image", "title", "description", "slug"],
@@ -363,6 +475,9 @@ exports.search = async (req, res, next) => {
         where: {
           title: {
             [Op.like]: `%${req.query.title}%`,
+          },
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
           },
         },
         attributes: ["id", "image", "title", "description", "slug"],
@@ -401,14 +516,6 @@ exports.getForAdmin = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -437,14 +544,6 @@ exports.getRelatedTools = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -457,20 +556,17 @@ exports.getRelatedTools = async (req, res, next) => {
       (toolCategory) => toolCategory.categoryId
     );
 
-    // Find tools that have the same tags as the opened tool
-    const tagIds = openedTool.toolTags.map((toolTag) => toolTag.tagId);
-
     const userId = req.requestor ? req.requestor.id : null;
 
-    // Find tools with the same category or tag IDs
+    // Find tools with the same category  IDs
     const relatedTools = await service.findAll({
       // ...sqquery(req.query),
       where: {
         id: { [Op.ne]: req.params.id },
-        [Op.or]: [
-          { "$toolCategories.categoryId$": { [Op.in]: categoryIds } },
-          { "$toolTags.tagId$": { [Op.in]: tagIds } },
-        ],
+        "$toolCategories.categoryId$": { [Op.in]: categoryIds },
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
       },
       attributes: [
         ...toolAttributes,
@@ -497,14 +593,6 @@ exports.getRelatedTools = async (req, res, next) => {
             attributes: categoryAttributes,
           },
         },
-        {
-          model: ToolTag,
-          attributes: ["tagId"],
-          include: {
-            model: Tag,
-            attributes: tagAttributes,
-          },
-        },
       ],
     });
 
@@ -513,18 +601,14 @@ exports.getRelatedTools = async (req, res, next) => {
       const commonCategories = tool.toolCategories.filter((toolCategory) =>
         categoryIds.includes(toolCategory.categoryId)
       );
-      const commonTags = tool.toolTags.filter((toolTag) =>
-        tagIds.includes(toolTag.tagId)
-      );
+
       const totalCategories = categoryIds.length;
-      const totalTags = tagIds.length;
+
       const matchingCategories = commonCategories.length;
-      const matchingTags = commonTags.length;
 
       // Calculate matching percentage
       tool.dataValues.matchingPercentage =
-        ((matchingCategories + matchingTags) / (totalCategories + totalTags)) *
-        100;
+        (matchingCategories / totalCategories) * 100;
     });
 
     // Sort tools based on matching percentage in descending order
@@ -556,10 +640,8 @@ exports.update = async (req, res, next) => {
     // Check if Image (logo) uploaded and if got URL
     if (req.files?.image) {
       req.body.image = req.files.image[0].location;
-      await Promise.all([
-        resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`),
-        resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`),
-      ]);
+      resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`);
+      resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`);
     }
 
     // Check if Videos uploaded and if got URLs
@@ -576,7 +658,7 @@ exports.update = async (req, res, next) => {
       });
     }
 
-    const { categories, tags, ...body } = req.body;
+    const { categories, ...body } = req.body;
 
     // Update the tool data
     const [affectedRows] = await service.update(body, { where: { id } });
@@ -599,27 +681,18 @@ exports.update = async (req, res, next) => {
       deleteFilesFromS3(filesToDelete);
     }
 
-    // Update categories and tags
+    // Update categories
     const categoryIds = categories.split(",").map(Number);
-    const tagIds = tags.split(",").map(Number);
-
     // Delete old associations
-    await Promise.all([
-      toolCategoryService.delete({ where: { toolId: id } }),
-      toolTagService.delete({ where: { toolId: id } }),
-    ]);
+    await toolCategoryService.delete({ where: { toolId: id } });
 
     // Create new associations using bulk create operations
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       toolId: id,
       categoryId,
     }));
-    const tagBulkInsertData = tagIds.map((tagId) => ({ toolId: id, tagId }));
 
-    await Promise.all([
-      toolCategoryService.bulkCreate(categoryBulkInsertData),
-      toolTagService.bulkCreate(tagBulkInsertData),
-    ]);
+    toolCategoryService.bulkCreate(categoryBulkInsertData);
   } catch (error) {
     console.error(error);
     next(error);
@@ -640,7 +713,6 @@ exports.delete = async (req, res, next) => {
     const [affectedRows] = await Promise.all([
       service.delete({ where: { id: toolId } }),
       toolCategoryService.delete({ where: { toolId } }),
-      toolTagService.delete({ where: { toolId } }),
       toolImageService.delete({ where: { toolId } }),
     ]);
 

@@ -1,5 +1,5 @@
 "use strict";
-const { DataTypes } = require("sequelize");
+const { DataTypes, Sequelize } = require("sequelize");
 const sequelize = require("../../config/db");
 const Tool = sequelize.define(
   "tool",
@@ -67,6 +67,10 @@ const Tool = sequelize.define(
     totalRatings: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
+    },
+    release: {
+      type: DataTypes.DATE,
+      defaultValue: Sequelize.NOW,
     },
   },
   {

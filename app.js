@@ -66,10 +66,13 @@ app.set("trust proxy", true);
 //   const clientIP = req.ip; // Get the client's IP address
 //   // console.log("req : ", req);
 //   console.log("client IP: ", clientIP);
+//   console.log("req IP: ", req.socket.remoteAddress);
+
 //   if (allowedIPs.includes(clientIP)) {
 //     next(); // Allow the request to proceed to the next middleware
 //   } else {
-//     res.status(403).send("Access denied. Your IP is not whitelisted.");
+//     next();
+//     // res.status(403).send("Access denied. Your IP is not whitelisted.");
 //   }
 // });
 
@@ -79,6 +82,7 @@ app.use(validateAPIKey);
 
 // Define your routes
 const indexRouter = require("./routes");
+const logService = require("./modules/log/service");
 app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error

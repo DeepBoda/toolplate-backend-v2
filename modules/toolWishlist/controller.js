@@ -7,7 +7,6 @@ const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   toolAttributes,
-  tagAttributes,
   categoryAttributes,
   userAdminAttributes,
   toolAdminAttributes,

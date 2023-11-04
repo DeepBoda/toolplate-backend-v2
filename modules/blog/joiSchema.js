@@ -9,7 +9,7 @@ module.exports = {
     readTime: Joi.number().required(),
     overview: Joi.string().required(),
     categories: Joi.string().required(),
-    tags: Joi.string().required(),
+    release: Joi.date(),
   }),
   update: Joi.object().keys({
     title: Joi.string(),
@@ -19,6 +19,6 @@ module.exports = {
     readTime: Joi.number(),
     overview: Joi.string(),
     categories: Joi.string(),
-    tags: Joi.string(),
+    release: Joi.date(),
   }),
 };

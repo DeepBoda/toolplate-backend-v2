@@ -1,5 +1,5 @@
 "use strict";
-const { DataTypes } = require("sequelize");
+const { DataTypes, Sequelize } = require("sequelize");
 const sequelize = require("../../config/db");
 const Blog = sequelize.define(
   "blog",
@@ -50,6 +50,10 @@ const Blog = sequelize.define(
     wishlists: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
+    },
+    release: {
+      type: DataTypes.DATE,
+      defaultValue: Sequelize.NOW,
     },
   },
   {

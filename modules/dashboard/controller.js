@@ -2,12 +2,10 @@ const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
 const moment = require("moment");
 const { dateFilter } = require("../../utils/service");
-
 const userService = require("../user/service");
 const toolService = require("../tool/service");
 const blogService = require("../blog/service");
 const categoryService = require("../category/service");
-const tagService = require("../tag/service");
 const notificationService = require("../notification/service");
 const toolViewService = require("../toolView/service");
 const blogViewService = require("../blogView/service");
@@ -36,7 +34,6 @@ exports.overview = async (req, res, next) => {
       tools,
       blogs,
       categories,
-      tags,
       notifications,
       toolViews,
       blogViews,
@@ -52,7 +49,6 @@ exports.overview = async (req, res, next) => {
       toolService.count(query),
       blogService.count(query),
       categoryService.count(query),
-      tagService.count(query),
       notificationService.count(query),
       toolViewService.count(query),
       blogViewService.count(query),
@@ -71,7 +67,6 @@ exports.overview = async (req, res, next) => {
         tools,
         blogs,
         categories,
-        tags,
         notifications,
         toolViews,
         blogViews,

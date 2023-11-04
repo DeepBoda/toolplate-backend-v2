@@ -12,5 +12,4 @@ const sequelize = new Sequelize(
   // }
 );
 
-console.log(db_config);
 module.exports = sequelize;

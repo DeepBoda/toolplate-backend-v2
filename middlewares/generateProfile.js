@@ -1,5 +1,5 @@
-const md5 = require("md5");
 const { S3 } = require("@aws-sdk/client-s3");
+const { v4: uuidv4 } = require("uuid");
 const sharp = require("sharp");
 
 const s3 = new S3({
@@ -75,7 +75,7 @@ exports.generateProfilePic = async (username) => {
     // Upload the image to Amazon S3 with the correct Content-Disposition header
     const uploadParams = {
       Bucket: process.env.BUCKET,
-      Key: `profile_pics/${md5(username)}.webp`, // Use the hashed username as the filename with .webp extension
+      Key: `profile_pics/${uuidv4()}.webp`, // Use the hashed username as the filename with .webp extension
       Body: image,
       ContentType: "image/webp", // Set the Content-Type as image/webp for WEBP format
       ContentDisposition: "inline", // Set the Content-Disposition header to "inline" to display the image in the browser

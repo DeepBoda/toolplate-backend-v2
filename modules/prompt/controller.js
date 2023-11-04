@@ -90,7 +90,6 @@ exports.promptSearch = async (req, res, next) => {
       if (!promptTools) {
         // Suggest tools based on the search query
         promptTools = await suggestTool([searchQuery]);
-        redisService.set(`PromptTools=${searchQuery}`, promptTools);
       }
 
       // Find the best matching tool for each prompt
@@ -114,6 +113,9 @@ exports.promptSearch = async (req, res, next) => {
           });
         }
       });
+      if (results.length > 0) {
+        redisService.set(`PromptTools=${searchQuery}`, promptTools);
+      }
 
       // Get a unique list of category IDs from the initial tools
       const categoryIds = Array.from(
@@ -194,7 +196,6 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // Try to retrieve the tags from the Redis cache
     const data = await service.findAndCountAll(
       sqquery(req.query, {}, ["search"])
     );

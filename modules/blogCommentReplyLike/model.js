@@ -1,7 +1,6 @@
 "use strict";
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const Blog = require("../blog/model");
 const User = require("../user/model");
 const BlogCommentReply = require("../blogCommentReply/model");
 const BlogCommentReplyLike = sequelize.define(

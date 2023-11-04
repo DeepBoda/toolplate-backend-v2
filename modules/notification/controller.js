@@ -1,7 +1,6 @@
 "use strict";
 
 const service = require("./service");
-const { sendNotificationToTopic } = require("../../service/lambda");
 const {
   AdminAttributes,
   notificationAdminAttributes,

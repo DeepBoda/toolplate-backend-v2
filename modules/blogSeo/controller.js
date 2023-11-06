@@ -62,7 +62,7 @@ exports.getById = async (req, res, next) => {
     let data = await redisService.get(cacheKey);
 
     if (!data) {
-      const data = await service.findOne({
+      data = await service.findOne({
         where: {
           blogId: req.params.blogId,
         },

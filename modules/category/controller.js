@@ -69,7 +69,7 @@ exports.getSitemap = async (req, res, next) => {
         usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
       );
 
-      const data = {};
+      data = {};
 
       // Group the data by the first letter of the category name
       categories.forEach((category) => {
@@ -96,7 +96,7 @@ exports.getSitemap = async (req, res, next) => {
           },
         ]);
       });
-      await redisService.set(`categorySitemap`, data);
+      redisService.set(`categorySitemap`, data);
     }
 
     res.status(200).send({

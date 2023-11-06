@@ -23,8 +23,10 @@ exports.add = async (req, res, next) => {
       });
     }
 
-    redisService.del(`tools-seo`);
-    redisService.del(`tool?seo=${req.params.toolId}`);
+    await Promise.all([
+      redisService.del(`tools-seo`),
+      redisService.del(`tool?seo=${req.params.toolId}`),
+    ]);
 
     res.status(200).json({
       status: "success",
@@ -63,7 +65,7 @@ exports.getById = async (req, res, next) => {
     let data = await redisService.get(cacheKey);
 
     if (!data) {
-      const data = await service.findOne({
+      data = await service.findOne({
         where: {
           toolId: req.params.toolId,
         },

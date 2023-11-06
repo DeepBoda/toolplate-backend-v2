@@ -2,7 +2,6 @@ const builder = require("xmlbuilder");
 const fs = require("fs");
 const blogService = require("../modules/blog/service");
 const toolService = require("../modules/tool/service");
-// Function to fetch country names from an API
 
 // Function to generate the XML sitemap
 async function generateBlogSitemap() {
@@ -28,7 +27,7 @@ async function generateBlogSitemap() {
   fs.writeFileSync("blogSitemap.xml", xml);
 }
 async function generateToolSitemap() {
-  const countryNames = await blogService.findAll({
+  const countryNames = await toolService.findAll({
     attributes: ["slug"],
   });
   const currentDate = new Date().toISOString().split("T")[0];
@@ -49,3 +48,6 @@ async function generateToolSitemap() {
   // Write the XML to a file
   fs.writeFileSync("toolSitemap.xml", xml);
 }
+
+generateBlogSitemap();
+generateToolSitemap();

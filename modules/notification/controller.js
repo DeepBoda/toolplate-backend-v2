@@ -9,6 +9,39 @@ const { usersqquery, sqquery } = require("../../utils/query");
 const { pushNotificationTopic } = require("../../service/firebase");
 const Admin = require("../admin/model");
 
+exports.clicks = async (req, res, next) => {
+  try {
+    const { title, body } = req.body;
+
+    // Find the notification by title and body
+    const notification = await service.findOne({
+      where: {
+        title,
+        body,
+      },
+    });
+
+    if (notification) {
+      // Increment the 'clicks' count by 1
+      notification.clicks = notification.clicks + 1;
+      // Save the updated notification
+      await notification.save();
+
+      return res.status(200).json({
+        status: "success",
+        message: "Click count incremented successfully.",
+      });
+    } else {
+      return res.status(404).json({
+        status: "error",
+        message: "Notification not found.",
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ------------- Only Admin can Create and Get all--------------
 exports.add = async (req, res, next) => {
   try {

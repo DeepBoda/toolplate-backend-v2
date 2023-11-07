@@ -4,6 +4,7 @@ const router = express.Router();
 router.use("/appConfig", require("../modules/appConfig"));
 router.use("/users", require("../modules/user"));
 router.use("/prompt", require("../modules/prompt"));
+router.use("/notification", require("../modules/notification"));
 router.use("/category", require("../modules/category"));
 router.use("/tool", require("../modules/tool"));
 router.use("/toolSeo", require("../modules/toolSeo"));

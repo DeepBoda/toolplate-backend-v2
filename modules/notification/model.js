@@ -26,6 +26,10 @@ const Notification = sequelize.define("notification", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  clicks: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
 });
 
 Admin.hasMany(Notification, {

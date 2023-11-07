@@ -54,7 +54,7 @@ exports.pushNotificationToBulk = async (to, title, body, click_action) => {
   }
 };
 
-// Function to send a notification to a topic
+// Topic to send notifications to subscribers
 exports.pushNotificationTopic = async (
   topic,
   title,
@@ -63,14 +63,12 @@ exports.pushNotificationTopic = async (
   adminId
 ) => {
   const message = {
-    notification: {
+    data: {
       title,
       body,
-      badge: 1,
-      sound: "https://cdn.toolplate.ai/asset/Notification.mp3",
-    },
-    data: {
       click_action,
+      badge: "1",
+      sound: "https://cdn.toolplate.ai/asset/Notification.mp3",
     },
     topic,
   };

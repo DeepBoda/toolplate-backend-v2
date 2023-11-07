@@ -23,7 +23,7 @@ exports.add = async (req, res, next) => {
 
     // Send the notification to the specified topic
     // sendNotificationToTopic(topic, title, body, click_action);
-    pushNotificationTopic(topic, title, body, click_action, adminId);
+    await pushNotificationTopic(topic, title, body, click_action, adminId);
 
     // Save the notification data
     // service.create(req.body);

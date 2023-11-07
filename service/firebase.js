@@ -66,6 +66,8 @@ exports.pushNotificationTopic = async (
     notification: {
       title,
       body,
+      badge: 1,
+      sound: "https://cdn.toolplate.ai/asset/Notification.mp3",
     },
     data: {
       click_action,

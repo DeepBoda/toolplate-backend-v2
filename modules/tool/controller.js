@@ -629,6 +629,88 @@ exports.getRelatedTools = async (req, res, next) => {
   }
 };
 
+exports.getAlternativeTools = async (req, res, next) => {
+  try {
+    // Find the details of the opened tool
+    const openedTool = await service.findOne({
+      where: { id: req.params.id },
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+
+    if (!openedTool) {
+      throw createError(404, "Tool not found");
+    }
+
+    // Find tools that have the same category as the opened tool
+    const categoryIds = openedTool.toolCategories.map(
+      (toolCategory) => toolCategory.categoryId
+    );
+    const where = {};
+
+    where["$toolCategories.categoryId$"] = { [Op.in]: categoryIds };
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    // Find tools with the same category  IDs
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        { ...req.query, sort: "views", sortBy: "DESC" },
+        {
+          id: { [Op.ne]: req.params.id },
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: [
+        ...toolAttributes,
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
+
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {

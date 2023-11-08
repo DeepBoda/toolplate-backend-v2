@@ -10,6 +10,7 @@ router.route("/search").get(tool.search);
 router.route("/data/:slug").get(tool.getDynamicBySlug);
 router.route("/view/:id").get(authMiddleware, tool.createView);
 router.route("/related/:id").get(tool.getRelatedTools);
+router.route("/alt/:id").get(tool.getAlternativeTools);
 router.route("/:slug").get(tool.getBySlug);
 
 

@@ -84,6 +84,98 @@ exports.overview = async (req, res, next) => {
   }
 };
 
+exports.users = async (req, res, next) => {
+  try {
+    let { startDate, endDate } = req.query;
+    if (moment(startDate).isAfter(endDate))
+      return next(createError(200, "endDate must be larger than startDate."));
+    let query = {};
+    if (startDate && endDate)
+      query = {
+        where: {
+          ...dateFilter(req.query),
+        },
+      };
+    const [blocked, active, joined] = await Promise.all([
+      userService.count({ where: { isBlocked: true, ...query?.where } }),
+      userService.count({ where: { isBlocked: false, ...query?.where } }),
+      userService.count(query),
+    ]);
+
+    res.status(200).send({
+      status: "success",
+      data: { blocked, active, joined },
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+exports.userData = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    let { startDate, endDate } = req.query;
+    if (moment(startDate).isAfter(endDate))
+      return next(createError(200, "endDate must be larger than startDate."));
+    let query = {};
+    if (startDate && endDate)
+      query = {
+        where: {
+          ...dateFilter(req.query),
+        },
+      };
+    const [
+      toolViews,
+      toolLikes,
+      toolWishlists,
+      ratings,
+      blogViews,
+      blogLikes,
+      blogWishlists,
+      comments,
+      replies,
+    ] = await Promise.all([
+      toolViewService.count({ where: { userId, ...query?.where } }),
+      toolLikeService.count({ where: { userId, ...query?.where } }),
+      toolWishlistService.count({
+        where: { userId, ...query?.where },
+      }),
+      toolRatingService.count({
+        where: { userId, ...query?.where },
+      }),
+      blogViewService.count({ where: { userId, ...query?.where } }),
+      blogLikeService.count({ where: { userId, ...query?.where } }),
+      blogWishlistService.count({
+        where: { userId, ...query?.where },
+      }),
+      blogCommentService.count({
+        where: { userId, ...query?.where },
+      }),
+      blogCommentReplyService.count({
+        where: { userId, ...query?.where },
+      }),
+    ]);
+
+    res.status(200).send({
+      status: "success",
+      data: {
+        toolViews,
+        toolLikes,
+        toolWishlists,
+        ratings,
+        blogViews,
+        blogLikes,
+        blogWishlists,
+        comments,
+        replies,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 // Admin
 // exports.adminUserDashboardOverview = async (req, res, next) => {
 //   try {

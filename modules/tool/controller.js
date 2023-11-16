@@ -714,6 +714,7 @@ exports.getAlternativeTools = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
+    console.log("body:", req.body);
     const { id } = req.params;
 
     // Retrieve the old tool data from the database based on the provided tool ID.

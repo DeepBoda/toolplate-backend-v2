@@ -12,6 +12,7 @@ module.exports = {
     videos: Joi.array().allow(null),
     categories: Joi.string().required(),
     release: Joi.date(),
+    social: Joi.array(),
   }),
   update: Joi.object().keys({
     title: Joi.string(),
@@ -23,5 +24,6 @@ module.exports = {
     videos: Joi.array(),
     categories: Joi.string(),
     release: Joi.date(),
+    social: Joi.array(),
   }),
 };

@@ -72,6 +72,17 @@ const Tool = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: Sequelize.NOW,
     },
+    social: {
+      type: DataTypes.TEXT,
+      get: function () {
+        return this.getDataValue("social")
+          ? JSON.parse(this.getDataValue("social"))
+          : [];
+      },
+      set: function (val) {
+        return this.setDataValue("social", JSON.stringify(val));
+      },
+    },
   },
   {
     paranoid: true,

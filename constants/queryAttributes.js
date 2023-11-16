@@ -26,6 +26,7 @@ exports.toolAttributes = [
   "ratingsAverage",
   "totalRatings",
   "release",
+  "social",
 ];
 exports.blogAttributes = [
   "id",
@@ -61,6 +62,7 @@ exports.toolAllAdminAttributes = [
   "ratingsAverage",
   "totalRatings",
   "release",
+  "social",
 ];
 exports.blogAllAdminAttributes = [
   "id",

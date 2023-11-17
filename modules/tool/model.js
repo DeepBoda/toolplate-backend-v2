@@ -73,14 +73,21 @@ const Tool = sequelize.define(
       defaultValue: Sequelize.NOW,
     },
     social: {
-      type: DataTypes.TEXT,
+      type: DataTypes.JSON,
       get: function () {
-        return this.getDataValue("social")
-          ? JSON.parse(this.getDataValue("social"))
-          : [];
+        const storedValue = this.getDataValue("social");
+        return storedValue || [];
       },
       set: function (val) {
-        return this.setDataValue("social", JSON.stringify(val));
+        if (typeof val === "string") {
+          try {
+            val = JSON.parse(val);
+          } catch (error) {
+            console.error("Error parsing social field:", error);
+            val = [];
+          }
+        }
+        this.setDataValue("social", val);
       },
     },
   },
@@ -88,5 +95,4 @@ const Tool = sequelize.define(
     paranoid: true,
   }
 );
-
 module.exports = Tool;

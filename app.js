@@ -172,6 +172,7 @@ app.use((err, req, res, next) => {
       message: "Unauthorized attempt, login again!",
     });
   }
+  wooffer.fail(err);
 
   // Handle other errors
   res.status(err.status || 500).json({

@@ -8,7 +8,15 @@ const compression = require("compression");
 const helmet = require("helmet");
 require("dotenv").config();
 
+const wooffer = require("wooffer");
+
+const token = process.env.WOOFFER_TOKEN_DEV;
+const serviceToken = process.env.WOOFFER_SERVICE_DEV;
+
 const app = express();
+wooffer(token, serviceToken);
+
+app.use(wooffer.requestMonitoring);
 
 // Configure environment-specific settings
 const isProduction = process.env.NODE_ENV === "production";

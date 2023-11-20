@@ -87,7 +87,7 @@ exports.getSitemap = async (req, res, next) => {
             url: `${url}/tools/${category.slug}/free`,
           },
           {
-            title: "Premium " + category.name + " Tools",
+            title: "Paid " + category.name + " Tools",
             url: `${url}/tools/${category.slug}/premium`,
           },
           {

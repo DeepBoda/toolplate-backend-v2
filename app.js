@@ -10,8 +10,11 @@ require("dotenv").config();
 
 const wooffer = require("wooffer");
 
-const token = process.env.WOOFFER_TOKEN_DEV;
-const serviceToken = process.env.WOOFFER_SERVICE_DEV;
+const token = process.env.WOOFFER_TOKEN;
+const serviceToken =
+  process.env.NODE_ENV === "production"
+    ? process.env.WOOFFER_SERVICE
+    : process.env.WOOFFER_SERVICE_DEV;
 
 const app = express();
 wooffer(token, serviceToken);
@@ -172,7 +175,7 @@ app.use((err, req, res, next) => {
       message: "Unauthorized attempt, login again!",
     });
   }
-  wooffer.fail(err);
+  wooffer.fail(err.message);
 
   // Handle other errors
   res.status(err.status || 500).json({

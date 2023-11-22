@@ -43,10 +43,12 @@ const Admin = sequelize.define(
       },
       beforeUpdate: async (admin, options) => {
         console.log("Before update admin");
-        admin.password = await bcryptjs.hash(admin.password, 12);
+        if (admin.password)
+          admin.password = await bcryptjs.hash(admin.password, 12);
       },
     },
   }
 );
+// Admin.sync({ alter: true });
 
 module.exports = Admin;

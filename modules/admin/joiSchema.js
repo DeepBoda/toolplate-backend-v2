@@ -6,8 +6,8 @@ module.exports = {
     email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
-  edit: Joi.object().keys({
-    name: Joi.string(),
-    email: Joi.string().email(),
+  update: Joi.object().keys({
+    name: Joi.string().required(),
+    password: Joi.string().required(),
   }),
 };

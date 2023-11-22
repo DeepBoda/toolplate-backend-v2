@@ -73,3 +73,20 @@ exports.getMyProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.update = async (req, res, next) => {
+  try {
+    const [affectedRows] = await service.update(req.body, {
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: { affectedRows },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

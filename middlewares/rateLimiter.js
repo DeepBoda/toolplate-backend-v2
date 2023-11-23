@@ -9,11 +9,17 @@ exports.limiter = rateLimit({
 
   // Redis store configuration
   store: new RedisStore({
-    client: client,
+    sendCommand: (...args) => client.sendCommand(args),
   }),
 
   // Custom message for rate limit exceeded
-  message: "Too many requests from this IP, please try again in a minute",
+  message: (req, res) => {
+    res.status(200).json({
+      status: "fail",
+      message: "Too many requests. Try again after 15 minutes.",
+      isBanned: true,
+    });
+  },
 
   keyGenerator: (req) => {
     // Use a combination of IP and API route for key generation

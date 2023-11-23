@@ -41,28 +41,46 @@ const frontendDomains = isProduction
   ? process.env.PROD_CORS_ORIGINS.split(",")
   : process.env.DEV_CORS_ORIGINS.split(",");
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (
-        !origin ||
-        frontendDomains.some((domain) => origin.startsWith(domain))
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-  })
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (
+      !origin ||
+      frontendDomains.some((domain) => origin.startsWith(domain))
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+};
+
+// Enable CORS for all routes (preflight and regular requests)
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Apply compression only if response size is above 1KB
 app.use(compression({ threshold: 1024 }));
 
-// Enhance security with helmet middleware
+// Use helmet middleware to set various security headers
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Customize your CSP policy as needed
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000, // 1 year in seconds
+      includeSubDomains: true,
+      preload: true,
+    },
+    frameguard: { action: "deny" },
+    referrerPolicy: { policy: "same-origin" },
+    expectCt: { maxAge: 0, enforce: false },
+    hidePoweredBy: false,
+    ieNoOpen: false,
+    noSniff: true,
+    permittedCrossDomainPolicies: false,
   })
 );
 

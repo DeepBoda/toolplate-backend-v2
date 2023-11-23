@@ -2,24 +2,21 @@ const rateLimit = require("express-rate-limit");
 const RedisStore = require("rate-limit-redis");
 const client = require(".././config/redis");
 
-exports.readLimit = rateLimit({
+exports.limiter = rateLimit({
   // Rate limiter configuration
-  windowMs: 1 * 30 * 1000, // 30 sec
-  max: 3,
+  windowMs: 15 * 60 * 1000, // 15 minute
+  max: 5, // Allow 5 requests per 15 minute
+
   // Redis store configuration
   store: new RedisStore({
-    sendCommand: (...args) => client.sendCommand(args),
+    client: client,
   }),
 
-  message: (req, res) => {
-    res.status(200).json({
-      status: "fail",
-      message:
-        "Excessive trading activity detected. Please wait before making another trade",
-      isBanned: true,
-    });
-  },
-  keyGenerator: function (req, res) {
-    return req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  // Custom message for rate limit exceeded
+  message: "Too many requests from this IP, please try again in a minute",
+
+  keyGenerator: (req) => {
+    // Use a combination of IP and API route for key generation
+    return `${req.ip}:${req.originalUrl}`;
   },
 });

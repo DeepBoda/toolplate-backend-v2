@@ -1,7 +1,7 @@
 "use strict";
 
 exports.AdminAttributes = ["id", "name"];
-exports.userAdminAttributes = ["username", "email", "profilePic"];
+exports.userAdminAttributes = ["username", "profilePic"];
 exports.userAllAdminAttributes = [
   "id",
   "username",

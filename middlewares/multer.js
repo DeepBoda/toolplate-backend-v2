@@ -4,6 +4,9 @@ const path = require("path");
 const { s3 } = require("../config/aws");
 const { v4: uuidv4 } = require("uuid");
 
+// Blacklisted of permitted file extensions
+const restrictedExtensions = [".txt", ".html", ".exe", ".sh", ".php"];
+
 const upload = multer({
   storage: multerS3({
     s3,
@@ -19,6 +22,11 @@ const upload = multer({
     },
 
     key: function (req, file, cb) {
+      // Check the file extension against the Blacklist
+      const originalExtension = path.extname(file.originalname).toLowerCase();
+      if (restrictedExtensions.includes(originalExtension)) {
+        return cb(new Error("Invalid file extension"), false);
+      }
       // Generate a unique file name for the S3 object
       const uniqueFileName = uuidv4();
       cb(null, path.join(uniqueFileName, path.extname(file.originalname)));

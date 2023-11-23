@@ -14,7 +14,7 @@ exports.limiter = rateLimit({
 
   // Custom message for rate limit exceeded
   message: (req, res) => {
-    res.status(403).send("Too many requests. Try again after 15 minutes.");
+    next(createError(403, `Too many requests. Try again after 15 minutes.`));
   },
 
   keyGenerator: (req) => {

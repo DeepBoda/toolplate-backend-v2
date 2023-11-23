@@ -4,6 +4,7 @@ const bcryptjs = require("bcryptjs");
 const crypto = require("crypto");
 const createError = require("http-errors");
 const service = require("./service");
+const redisService = require("../../utils/redis");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const { sendOTP } = require("../../utils/mail");
@@ -35,11 +36,14 @@ exports.signup = async (req, res, next) => {
     // Generate a 6-digit OTP
     const OTP = generateOTP();
 
+    // Store OTP and Password temporary in Redis with a key associated with the user's email
+    await Promise.all([
+      redisService.set(email, OTP, "EX", 300), // Set expiration time to 300 seconds (5 minutes)
+      redisService.set(`${email}-pass`, password, "EX", 300), // Set expiration time to 300 seconds (5 minutes)
+      sendOTP({ email, username, OTP }), // Send the email with the OTP
+    ]);
     // Generate JWT token and send response
-    const token = await getJwtToken({ ...req.body, OTP });
-
-    // Send the email with the OTP
-    await sendOTP({ email, username, OTP });
+    const token = await getJwtToken({ username, email });
 
     res.status(200).json({
       status: "success",
@@ -56,20 +60,20 @@ exports.signup = async (req, res, next) => {
 exports.verifyOTP = async (req, res, next) => {
   try {
     const decodedToken = await jwtDecoderForBody(req.body.token);
-    console.log(decodedToken);
-    if (
-      !decodedToken ||
-      !decodedToken.username ||
-      !decodedToken.email ||
-      !decodedToken.OTP
-    ) {
+
+    if (!decodedToken || !decodedToken.username || !decodedToken.email) {
       throw createError(400, "Invalid token or missing data!");
     }
+
+    const [storedOTP, storedPASS] = await Promise.all([
+      redisService.get(decodedToken.email),
+      redisService.get(`${decodedToken.email}-pass`),
+    ]);
 
     // Compare the entered OTP with the OTP from the token
     const isOTPValid = crypto.timingSafeEqual(
       Buffer.from(req.body.otp),
-      Buffer.from(decodedToken.OTP.toString())
+      Buffer.from(storedOTP.toString())
     );
 
     if (!isOTPValid) {
@@ -97,7 +101,7 @@ exports.verifyOTP = async (req, res, next) => {
     const user = await service.create({
       username: decodedToken.username,
       email: decodedToken.email,
-      password: decodedToken.password,
+      password: storedPASS,
       uid,
       profilePic,
     });
@@ -112,6 +116,9 @@ exports.verifyOTP = async (req, res, next) => {
       role: "User",
       user,
     });
+
+    redisService.del(decodedToken.email);
+    redisService.del(`${decodedToken.email}-pass`);
   } catch (error) {
     next(error);
   }

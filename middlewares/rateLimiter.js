@@ -14,8 +14,12 @@ exports.limiter = rateLimit({
   headers: {
     "Retry-After": 60,
   },
-  statusCode: 403,
-  message: "Too many requests. Try again after 15 minutes.",
+  message: (req, res) => {
+    res.status(403).send({
+      status: "fail",
+      message: "Too many requests. Try again after 15 minutes.",
+    });
+  },
 
   skip: (req, res) => {
     return req.ip === "127.0.0.1";

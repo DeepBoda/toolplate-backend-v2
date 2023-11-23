@@ -10,9 +10,9 @@ const {limiter} = require("../../middlewares/rateLimiter");
 
 
 // <=============== Public APIs ===============>
-router.post("/verify",  user.verifyOTP); 
-router.post("/signup", joiValidator(userSchema.signup), user.signup); 
-router.post("/google",  user.socialAuth); 
+router.post("/verify",limiter,  user.verifyOTP); 
+router.post("/signup",limiter, joiValidator(userSchema.signup), user.signup); 
+router.post("/google",limiter,  user.socialAuth); 
 router.post("/login",limiter, user.login); 
 
 // <=============== Authorized APIs ===============>

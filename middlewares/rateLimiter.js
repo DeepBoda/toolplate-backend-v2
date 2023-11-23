@@ -14,11 +14,7 @@ exports.limiter = rateLimit({
 
   // Custom message for rate limit exceeded
   message: (req, res) => {
-    res.status(200).json({
-      status: "fail",
-      message: "Too many requests. Try again after 15 minutes.",
-      isBanned: true,
-    });
+    res.status(403).send("Too many requests. Try again after 15 minutes.");
   },
 
   keyGenerator: (req) => {

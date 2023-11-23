@@ -1,6 +1,7 @@
 const rateLimit = require("express-rate-limit");
 const RedisStore = require("rate-limit-redis");
 const client = require(".././config/redis");
+const createError = require("http-errors");
 
 exports.limiter = rateLimit({
   // Rate limiter configuration
@@ -13,7 +14,7 @@ exports.limiter = rateLimit({
   }),
 
   // Custom message for rate limit exceeded
-  message: (req, res) => {
+  message: (req, res, next) => {
     next(createError(403, `Too many requests. Try again after 15 minutes.`));
   },
 

@@ -29,7 +29,8 @@ const upload = multer({
       }
       // Generate a unique file name for the S3 object
       const uniqueFileName = uuidv4();
-      cb(null, path.join(uniqueFileName, path.extname(file.originalname)));
+      const key = `${uniqueFileName}${originalExtension}`;
+      cb(null, key);
     },
 
     contentType: multerS3.AUTO_CONTENT_TYPE, // Automatically detect content type based on file extension

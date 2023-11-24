@@ -5,7 +5,7 @@ const client = require(".././config/redis");
 exports.limiter = rateLimit({
   // Rate limiter configuration
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // Allow 5 requests per 15 minutes
+  max: 3, // Allow 3 requests per 15 minutes
 
   // Redis store configuration
   store: new RedisStore({

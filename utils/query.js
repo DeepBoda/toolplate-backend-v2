@@ -25,7 +25,11 @@ exports.sqquery = (
   excludeColumnsFromOrder = [],
   excludeFields = []
 ) => {
-  const limit = parseInt(q.limit) || 10000;
+  const limit = !q.limit
+    ? 10000
+    : isNaN(parseInt(q.limit))
+    ? 1
+    : parseInt(q.limit);
   const page = parseInt(q.page) || 1;
   const skip = (page - 1) * limit;
   const sort = q.sort || "createdAt";

@@ -16,14 +16,21 @@ exports.get = async (endPoint) => {
 };
 
 /**
- * Set data in Redis.
+ * Set data in Redis with an expiration time.
  * @param {String} endPoint - The key under which the data will be stored in Redis.
  * @param {Array | Object | String | Number | Boolean} data - The data to be stored in Redis. It can be an array, object, string, number, or boolean.
+ * @param {Number} [expirationTime] - Optional. The expiration time for the key in seconds.
  */
-exports.set = async (endPoint, data) => {
+exports.set = async (endPoint, data, expirationTime) => {
   try {
     const jsonData = JSON.stringify(data);
-    await redisClient.SET(endPoint, jsonData);
+
+    if (expirationTime) {
+      await redisClient.SET(endPoint, jsonData, "EX", expirationTime);
+    } else {
+      await redisClient.SET(endPoint, jsonData);
+    }
+    console.log(`Data set successfully in Redis for key: ${endPoint}`);
   } catch (error) {
     console.error(`Error in Redis SET operation:\n ${error}`);
   }

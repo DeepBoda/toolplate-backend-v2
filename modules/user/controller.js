@@ -73,7 +73,7 @@ exports.verifyOTP = async (req, res, next) => {
     // Compare the entered OTP with the OTP from the token
     const isOTPValid = crypto.timingSafeEqual(
       Buffer.from(req.body.otp),
-      Buffer.from(storedOTP.toString())
+      Buffer.from(storedOTP)
     );
 
     if (!isOTPValid) {

@@ -19,6 +19,8 @@ const {
 } = require("../../utils/service");
 const { userAllAdminAttributes } = require("../../constants/queryAttributes");
 
+let localOtp;
+let localPassword;
 // Signup route
 exports.signup = async (req, res, next) => {
   try {
@@ -36,12 +38,16 @@ exports.signup = async (req, res, next) => {
     // Generate a 6-digit OTP
     const OTP = generateOTP();
 
+    // Store OTP and Password temporarily in local variables
+    localOtp = OTP.toString();
+    localPassword = password;
+
     // Store OTP and Password temporary in Redis with a key associated with the user's email
-    await Promise.all([
-      redisService.set(email, OTP, "EX", 300), // Set expiration time to 300 seconds (5 minutes)
-      redisService.set(`${email}-pass`, password, "EX", 300), // Set expiration time to 300 seconds (5 minutes)
-      sendOTP({ email, username, OTP }), // Send the email with the OTP
-    ]);
+    // await Promise.all([
+    //   redisService.set(email, localOtp, "EX", 300), // Set expiration time to 300 seconds (5 minutes)
+    //   redisService.set(`${email}-pass`, localPassword, "EX", 300), // Set expiration time to 300 seconds (5 minutes)
+    //   sendOTP({ email, username, localOtp }), // Send the email with the OTP
+    // ]);
     // Generate JWT token and send response
     const token = await getJwtToken({ username, email });
 
@@ -65,10 +71,15 @@ exports.verifyOTP = async (req, res, next) => {
       throw createError(400, "Invalid token or missing data!");
     }
 
-    const [storedOTP, storedPASS] = await Promise.all([
+    let [storedOTP, storedPASS] = await Promise.all([
       redisService.get(decodedToken.email),
       redisService.get(`${decodedToken.email}-pass`),
     ]);
+
+    if (!storedOTP || !storedPASS) {
+      storedOTP = localOtp;
+      storedPASS = localPassword;
+    }
 
     // Compare the entered OTP with the OTP from the token
     const isOTPValid = crypto.timingSafeEqual(

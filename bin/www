@@ -5,8 +5,27 @@
  */
 
 const app = require("../app");
-const debug = require("debug")("nodejs-sequelize-architecture:server");
 const http = require("http");
+const winston = require("winston");
+
+// Configure Winston logger
+const logger = winston.createLogger({
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: "error.log", level: "error" }),
+  ],
+});
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error(`Unhandled Rejection at: ${promise}. Reason: ${reason}`);
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught Exception:", error);
+  process.exit(1); // Exit the process after logging the uncaught exception
+});
 
 /**
  * Get port from environment and store in Express.
@@ -70,14 +89,21 @@ function onError(error) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case "EACCES":
-      console.error(bind + " requires elevated privileges");
+      logger.error(bind + " requires elevated privileges");
       break;
     case "EADDRINUSE":
-      console.error(bind + " is already in use");
+      logger.error(bind + " is already in use");
       break;
     default:
+      logger.error(error);
       throw error;
   }
+
+  // Close server and exit process on error
+  server.close(() => {
+    logger.error("Server closed due to error. Exiting process.");
+    process.exit(1);
+  });
 }
 
 /**
@@ -87,5 +113,5 @@ function onError(error) {
 function onListening() {
   const addr = server.address();
   const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
-  debug("Listening on " + bind);
+  // debug("Listening on " + bind);
 }

@@ -41,51 +41,53 @@ const frontendDomains = isProduction
   ? process.env.PROD_CORS_ORIGINS.split(",")
   : process.env.DEV_CORS_ORIGINS.split(",");
 
+// const corsOptions = {
+//   origin: (origin, callback) => {
+//     if (
+//       !origin ||
+//       frontendDomains.some((domain) => origin.startsWith(domain))
+//     ) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+// };
+
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (
-      !origin ||
-      frontendDomains.some((domain) => origin.startsWith(domain))
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: "*",
 };
 
 // Enable CORS for all routes (preflight and regular requests)
-app.use(cors());
-// app.use(cors(corsOptions));
-// app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Apply compression only if response size is above 1KB
 app.use(compression({ threshold: 1024 }));
 
 // Use helmet middleware to set various security headers
 app.use(
-  helmet()
-  // {
-  // contentSecurityPolicy: {
-  //   directives: {
-  //     defaultSrc: ["'self'"],
-  //   },
-  // },
-  // hsts: {
-  //   maxAge: 31536000, // 1 year in seconds
-  //   includeSubDomains: true,
-  //   preload: true,
-  // },
-  // frameguard: { action: "deny" },
-  // referrerPolicy: { policy: "same-origin" },
-  // expectCt: { maxAge: 0, enforce: false },
-  // hidePoweredBy: false,
-  // ieNoOpen: false,
-  // noSniff: true,
-  // permittedCrossDomainPolicies: false,
-  // crossOriginOpenerPolicy: "unsafe-none",
-  // crossOriginEmbedderPolicy: "unsafe-none",
-  // }
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000, // 1 year in seconds
+      includeSubDomains: true,
+      preload: true,
+    },
+    frameguard: { action: "deny" },
+    referrerPolicy: { policy: "same-origin" },
+    expectCt: { maxAge: 0, enforce: false },
+    hidePoweredBy: false,
+    ieNoOpen: false,
+    noSniff: true,
+    permittedCrossDomainPolicies: false,
+    crossOriginOpenerPolicy: "unsafe-none",
+    crossOriginEmbedderPolicy: "unsafe-none",
+  })
 );
 
 // Define your IP whitelist based on the environment

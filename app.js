@@ -81,6 +81,8 @@ app.use(
     ieNoOpen: false,
     noSniff: true,
     permittedCrossDomainPolicies: false,
+    crossOriginOpenerPolicy: "unsafe-none",
+    crossOriginEmbedderPolicy: "unsafe-none",
   })
 );
 

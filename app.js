@@ -55,8 +55,9 @@ const corsOptions = {
 };
 
 // Enable CORS for all routes (preflight and regular requests)
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.use(cors());
+// app.use(cors(corsOptions));
+// app.options("*", cors(corsOptions));
 
 // Apply compression only if response size is above 1KB
 app.use(compression({ threshold: 1024 }));

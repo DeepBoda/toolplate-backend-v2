@@ -10,6 +10,9 @@ router.use(authMiddleware);
 router.
   route("/")
   .get(rating.getAll);
+  router.
+  route("/data/:slug")
+  .get(rating.getBySlug);
 
 router.use(protectRoute(['User']));
 router

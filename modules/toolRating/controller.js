@@ -147,19 +147,59 @@ exports.getAllForAdmin = async (req, res, next) => {
   }
 };
 
-exports.getById = async (req, res, next) => {
+exports.getBySlug = async (req, res, next) => {
   try {
-    const data = await service.findOne({
-      where: {
-        id: req.params.id,
-      },
+    const slug = req.params.slug;
+
+    const toolIdQuery = `
+      SELECT id
+      FROM tools
+      WHERE slug = :slug;
+    `;
+
+    const [tool] = await sequelize.query(toolIdQuery, {
+      type: sequelize.QueryTypes.SELECT,
+      replacements: { slug },
     });
 
-    res.status(200).send({
-      status: "success",
-      data,
+    if (!tool || !tool.id) {
+      // Handle the case when the tool is not found for the given slug
+      return res
+        .status(404)
+        .json({ status: "error", message: "Tool not found" });
+    }
+
+    const toolId = tool.id;
+
+    const ratingsSummaryQuery = `
+    SELECT
+      COUNT(*) AS totalCount,
+      CAST(COALESCE(ROUND(AVG(rating), 1), 0) AS DECIMAL(10,1)) AS averageRating,
+      JSON_ARRAY(
+        JSON_OBJECT('rating', 5, 'percentage', CAST(COALESCE(SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 0) AS SIGNED)),
+        JSON_OBJECT('rating', 4, 'percentage', CAST(COALESCE(SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 0) AS SIGNED)),
+        JSON_OBJECT('rating', 3, 'percentage', CAST(COALESCE(SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 0) AS SIGNED)),
+        JSON_OBJECT('rating', 2, 'percentage', CAST(COALESCE(SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 0) AS SIGNED)),
+        JSON_OBJECT('rating', 1, 'percentage', CAST(COALESCE(SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 0) AS SIGNED))
+      ) AS starRatings
+    FROM toolRatings
+    WHERE toolId = :toolId
+      AND deletedAt IS NULL;
+  `;
+
+    const [ratingsSummary] = await sequelize.query(ratingsSummaryQuery, {
+      type: sequelize.QueryTypes.SELECT,
+      replacements: { toolId },
     });
+
+    const responseData = {
+      status: "success",
+      data: ratingsSummary,
+    };
+
+    res.status(200).json(responseData);
   } catch (error) {
+    console.error("Error fetching tool ratings summary:", error);
     next(error);
   }
 };

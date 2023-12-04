@@ -19,7 +19,7 @@ const ToolRating = sequelize.define(
       type: DataTypes.TEXT,
     },
     rating: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
   },

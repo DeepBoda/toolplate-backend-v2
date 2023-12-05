@@ -54,6 +54,8 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
+    const userId = req.requestor ? req.requestor.id : null;
+
     const data = await service.findAndCountAll({
       ...sqquery(
         req.query,
@@ -64,7 +66,21 @@ exports.getAll = async (req, res, next) => {
       ),
       include: {
         model: Blog,
-        attributes: blogAttributes,
+        attributes: [
+          ...blogAttributes,
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+            ),
+            "isWishlisted",
+          ],
+        ],
         include: {
           model: BlogCategory,
           attributes: ["id", "blogId", "categoryId"],

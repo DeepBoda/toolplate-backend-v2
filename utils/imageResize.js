@@ -23,7 +23,7 @@ exports.resizeAndUploadImage = async (
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
     const pipeline = sharp(originalImageBuffer).avif({
-      quality: 90,
+      quality: 95,
       speed: 0,
     });
 
@@ -77,7 +77,7 @@ exports.resizeAndUploadWebP = async (sizes, originalImageS3Link, keyPrefix) => {
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
     const pipeline = sharp(originalImageBuffer).webp({
-      quality: 90, // Adjust the quality as needed (0-100)
+      quality: 95, // Adjust the quality as needed (0-100)
       alphaQuality: 100, // For images with transparency
       lossless: false, // Set to true for lossless compression (ignores quality)
       smartSubsample: true, // Better quality downscaling at lower sizes

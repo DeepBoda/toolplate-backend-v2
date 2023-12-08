@@ -26,7 +26,7 @@ exports.suggestTool = async (prompts) => {
         },
         {
           role: "user",
-          content: `Give me the best Ai tools for following: ${prompts}`,
+          content: `Give me the best Ai tools for following prompt: ${prompts} ?`,
         },
       ],
       model: "gpt-3.5-turbo",

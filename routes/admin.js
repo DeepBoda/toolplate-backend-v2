@@ -35,4 +35,5 @@ router.use(
   require("../modules/blogCommentReplyLike/admin")
 );
 router.use("/newsCategory", require("../modules/newsCategory/admin"));
+router.use("/news", require("../modules/news/admin"));
 module.exports = router;

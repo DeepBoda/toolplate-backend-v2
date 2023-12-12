@@ -23,7 +23,7 @@ exports.resizeAndUploadImage = async (
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
     const pipeline = sharp(originalImageBuffer).avif({
-      quality: 95,
+      quality: 90,
       speed: 0,
     });
 
@@ -59,7 +59,7 @@ exports.resizeAndUploadImage = async (
     });
 
     await Promise.all(uploadPromises);
-    console.log("success");
+    console.log("Avif image resize and upload successfully!");
 
     return true;
   } catch (err) {
@@ -77,9 +77,9 @@ exports.resizeAndUploadWebP = async (sizes, originalImageS3Link, keyPrefix) => {
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
     const pipeline = sharp(originalImageBuffer).webp({
-      quality: 95, // Adjust the quality as needed (0-100)
+      quality: 90, // Adjust the quality as needed (0-100)
       alphaQuality: 100, // For images with transparency
-      lossless: false, // Set to true for lossless compression (ignores quality)
+      lossless: true, // Set to true for lossless compression (ignores quality)
       smartSubsample: true, // Better quality downscaling at lower sizes
     });
 

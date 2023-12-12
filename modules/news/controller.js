@@ -15,6 +15,7 @@ const {
   newsAttributes,
   categoryAttributes,
   newsAllAdminAttributes,
+  newsCategoryAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const NewsCategory = require("../newsCategory/model");
@@ -39,7 +40,7 @@ exports.add = async (req, res, next) => {
     req.body.slug = slugify(req.body.title, {
       replacement: "-", // Replace spaces with hyphens
       lower: true, // Convert to lowercase
-      remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+      remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
     });
 
     // Create the new news entry in the `news` table
@@ -62,63 +63,25 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`newss`);
-    // if (!data)
-    const { categoryIds, ...query } = req.query;
-
-    const where = {};
-
-    if (categoryIds) {
-      // Split the comma-separated categoryIds into an array
-      const categoryIdArray = categoryIds.split(",").map(Number);
-
-      // Use the `Op.in` operator to find newss that match any of the specified categoryIds
-      where["$newsCategories.categoryId$"] = {
-        [Op.in]: categoryIdArray,
-      };
-    }
-
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
-      ...sqquery(
-        query,
-        {
-          release: {
-            [Op.lte]: moment(), // Less than or equal to the current date
-          },
-        },
-        ["title"]
-      ),
+      ...sqquery(req.query, {}, ["title", "description"]),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...newsAttributes,
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM newsLikes WHERE newsLikes.newsId = news.id AND newsLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
-          ),
-          "isWishlisted",
-        ],
+        // [
+        //   sequelize.literal(
+        //     `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
+        //   ),
+        //   "isWishlisted",
+        // ],
       ],
       include: {
         model: NewsCategory,
-        attributes: ["categoryId"],
-        ...query,
-        where,
-        include: {
-          model: Category,
-          attributes: categoryAttributes,
-        },
+        attributes: newsCategoryAttributes,
       },
     });
-
-    // redisService.set(`newss`, data);
 
     res.status(200).send({
       status: "success",
@@ -131,90 +94,13 @@ exports.getAll = async (req, res, next) => {
 
 exports.getAllForAdmin = async (req, res, next) => {
   try {
-    const { categoryIds, ...query } = req.query;
-
-    const where = {};
-
-    if (categoryIds) {
-      // Split the comma-separated categoryIds into an array
-      const categoryIdArray = categoryIds.split(",").map(Number);
-
-      // Use the `Op.in` operator to find newss that match any of the specified categoryIds
-      where["$newsCategories.categoryId$"] = {
-        [Op.in]: categoryIdArray,
-      };
-    }
     const data = await service.findAndCountAll({
-      ...sqquery(
-        query,
-        {
-          release: {
-            [Op.lte]: moment(), // Less than or equal to the current date
-          },
-        },
-        ["title"]
-      ),
+      ...sqquery(req.query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: newsAllAdminAttributes,
+      // attributes: newsAllAdminAttributes,
       include: {
         model: NewsCategory,
-        attributes: ["categoryId"],
-        ...query,
-        where,
-        include: {
-          model: Category,
-          attributes: categoryAttributes,
-        },
       },
-    });
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.getScheduledForAdmin = async (req, res, next) => {
-  try {
-    const { categoryIds, ...query } = req.query;
-
-    const where = {};
-
-    if (categoryIds) {
-      // Split the comma-separated categoryIds into an array
-      const categoryIdArray = categoryIds.split(",").map(Number);
-
-      // Use the `Op.in` operator to find newss that match any of the specified categoryIds
-      where["$newsCategories.categoryId$"] = {
-        [Op.in]: categoryIdArray,
-      };
-    }
-    const data = await service.findAndCountAll({
-      ...sqquery(
-        query,
-        {
-          release: {
-            [Op.gt]: moment(), // Less than or equal to the current date
-          },
-        },
-        ["title"]
-      ),
-      distinct: true, // Add this option to ensure accurate counts
-      attributes: newsAllAdminAttributes,
-      include: [
-        {
-          model: NewsCategory,
-          attributes: ["categoryId"],
-          ...query,
-          where,
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
-        },
-      ],
     });
 
     res.status(200).send({
@@ -239,11 +125,7 @@ exports.getBySlug = async (req, res, next) => {
         include: [
           {
             model: NewsCategory,
-            attributes: ["categoryId"],
-            include: {
-              model: Category,
-              attributes: categoryAttributes,
-            },
+            attributes: newsCategoryAttributes,
           },
         ],
       });
@@ -259,9 +141,10 @@ exports.getBySlug = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getByCategorySlug = async (req, res, next) => {
   try {
-    const category = await categoryService.findOne({
+    const category = await newsCategoryService.findOne({
       where: {
         slug: req.params.slug,
       },
@@ -271,89 +154,33 @@ exports.getByCategorySlug = async (req, res, next) => {
       return next(createHttpError(404, "Category not found!"));
     }
 
-    const where = {};
-
-    where["$newsCategories.categoryId$"] = category.id;
-
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
       ...sqquery(
         req.query,
         {
-          release: {
-            [Op.lte]: moment(), // Less than or equal to the current date
-          },
+          newsCategoryId: category.id,
         },
         ["title"]
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...newsAttributes,
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM newsLikes WHERE newsLikes.newsId = news.id AND newsLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
-          ),
-          "isWishlisted",
-        ],
+        // [
+        //   sequelize.literal(
+        //     `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
+        //   ),
+        //   "isWishlisted",
+        // ],
       ],
       include: [
         {
           model: NewsCategory,
-          attributes: ["categoryId"],
-          ...req.query,
-          where,
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
+          attributes: newsCategoryAttributes,
         },
       ],
     });
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getDynamicBySlug = async (req, res, next) => {
-  try {
-    // let data = await redisService.get(`oneNews`);
-    // if (!data)
-    const userId = req.requestor ? req.requestor.id : null;
-
-    const data = await service.findOne({
-      where: {
-        slug: req.params.slug,
-      },
-      attributes: [
-        ...newsAttributes,
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM newsLikes WHERE newsLikes.newsId = news.id AND newsLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
-          ),
-          "isWishlisted",
-        ],
-      ],
-    });
-
-    // redisService.set(`oneNews`, data);
 
     res.status(200).send({
       status: "success",
@@ -389,124 +216,18 @@ exports.createView = async (req, res, next) => {
 
 exports.getForAdmin = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`oneNews`);
-    // if (!data)
-
     const data = await service.findOne({
       where: {
         id: req.params.id,
       },
       include: {
         model: NewsCategory,
-        attributes: ["categoryId"],
-        include: {
-          model: Category,
-          attributes: ["id", "name"],
-        },
       },
     });
-
-    // redisService.set(`oneNews`, data);
 
     res.status(200).send({
       status: "success",
       data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getRelatedNewss = async (req, res, next) => {
-  try {
-    // Find the details of the opened news
-    const openedNews = await service.findOne({
-      where: { id: req.params.id },
-      attributes: newsAttributes,
-      include: {
-        model: NewsCategory,
-        attributes: ["categoryId"],
-      },
-    });
-
-    if (!openedNews) {
-      throw createError(404, "News not found");
-    }
-
-    // Find newss that have the same category as the opened news
-    const categoryIds = openedNews.newsCategories.map(
-      (newsCategory) => newsCategory.categoryId
-    );
-
-    const userId = req.requestor ? req.requestor.id : null;
-    // Find newss with the same category
-    const relatedNewss = await service.findAll({
-      // ...sqquery(req.query),
-      where: {
-        id: { [Op.ne]: req.params.id },
-        "$newsCategories.categoryId$": { [Op.in]: categoryIds },
-        release: {
-          [Op.lte]: moment(), // Less than or equal to the current date
-        },
-      },
-      attributes: [
-        ...newsAttributes,
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM newsLikes WHERE newsLikes.newsId = news.id AND newsLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-      ],
-
-      include: [
-        {
-          model: NewsCategory,
-          attributes: ["categoryId"],
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
-        },
-      ],
-    });
-
-    // Calculate matching percentage for each news
-    relatedNewss.forEach((news) => {
-      const commonCategories = news.newsCategories.filter((newsCategory) =>
-        categoryIds.includes(newsCategory.categoryId)
-      );
-
-      const totalCategories = categoryIds.length;
-      const matchingCategories = commonCategories.length;
-
-      // Calculate matching percentage
-      news.dataValues.matchingPercentage =
-        (matchingCategories / totalCategories) * 100;
-    });
-
-    // Sort newss based on matching percentage in descending order
-    relatedNewss.sort(
-      (a, b) =>
-        b.dataValues.matchingPercentage - a.dataValues.matchingPercentage
-    );
-
-    // Limit the result to the top 3 most related newss
-    const mostRelatedNewss = relatedNewss.slice(0, 3);
-
-    // Select only the required attributes (image and title) for each news
-    const reducedData = mostRelatedNewss.map(
-      (news) => (
-        (news = news.toJSON()),
-        {
-          ...news,
-        }
-      )
-    );
-
-    res.status(200).json({
-      status: "success",
-      data: reducedData,
     });
   } catch (error) {
     next(error);
@@ -536,35 +257,18 @@ exports.update = async (req, res, next) => {
       body.slug = slugify(body.title, {
         replacement: "-", // Replace spaces with hyphens
         lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+        remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
       });
     }
 
-    const { categories, ...updatedData } = body;
-
     // Update the news data
-    const [affectedRows] = await service.update(updatedData, { where: { id } });
+    const [affectedRows] = await service.update(body, { where: { id } });
 
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });
 
     // Clear Redis cache
     redisService.del(`news?slug=${oldNewsData.slug}`);
-
-    // Handle categories  updates
-    const categoryIds = categories.split(",").map(Number);
-
-    // Delete existing associations with categories
-    await newsCategoryService.delete({ where: { newsId: id } });
-
-    // Create an array of objects for bulk insert in `newsCategory` table
-    const categoryBulkInsertData = categoryIds.map((categoryId) => ({
-      newsId: id,
-      categoryId,
-    }));
-
-    // Use bulk create operations for `newsCategory`
-    await newsCategoryService.bulkCreate(categoryBulkInsertData);
 
     // Handle the file deletion
     if (file && oldNewsData?.image) {
@@ -595,13 +299,6 @@ exports.delete = async (req, res, next) => {
     // Delete the file from S3 if an image URL is present
     if (image) deleteFilesFromS3([image]);
 
-    // Delete associated categories
-    newsCategoryService.delete({
-      where: {
-        newsId: req.params.id,
-      },
-    });
-
     // Send the response
     res.status(200).send({
       status: "success",
@@ -625,7 +322,7 @@ const makeSLug = async (req, res, next) => {
       let slug = slugify(allNews[i].title, {
         replacement: "-", // Replace spaces with hyphens
         lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+        remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
       });
       allNews[i].slug = slug;
       allNews[i].save();

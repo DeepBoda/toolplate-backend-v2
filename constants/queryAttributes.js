@@ -43,6 +43,16 @@ exports.blogAttributes = [
   "wishlists",
   "release",
 ];
+exports.newsAttributes = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "link",
+  "slug",
+  "newsCategoryId",
+  "createdAt",
+];
 
 exports.categoryAttributes = ["id", "name", "slug"];
 exports.newsCategoryAttributes = ["id", "name", "icon", "slug"];

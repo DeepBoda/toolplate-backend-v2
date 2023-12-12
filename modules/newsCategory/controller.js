@@ -21,7 +21,7 @@ exports.add = async (req, res, next) => {
     req.body.slug = slugify(req.body.name, {
       replacement: "-", // Replace spaces with hyphens
       lower: true, // Convert to lowercase
-      remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+      remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
     });
 
     const data = await service.create(req.body);
@@ -124,7 +124,7 @@ exports.update = async (req, res, next) => {
       req.body.slug = slugify(req.body.name, {
         replacement: "-", // Replace spaces with hyphens
         lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+        remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
       });
     }
 

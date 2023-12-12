@@ -23,8 +23,10 @@ exports.resizeAndUploadImage = async (
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
     const pipeline = sharp(originalImageBuffer).avif({
-      quality: 90,
-      speed: 0,
+      quality: 100, // Maximum quality (0-100)
+      chromaSubsampling: "4:4:4", // Higher chroma subsampling for better color accuracy
+      lossless: false, // Set to true for lossless compression
+      effort: 0, // Trade-off between file size and performance (0-6)
     });
 
     const resizePromises = sizes.map(async (size) => {

@@ -7,18 +7,18 @@ const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
 const redisService = require("../../utils/redis");
-const seoService = require("../blogSeo/service");
-const viewService = require("../blogView/service");
-const { blogResizeImageSize } = require("../../constants");
+
+// const viewService = require("../newsView/service");
+const { newsResizeImageSize } = require("../../constants");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
-  blogAttributes,
+  newsAttributes,
   categoryAttributes,
-  blogAllAdminAttributes,
+  newsAllAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const BlogCategory = require("../blogCategory/model");
-const blogCategoryService = require("../blogCategory/service");
+const NewsCategory = require("../newsCategory/model");
+const newsCategoryService = require("../newsCategory/service");
 const Category = require("../category/model");
 const categoryService = require("../category/service");
 const {
@@ -42,49 +42,18 @@ exports.add = async (req, res, next) => {
       remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
     });
 
-    const { categories, ...bodyData } = req.body;
+    // Create the new news entry in the `news` table
+    const news = await service.create(req.body);
 
-    // Create the new blog entry in the `blog` table
-    const blog = await service.create(bodyData);
-
-    // Send a push notification with the blog title and body
-    if (blog.createdAt == blog.release) {
-      const topic =
-        process.env.NODE_ENV === "production"
-          ? process.env.TOPIC
-          : process.env.DEV_TOPIC;
-      const title = blog.title;
-      const body = "Hot on Toolplate- check it now!";
-      const click_action = `blog/${blog.slug}`;
-      pushNotificationTopic(topic, title, body, click_action, 1);
-    }
-
-    // Get the comma-separated `categories`  IDs
-    const categoryIds = categories.split(",").map(Number);
-
-    // Create an array of objects for bulk insert in `blogCategory` table
-    const categoryBulkInsertData = categoryIds.map((categoryId) => ({
-      blogId: blog.id,
-      categoryId,
-    }));
-    const seoData = {
-      blogId: blog.id,
-      title: blog.title,
-      description: blog.description,
-    };
-    // Use bulk create operations for `blogCategory`
-    blogCategoryService.bulkCreate(categoryBulkInsertData);
-    seoService.create(seoData);
-
-    // Send the HTTP response with a success status and the created blog entry
+    // Send the HTTP response with a success status and the created news entry
     res.status(200).json({
       status: "success",
-      data: blog,
+      data: news,
     });
 
-    // Resize and upload the blog image
-    resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`);
-    resizeAndUploadWebP(blogResizeImageSize, blog.image, `blog_${blog.id}`);
+    // Resize and upload the news image
+    resizeAndUploadImage(newsResizeImageSize, news.image, `news_${news.id}`);
+    resizeAndUploadWebP(newsResizeImageSize, news.image, `news_${news.id}`);
   } catch (error) {
     console.error(error);
     next(error);
@@ -93,7 +62,7 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`blogs`);
+    // let data = await redisService.get(`newss`);
     // if (!data)
     const { categoryIds, ...query } = req.query;
 
@@ -103,8 +72,8 @@ exports.getAll = async (req, res, next) => {
       // Split the comma-separated categoryIds into an array
       const categoryIdArray = categoryIds.split(",").map(Number);
 
-      // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
-      where["$blogCategories.categoryId$"] = {
+      // Use the `Op.in` operator to find newss that match any of the specified categoryIds
+      where["$newsCategories.categoryId$"] = {
         [Op.in]: categoryIdArray,
       };
     }
@@ -123,22 +92,22 @@ exports.getAll = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
-        ...blogAttributes,
+        ...newsAttributes,
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            `(SELECT COUNT(*) FROM newsLikes WHERE newsLikes.newsId = news.id AND newsLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
         ],
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
         ],
       ],
       include: {
-        model: BlogCategory,
+        model: NewsCategory,
         attributes: ["categoryId"],
         ...query,
         where,
@@ -149,7 +118,7 @@ exports.getAll = async (req, res, next) => {
       },
     });
 
-    // redisService.set(`blogs`, data);
+    // redisService.set(`newss`, data);
 
     res.status(200).send({
       status: "success",
@@ -170,8 +139,8 @@ exports.getAllForAdmin = async (req, res, next) => {
       // Split the comma-separated categoryIds into an array
       const categoryIdArray = categoryIds.split(",").map(Number);
 
-      // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
-      where["$blogCategories.categoryId$"] = {
+      // Use the `Op.in` operator to find newss that match any of the specified categoryIds
+      where["$newsCategories.categoryId$"] = {
         [Op.in]: categoryIdArray,
       };
     }
@@ -186,9 +155,9 @@ exports.getAllForAdmin = async (req, res, next) => {
         ["title"]
       ),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: blogAllAdminAttributes,
+      attributes: newsAllAdminAttributes,
       include: {
-        model: BlogCategory,
+        model: NewsCategory,
         attributes: ["categoryId"],
         ...query,
         where,
@@ -217,8 +186,8 @@ exports.getScheduledForAdmin = async (req, res, next) => {
       // Split the comma-separated categoryIds into an array
       const categoryIdArray = categoryIds.split(",").map(Number);
 
-      // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
-      where["$blogCategories.categoryId$"] = {
+      // Use the `Op.in` operator to find newss that match any of the specified categoryIds
+      where["$newsCategories.categoryId$"] = {
         [Op.in]: categoryIdArray,
       };
     }
@@ -233,10 +202,10 @@ exports.getScheduledForAdmin = async (req, res, next) => {
         ["title"]
       ),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: blogAllAdminAttributes,
+      attributes: newsAllAdminAttributes,
       include: [
         {
-          model: BlogCategory,
+          model: NewsCategory,
           attributes: ["categoryId"],
           ...query,
           where,
@@ -259,7 +228,7 @@ exports.getScheduledForAdmin = async (req, res, next) => {
 
 exports.getBySlug = async (req, res, next) => {
   try {
-    const cacheKey = `blog?slug=${req.params.slug}`;
+    const cacheKey = `news?slug=${req.params.slug}`;
     let data = await redisService.get(cacheKey);
 
     if (!data) {
@@ -269,7 +238,7 @@ exports.getBySlug = async (req, res, next) => {
         },
         include: [
           {
-            model: BlogCategory,
+            model: NewsCategory,
             attributes: ["categoryId"],
             include: {
               model: Category,
@@ -304,7 +273,7 @@ exports.getByCategorySlug = async (req, res, next) => {
 
     const where = {};
 
-    where["$blogCategories.categoryId$"] = category.id;
+    where["$newsCategories.categoryId$"] = category.id;
 
     const userId = req.requestor ? req.requestor.id : null;
 
@@ -320,23 +289,23 @@ exports.getByCategorySlug = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
-        ...blogAttributes,
+        ...newsAttributes,
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            `(SELECT COUNT(*) FROM newsLikes WHERE newsLikes.newsId = news.id AND newsLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
         ],
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
         ],
       ],
       include: [
         {
-          model: BlogCategory,
+          model: NewsCategory,
           attributes: ["categoryId"],
           ...req.query,
           where,
@@ -359,7 +328,7 @@ exports.getByCategorySlug = async (req, res, next) => {
 
 exports.getDynamicBySlug = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`oneBlog`);
+    // let data = await redisService.get(`oneNews`);
     // if (!data)
     const userId = req.requestor ? req.requestor.id : null;
 
@@ -368,23 +337,23 @@ exports.getDynamicBySlug = async (req, res, next) => {
         slug: req.params.slug,
       },
       attributes: [
-        ...blogAttributes,
+        ...newsAttributes,
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            `(SELECT COUNT(*) FROM newsLikes WHERE newsLikes.newsId = news.id AND newsLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
         ],
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
         ],
       ],
     });
 
-    // redisService.set(`oneBlog`, data);
+    // redisService.set(`oneNews`, data);
 
     res.status(200).send({
       status: "success",
@@ -405,7 +374,7 @@ exports.createView = async (req, res, next) => {
 
     // Create the view record
     viewService.create({
-      blogId: req.params.id,
+      newsId: req.params.id,
       userId: req.requestor?.id || null,
     });
 
@@ -420,7 +389,7 @@ exports.createView = async (req, res, next) => {
 
 exports.getForAdmin = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`oneBlog`);
+    // let data = await redisService.get(`oneNews`);
     // if (!data)
 
     const data = await service.findOne({
@@ -428,7 +397,7 @@ exports.getForAdmin = async (req, res, next) => {
         id: req.params.id,
       },
       include: {
-        model: BlogCategory,
+        model: NewsCategory,
         attributes: ["categoryId"],
         include: {
           model: Category,
@@ -437,7 +406,7 @@ exports.getForAdmin = async (req, res, next) => {
       },
     });
 
-    // redisService.set(`oneBlog`, data);
+    // redisService.set(`oneNews`, data);
 
     res.status(200).send({
       status: "success",
@@ -448,43 +417,43 @@ exports.getForAdmin = async (req, res, next) => {
   }
 };
 
-exports.getRelatedBlogs = async (req, res, next) => {
+exports.getRelatedNewss = async (req, res, next) => {
   try {
-    // Find the details of the opened blog
-    const openedBlog = await service.findOne({
+    // Find the details of the opened news
+    const openedNews = await service.findOne({
       where: { id: req.params.id },
-      attributes: blogAttributes,
+      attributes: newsAttributes,
       include: {
-        model: BlogCategory,
+        model: NewsCategory,
         attributes: ["categoryId"],
       },
     });
 
-    if (!openedBlog) {
-      throw createError(404, "Blog not found");
+    if (!openedNews) {
+      throw createError(404, "News not found");
     }
 
-    // Find blogs that have the same category as the opened blog
-    const categoryIds = openedBlog.blogCategories.map(
-      (blogCategory) => blogCategory.categoryId
+    // Find newss that have the same category as the opened news
+    const categoryIds = openedNews.newsCategories.map(
+      (newsCategory) => newsCategory.categoryId
     );
 
     const userId = req.requestor ? req.requestor.id : null;
-    // Find blogs with the same category
-    const relatedBlogs = await service.findAll({
+    // Find newss with the same category
+    const relatedNewss = await service.findAll({
       // ...sqquery(req.query),
       where: {
         id: { [Op.ne]: req.params.id },
-        "$blogCategories.categoryId$": { [Op.in]: categoryIds },
+        "$newsCategories.categoryId$": { [Op.in]: categoryIds },
         release: {
           [Op.lte]: moment(), // Less than or equal to the current date
         },
       },
       attributes: [
-        ...blogAttributes,
+        ...newsAttributes,
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            `(SELECT COUNT(*) FROM newsLikes WHERE newsLikes.newsId = news.id AND newsLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
         ],
@@ -492,7 +461,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
 
       include: [
         {
-          model: BlogCategory,
+          model: NewsCategory,
           attributes: ["categoryId"],
           include: {
             model: Category,
@@ -502,35 +471,35 @@ exports.getRelatedBlogs = async (req, res, next) => {
       ],
     });
 
-    // Calculate matching percentage for each blog
-    relatedBlogs.forEach((blog) => {
-      const commonCategories = blog.blogCategories.filter((blogCategory) =>
-        categoryIds.includes(blogCategory.categoryId)
+    // Calculate matching percentage for each news
+    relatedNewss.forEach((news) => {
+      const commonCategories = news.newsCategories.filter((newsCategory) =>
+        categoryIds.includes(newsCategory.categoryId)
       );
 
       const totalCategories = categoryIds.length;
       const matchingCategories = commonCategories.length;
 
       // Calculate matching percentage
-      blog.dataValues.matchingPercentage =
+      news.dataValues.matchingPercentage =
         (matchingCategories / totalCategories) * 100;
     });
 
-    // Sort blogs based on matching percentage in descending order
-    relatedBlogs.sort(
+    // Sort newss based on matching percentage in descending order
+    relatedNewss.sort(
       (a, b) =>
         b.dataValues.matchingPercentage - a.dataValues.matchingPercentage
     );
 
-    // Limit the result to the top 3 most related blogs
-    const mostRelatedBlogs = relatedBlogs.slice(0, 3);
+    // Limit the result to the top 3 most related newss
+    const mostRelatedNewss = relatedNewss.slice(0, 3);
 
-    // Select only the required attributes (image and title) for each blog
-    const reducedData = mostRelatedBlogs.map(
-      (blog) => (
-        (blog = blog.toJSON()),
+    // Select only the required attributes (image and title) for each news
+    const reducedData = mostRelatedNewss.map(
+      (news) => (
+        (news = news.toJSON()),
         {
-          ...blog,
+          ...news,
         }
       )
     );
@@ -550,16 +519,16 @@ exports.update = async (req, res, next) => {
     const { id } = req.params;
     const { file, body } = req;
 
-    // Retrieve the old blog data based on the provided blog ID
-    const oldBlogData = await service.findOne({ where: { id } });
+    // Retrieve the old news data based on the provided news ID
+    const oldNewsData = await service.findOne({ where: { id } });
 
     // Check if an image is uploaded and update the image property in the request body
     if (file) {
       body.image = file.location;
 
       // Resize and upload the image (if needed)
-      resizeAndUploadImage(blogResizeImageSize, file.location, `blog_${id}`);
-      resizeAndUploadWebP(blogResizeImageSize, file.location, `blog_${id}`);
+      resizeAndUploadImage(newsResizeImageSize, file.location, `news_${id}`);
+      resizeAndUploadWebP(newsResizeImageSize, file.location, `news_${id}`);
     }
 
     // Create slug URL based on title
@@ -573,33 +542,33 @@ exports.update = async (req, res, next) => {
 
     const { categories, ...updatedData } = body;
 
-    // Update the blog data
+    // Update the news data
     const [affectedRows] = await service.update(updatedData, { where: { id } });
 
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });
 
     // Clear Redis cache
-    redisService.del(`blog?slug=${oldBlogData.slug}`);
+    redisService.del(`news?slug=${oldNewsData.slug}`);
 
     // Handle categories  updates
     const categoryIds = categories.split(",").map(Number);
 
     // Delete existing associations with categories
-    await blogCategoryService.delete({ where: { blogId: id } });
+    await newsCategoryService.delete({ where: { newsId: id } });
 
-    // Create an array of objects for bulk insert in `blogCategory` table
+    // Create an array of objects for bulk insert in `newsCategory` table
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
-      blogId: id,
+      newsId: id,
       categoryId,
     }));
 
-    // Use bulk create operations for `blogCategory`
-    await blogCategoryService.bulkCreate(categoryBulkInsertData);
+    // Use bulk create operations for `newsCategory`
+    await newsCategoryService.bulkCreate(categoryBulkInsertData);
 
     // Handle the file deletion
-    if (file && oldBlogData?.image) {
-      deleteFilesFromS3([oldBlogData.image]);
+    if (file && oldNewsData?.image) {
+      deleteFilesFromS3([oldNewsData.image]);
     }
   } catch (error) {
     console.error(error);
@@ -609,14 +578,14 @@ exports.update = async (req, res, next) => {
 
 exports.delete = async (req, res, next) => {
   try {
-    // Find the blog to get the image URL
+    // Find the news to get the image URL
     const { image } = await service.findOne({
       where: {
         id: req.params.id,
       },
     });
 
-    // Delete the blog entry
+    // Delete the news entry
     const affectedRows = await service.delete({
       where: {
         id: req.params.id,
@@ -627,9 +596,9 @@ exports.delete = async (req, res, next) => {
     if (image) deleteFilesFromS3([image]);
 
     // Delete associated categories
-    blogCategoryService.delete({
+    newsCategoryService.delete({
       where: {
-        blogId: req.params.id,
+        newsId: req.params.id,
       },
     });
 
@@ -648,18 +617,18 @@ exports.delete = async (req, res, next) => {
 
 const makeSLug = async (req, res, next) => {
   try {
-    const allBlog = await service.findAll({
+    const allNews = await service.findAll({
       attributes: ["id", "title"],
     });
 
-    for (let i in allBlog) {
-      let slug = slugify(allBlog[i].title, {
+    for (let i in allNews) {
+      let slug = slugify(allNews[i].title, {
         replacement: "-", // Replace spaces with hyphens
         lower: true, // Convert to lowercase
         remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
       });
-      allBlog[i].slug = slug;
-      allBlog[i].save();
+      allNews[i].slug = slug;
+      allNews[i].save();
     }
   } catch (error) {
     console.error(error);

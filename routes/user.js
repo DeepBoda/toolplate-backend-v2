@@ -24,5 +24,6 @@ router.use("/comments/replyLike", require("../modules/blogCommentReplyLike"));
 router.use("/newsCategory", require("../modules/newsCategory"));
 router.use("/news", require("../modules/news"));
 router.use("/allNews", require("../modules/news/seoRoutes"));
+router.use("/newsWishlist", require("../modules/newsWishlist"));
 
 module.exports = router;

@@ -36,4 +36,6 @@ router.use(
 );
 router.use("/newsCategory", require("../modules/newsCategory/admin"));
 router.use("/news", require("../modules/news/admin"));
+router.use("/newsWishlist", require("../modules/newsWishlist/admin"));
+
 module.exports = router;

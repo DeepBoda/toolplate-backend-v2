@@ -4,7 +4,7 @@ const slugify = require("slugify");
 const service = require("./service");
 const redisService = require("../../utils/redis");
 
-// const viewService = require("../newsView/service");
+const viewService = require("../newsView/service");
 const { newsResizeImageSize } = require("../../constants");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {

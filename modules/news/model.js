@@ -29,6 +29,14 @@ const News = sequelize.define(
     slug: {
       type: DataTypes.STRING,
     },
+    views: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    wishlists: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
   },
   {
     paranoid: true,

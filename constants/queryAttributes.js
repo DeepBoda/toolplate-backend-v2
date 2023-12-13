@@ -50,6 +50,8 @@ exports.newsAttributes = [
   "image",
   "link",
   "slug",
+  "views",
+  "wishlists",
   "newsCategoryId",
   "createdAt",
 ];

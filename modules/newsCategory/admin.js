@@ -10,7 +10,7 @@ router
   .route("/")
   .get(category.getAllForAdmin)
   .post(
-    upload.single("icon"),
+    upload.single("image"),
     joiValidator(categorySchema.create),
     category.add
   );
@@ -18,7 +18,7 @@ router
   .route("/:id")
   .get(category.getById)
   .patch(
-    upload.single("icon"),
+    upload.single("image"),
     joiValidator(categorySchema.update),
     category.update
   )

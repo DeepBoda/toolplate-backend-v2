@@ -20,14 +20,14 @@ module.exports = {
     const newsCategories = [];
 
     // Loop through the newsCategories and create seed data
-    for (const [name, iconUrl] of Object.entries(imageUrls)) {
+    for (const [name, imageUrl] of Object.entries(imageUrls)) {
       const slug = name.toLocaleLowerCase();
       const createdAt = faker.date.between(startDate, endDate);
       const updatedAt = faker.date.between(startDate, endDate);
 
       newsCategories.push({
         name,
-        icon: iconUrl,
+        image: imageUrl,
         slug,
         createdAt,
         updatedAt,

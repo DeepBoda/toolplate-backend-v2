@@ -14,7 +14,7 @@ const NewsCategory = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    icon: {
+    image: {
       type: DataTypes.STRING,
     },
     slug: {
@@ -25,5 +25,4 @@ const NewsCategory = sequelize.define(
     paranoid: true,
   }
 );
-
 module.exports = NewsCategory;

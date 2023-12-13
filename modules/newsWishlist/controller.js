@@ -101,6 +101,10 @@ exports.getByUser = async (req, res, next) => {
         {
           model: News,
           attributes: newsAttributes,
+          include: {
+            model: NewsCategory,
+            attributes: newsCategoryAttributes,
+          },
         },
       ],
     });

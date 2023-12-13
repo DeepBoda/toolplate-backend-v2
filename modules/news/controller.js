@@ -1,11 +1,7 @@
 "use strict";
-const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
-const moment = require("moment");
-const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
-const { pushNotificationTopic } = require("../../service/firebase");
 const redisService = require("../../utils/redis");
 
 // const viewService = require("../newsView/service");
@@ -13,15 +9,11 @@ const { newsResizeImageSize } = require("../../constants");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   newsAttributes,
-  categoryAttributes,
-  newsAllAdminAttributes,
   newsCategoryAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const NewsCategory = require("../newsCategory/model");
 const newsCategoryService = require("../newsCategory/service");
-const Category = require("../category/model");
-const categoryService = require("../category/service");
 const {
   resizeAndUploadImage,
   resizeAndUploadWebP,
@@ -70,12 +62,12 @@ exports.getAll = async (req, res, next) => {
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...newsAttributes,
-        // [
-        //   sequelize.literal(
-        //     `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
-        //   ),
-        //   "isWishlisted",
-        // ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
       include: {
         model: NewsCategory,
@@ -97,7 +89,7 @@ exports.getAllForAdmin = async (req, res, next) => {
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
-      // attributes: newsAllAdminAttributes,
+      attributes: newsAttributes,
       include: {
         model: NewsCategory,
       },
@@ -167,12 +159,12 @@ exports.getByCategorySlug = async (req, res, next) => {
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...newsAttributes,
-        // [
-        //   sequelize.literal(
-        //     `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
-        //   ),
-        //   "isWishlisted",
-        // ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
       include: [
         {

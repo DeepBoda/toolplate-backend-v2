@@ -15,3 +15,6 @@ exports.toolSize = [
 exports.toolPreviewSize = [
   { width: 550, height: 320 },
 ];
+exports.newsResizeImageSize = [
+  { width: 430, height: 250 },
+];

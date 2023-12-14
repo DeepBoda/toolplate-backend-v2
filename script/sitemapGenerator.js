@@ -27,6 +27,7 @@ const BlogSitemap = async () => {
   // Write the XML to a file
   fs.writeFileSync("blogSitemap.xml", xml);
 };
+
 const ToolSitemap = async () => {
   const tools = await toolService.findAll({
     attributes: ["slug"],
@@ -49,6 +50,7 @@ const ToolSitemap = async () => {
   // Write the XML to a file
   fs.writeFileSync("toolSitemap.xml", xml);
 };
+
 const CategorySitemap = async () => {
   const categories = await categoryService.findAll({
     attributes: ["slug"],

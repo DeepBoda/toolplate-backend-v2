@@ -3,14 +3,18 @@
 const service = require("./service");
 const redisService = require("../../utils/redis");
 const slugify = require("slugify");
-const toolCategoryService = require("../toolCategory/service");
-const blogCategoryService = require("../blogCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
-const { categoryAdminAttributes } = require("../../constants/queryAttributes");
+const { deleteFilesFromS3 } = require("../../middlewares/multer");
+const { newsCategoryAttributes } = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    // Check if an image file is provided and add the file location to the request body
+    if (req.file) {
+      req.body.image = req.file.location;
+    }
+
     // Create slug URL based on name
     req.body.slug = slugify(req.body.name, {
       replacement: "-", // Replace spaces with hyphens
@@ -19,8 +23,7 @@ exports.add = async (req, res, next) => {
     });
 
     const data = await service.create(req.body);
-    redisService.del(`categories`);
-    redisService.del(`categorySitemap`);
+    redisService.del(`news-categories`);
 
     res.status(200).json({
       status: "success",
@@ -35,96 +38,21 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     // Try to retrieve the categories from the Redis cache
-    let data = await redisService.get(`categories`);
+    let data = await redisService.get(`news-categories`);
 
     // If the categories are not found in the cache
     if (!data) {
-      const data = await service.findAndCountAll(
-        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-      );
-      redisService.set(`categories`, data);
-    }
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getSitemap = async (req, res, next) => {
-  try {
-    // Try to retrieve the categories from the Redis cache
-    let data = await redisService.get(`categorySitemap`);
-    if (!data) {
-      const url =
-        process.env.NODE_ENV === "production"
-          ? process.env.PROD_WEB
-          : process.env.DEV_WEB;
-
-      // If the categories are not found in the cache
-      const categories = await service.findAll(
-        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-      );
-
-      data = {};
-
-      // Group the data by the first letter of the category name
-      categories.forEach((category) => {
-        const key = category.name.charAt(0).toUpperCase();
-        if (!data[key]) {
-          data[key] = [];
-        }
-        data[key].push([
-          {
-            title: category.name + " Tools",
-            url: `${url}/tools/${category.slug}`,
-          },
-          {
-            title: "Free " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/free`,
-          },
-          {
-            title: "Paid " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/premium`,
-          },
-          {
-            title: "Freemium " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/freemium`,
-          },
-        ]);
+      data = await service.findAndCountAll({
+        ...usersqquery({ ...req.query, sort: "name", sortBy: "ASC" }),
+        attributes: newsCategoryAttributes,
       });
-      redisService.set(`categorySitemap`, data);
+      redisService.set(`news-categories`, data);
     }
 
     res.status(200).send({
       status: "success",
       data,
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getSlugsForSitemap = async (req, res, next) => {
-  try {
-    const url =
-      process.env.NODE_ENV === "production"
-        ? process.env.PROD_WEB
-        : process.env.DEV_WEB;
-
-    const categories = await service.findAll();
-
-    const categorySlugs = categories.flatMap((category) => [
-      `${url}/tools/${category.slug}`,
-      `${url}/tools/${category.slug}/free`,
-      `${url}/tools/${category.slug}/premium`,
-      `${url}/tools/${category.slug}/freemium`,
-    ]);
-
-    res.status(200).send({ status: "success", data: categorySlugs });
   } catch (error) {
     next(error);
   }
@@ -135,7 +63,23 @@ exports.getAllForAdmin = async (req, res, next) => {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["name"]),
-      attributes: categoryAdminAttributes,
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getBySlug = async (req, res, next) => {
+  try {
+    const data = await service.findOne({
+      where: {
+        slug: req.params.slug,
+      },
     });
 
     res.status(200).send({
@@ -164,9 +108,40 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+exports.getSlugsForSitemap = async (req, res, next) => {
+  try {
+    const url =
+      process.env.NODE_ENV === "production"
+        ? process.env.PROD_WEB
+        : process.env.DEV_WEB;
+
+    // If the categories are not found in the cache
+    const categories = await service.findAll();
+
+    // Generate slugs for each category
+    const categorySlugs = categories.map(
+      (category) => `${url}/allNews/${category.slug}`
+    );
+
+    // Send the response
+    res.status(200).json({
+      status: "success",
+      data: categorySlugs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
+    let oldData;
+    if (req.file) {
+      req.body.image = req.file.location;
+      oldData = await service.findOne({ where: { id: req.params.id } });
+    }
+
     // Create slug URL based on name
     if (req.body.name) {
       req.body.slug = slugify(req.body.name, {
@@ -182,8 +157,11 @@ exports.update = async (req, res, next) => {
         id: req.params.id,
       },
     });
-    redisService.del(`categories`);
-    redisService.del(`categorySitemap`);
+    if (req.file && oldData?.image) {
+      deleteFilesFromS3([oldData.image]);
+    }
+    redisService.del(`news-categories`);
+
     // Send the response
     res.status(200).json({
       status: "success",
@@ -200,17 +178,15 @@ exports.update = async (req, res, next) => {
 exports.delete = async (req, res, next) => {
   try {
     const { id } = req.params;
+    // Find the news to get the image URL
+    const { image } = await service.findOne({
+      where: {
+        id,
+      },
+    });
 
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
-
-    // Wait for the service deletion and start both background deletions
-    await Promise.all([
-      toolCategoryService.delete({ where: { categoryId: id } }),
-      blogCategoryService.delete({ where: { categoryId: id } }),
-      redisService.del(`categories`),
-      redisService.del(`categorySitemap`),
-    ]);
 
     // Check if affectedRows is zero and return a meaningful response
     if (affectedRows === 0) {
@@ -219,6 +195,10 @@ exports.delete = async (req, res, next) => {
         message: "No record found with the given id.",
       });
     } else {
+      // Delete the file from S3 if an image URL is present
+      if (image) deleteFilesFromS3([image]);
+      redisService.del(`news-categories`);
+
       // Send response with the number of affected rows
       res.status(200).send({
         status: "success",

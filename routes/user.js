@@ -21,5 +21,10 @@ router.use("/blogWishlist", require("../modules/blogWishlist"));
 router.use("/commentLike", require("../modules/blogCommentLike"));
 router.use("/comments/reply", require("../modules/blogCommentReply"));
 router.use("/comments/replyLike", require("../modules/blogCommentReplyLike"));
+router.use("/newsCategory", require("../modules/newsCategory"));
+router.use("/news", require("../modules/news"));
+router.use("/allNews", require("../modules/news/seoRoutes"));
+router.use("/newsWishlist", require("../modules/newsWishlist"));
+router.use("/toolNews", require("../modules/toolNews"));
 
 module.exports = router;

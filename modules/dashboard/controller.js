@@ -16,6 +16,9 @@ const blogWishlistService = require("../blogWishlist/service");
 const toolRatingService = require("../toolRating/service");
 const blogCommentService = require("../blogComment/service");
 const blogCommentReplyService = require("../blogCommentReply/service");
+const newsService = require("../news/service");
+const newsViewService = require("../newsView/service");
+const newsWishlistService = require("../newsWishlist/service");
 
 exports.overview = async (req, res, next) => {
   try {
@@ -44,6 +47,9 @@ exports.overview = async (req, res, next) => {
       toolRatings,
       blogComments,
       blogCommentReplies,
+      news,
+      newsViews,
+      newsWishlists,
     ] = await Promise.all([
       userService.count(query),
       toolService.count(query),
@@ -59,6 +65,9 @@ exports.overview = async (req, res, next) => {
       toolRatingService.count(query),
       blogCommentService.count(query),
       blogCommentReplyService.count(query),
+      newsService.count(query),
+      newsViewService.count(query),
+      newsWishlistService.count(query),
     ]);
     res.status(200).json({
       status: "success",
@@ -77,6 +86,9 @@ exports.overview = async (req, res, next) => {
         toolRatings,
         blogComments,
         blogCommentReplies,
+        news,
+        newsViews,
+        newsWishlists,
       },
     });
   } catch (error) {
@@ -134,6 +146,8 @@ exports.userData = async (req, res, next) => {
       blogWishlists,
       comments,
       replies,
+      newsViews,
+      newsWishlists,
     ] = await Promise.all([
       toolViewService.count({ where: { userId, ...query?.where } }),
       toolLikeService.count({ where: { userId, ...query?.where } }),
@@ -154,6 +168,12 @@ exports.userData = async (req, res, next) => {
       blogCommentReplyService.count({
         where: { userId, ...query?.where },
       }),
+      newsViewService.count({
+        where: { userId, ...query?.where },
+      }),
+      newsWishlistService.count({
+        where: { userId, ...query?.where },
+      }),
     ]);
 
     res.status(200).send({
@@ -168,6 +188,8 @@ exports.userData = async (req, res, next) => {
         blogWishlists,
         comments,
         replies,
+        newsViews,
+        newsWishlists,
       },
     });
   } catch (error) {

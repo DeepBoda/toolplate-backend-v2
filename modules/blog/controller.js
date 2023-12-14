@@ -39,7 +39,7 @@ exports.add = async (req, res, next) => {
     req.body.slug = slugify(req.body.title, {
       replacement: "-", // Replace spaces with hyphens
       lower: true, // Convert to lowercase
-      remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+      remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
     });
 
     const { categories, ...bodyData } = req.body;
@@ -544,6 +544,29 @@ exports.getRelatedBlogs = async (req, res, next) => {
   }
 };
 
+exports.getSlugsForSitemap = async (req, res, next) => {
+  try {
+    const url =
+      process.env.NODE_ENV === "production"
+        ? process.env.PROD_WEB
+        : process.env.DEV_WEB;
+
+    // If the blogs are not found in the cache
+    const blogs = await service.findAll();
+
+    // Generate slugs for each blog
+    const blogSlugs = blogs.map((blog) => `${url}/blog/${blog.slug}`);
+
+    // Send the response
+    res.status(200).json({
+      status: "success",
+      data: blogSlugs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
@@ -567,7 +590,7 @@ exports.update = async (req, res, next) => {
       body.slug = slugify(body.title, {
         replacement: "-", // Replace spaces with hyphens
         lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+        remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
       });
     }
 
@@ -656,7 +679,7 @@ const makeSLug = async (req, res, next) => {
       let slug = slugify(allBlog[i].title, {
         replacement: "-", // Replace spaces with hyphens
         lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@/?\\]/g, // Remove special characters
+        remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
       });
       allBlog[i].slug = slug;
       allBlog[i].save();

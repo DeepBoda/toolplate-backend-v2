@@ -14,6 +14,7 @@ const {
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const NewsCategory = require("../newsCategory/model");
 const newsCategoryService = require("../newsCategory/service");
+const toolNewsService = require("../toolNews/service");
 const {
   resizeAndUploadImage,
   resizeAndUploadWebP,
@@ -35,8 +36,10 @@ exports.add = async (req, res, next) => {
       remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
     });
 
+    const { tools, ...body } = req.body;
+
     // Create the new news entry in the `news` table
-    const news = await service.create(req.body);
+    const news = await service.create(body);
 
     // Send the HTTP response with a success status and the created news entry
     res.status(200).json({
@@ -44,9 +47,22 @@ exports.add = async (req, res, next) => {
       data: news,
     });
 
-    // Resize and upload the news image
-    resizeAndUploadImage(newsResizeImageSize, news.image, `news_${news.id}`);
-    resizeAndUploadWebP(newsResizeImageSize, news.image, `news_${news.id}`);
+    if (tools) {
+      // Get the comma-separated `tools` IDs
+      const toolIds = tools.split(",").map(Number);
+      // Add entries in the `toolNews` table using bulk insert
+      const toolsBulkInsertData = toolIds.map((toolId) => ({
+        newsId: news.id,
+        toolId,
+      }));
+      //  execute bulk inserts concurrently
+      toolNewsService.bulkCreate(toolsBulkInsertData);
+    }
+    if (req.file) {
+      // Resize and upload the news image
+      resizeAndUploadImage(newsResizeImageSize, news.image, `news_${news.id}`);
+      resizeAndUploadWebP(newsResizeImageSize, news.image, `news_${news.id}`);
+    }
   } catch (error) {
     console.error(error);
     next(error);

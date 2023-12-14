@@ -115,9 +115,7 @@ exports.getSlugsForSitemap = async (req, res, next) => {
         ? process.env.PROD_WEB
         : process.env.DEV_WEB;
 
-    const categories = await service.findAll(
-      usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-    );
+    const categories = await service.findAll();
 
     const categorySlugs = categories.flatMap((category) => [
       `${url}/tools/${category.slug}`,

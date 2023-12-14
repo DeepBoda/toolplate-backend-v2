@@ -59,8 +59,8 @@ exports.newsAttributes = [
 exports.categoryAttributes = ["id", "name", "slug"];
 exports.newsCategoryAttributes = ["id", "name", "image", "slug"];
 
-exports.toolAdminAttributes = ["title", "image", "price"];
-exports.blogAdminAttributes = ["title", "image", "alt"];
+exports.toolAdminAttributes = ["id", "title", "image", "price"];
+exports.blogAdminAttributes = ["id", "title", "image", "alt"];
 
 exports.toolAllAdminAttributes = [
   "id",

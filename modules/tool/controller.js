@@ -19,6 +19,7 @@ const {
   toolAttributes,
   categoryAttributes,
   toolAllAdminAttributes,
+  toolAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
@@ -230,6 +231,23 @@ exports.getAllForAdmin = async (req, res, next) => {
           },
         },
       ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllForNews = async (req, res, next) => {
+  try {
+    const data = await service.findAll({
+      ...usersqquery({ ...req.query, sort: "title", sortBy: "ASC" }),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: ["id", "title"],
     });
 
     res.status(200).send({

@@ -19,6 +19,7 @@ router
     tool.add
   );
 router.route("/scheduled").get(tool.getScheduledForAdmin);
+router.route("/news").get(tool.getAllForNews);
 router
   .route("/:id")
   .get(tool.getForAdmin)

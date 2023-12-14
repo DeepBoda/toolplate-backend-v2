@@ -108,6 +108,30 @@ exports.getSitemap = async (req, res, next) => {
   }
 };
 
+exports.getSlugsForSitemap = async (req, res, next) => {
+  try {
+    const url =
+      process.env.NODE_ENV === "production"
+        ? process.env.PROD_WEB
+        : process.env.DEV_WEB;
+
+    const categories = await service.findAll(
+      usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
+    );
+
+    const categorySlugs = categories.flatMap((category) => [
+      `${url}/tools/${category.slug}`,
+      `${url}/tools/${category.slug}/free`,
+      `${url}/tools/${category.slug}/premium`,
+      `${url}/tools/${category.slug}/freemium`,
+    ]);
+
+    res.status(200).send({ status: "success", data: categorySlugs });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getAllForAdmin = async (req, res, next) => {
   try {
     // If the categories is not found in the cache

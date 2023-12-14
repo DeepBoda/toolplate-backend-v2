@@ -711,6 +711,28 @@ exports.getAlternativeTools = async (req, res, next) => {
   }
 };
 
+exports.getSlugsForSitemap = async (req, res, next) => {
+  try {
+    const url =
+      process.env.NODE_ENV === "production"
+        ? process.env.PROD_WEB
+        : process.env.DEV_WEB;
+
+    // If the tools are not found in the cache
+    const tools = await service.findAll();
+
+    // Generate slugs for each tool
+    const blogSlugs = tools.map((tool) => `${url}/tool/${tool.slug}`);
+
+    // Send the response
+    res.status(200).json({
+      status: "success",
+      data: blogSlugs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {

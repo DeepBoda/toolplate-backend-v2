@@ -108,6 +108,31 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+exports.getSlugsForSitemap = async (req, res, next) => {
+  try {
+    const url =
+      process.env.NODE_ENV === "production"
+        ? process.env.PROD_WEB
+        : process.env.DEV_WEB;
+
+    // If the categories are not found in the cache
+    const categories = await service.findAll();
+
+    // Generate slugs for each category
+    const categorySlugs = categories.map(
+      (category) => `${url}/allNews/${category.slug}`
+    );
+
+    // Send the response
+    res.status(200).json({
+      status: "success",
+      data: categorySlugs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {

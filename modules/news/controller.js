@@ -284,7 +284,7 @@ exports.update = async (req, res, next) => {
       });
     }
 
-    const { tools, body } = req.body;
+    const { tools, ...body } = req.body;
 
     // Update the news data
     const [affectedRows] = await service.update(body, { where: { id } });
@@ -295,13 +295,13 @@ exports.update = async (req, res, next) => {
     if (tools) {
       // Get the comma-separated `tools` IDs
       const toolIds = tools.split(",").map(Number);
-      // Delete old associations
-      await toolCategoryService.delete({ where: { newsId: id } });
       // Add entries in the `toolNews` table using bulk insert
       const toolsBulkInsertData = toolIds.map((toolId) => ({
         newsId: id,
         toolId,
       }));
+      // Delete old associations
+      await toolNewsService.delete({ where: { newsId: id } });
       //  execute bulk inserts concurrently
       toolNewsService.bulkCreate(toolsBulkInsertData);
     }

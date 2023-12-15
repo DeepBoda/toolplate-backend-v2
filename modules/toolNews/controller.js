@@ -1,14 +1,15 @@
 "use strict";
-
-const { Op } = require("sequelize");
+const sequelize = require("../../config/db");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const News = require("../news/model");
 const {
   toolAdminAttributes,
   newsAttributes,
+  newsCategoryAttributes,
 } = require("../../constants/queryAttributes");
 const Tool = require("../tool/model");
+const NewsCategory = require("../newsCategory/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -27,13 +28,28 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
+    const userId = req.requestor ? req.requestor.id : null;
+
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
       distinct: true, // Add this option to ensure accurate counts
       include: [
         {
           model: News,
-          attributes: newsAttributes,
+          as: "news",
+          attributes: [
+            ...newsAttributes,
+            [
+              sequelize.literal(
+                `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
+              ),
+              "isWishlisted",
+            ],
+          ],
+          include: {
+            model: NewsCategory,
+            attributes: newsCategoryAttributes,
+          },
         },
         {
           model: Tool,

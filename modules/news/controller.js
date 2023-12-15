@@ -20,6 +20,8 @@ const {
   resizeAndUploadWebP,
 } = require("../../utils/imageResize");
 const createHttpError = require("http-errors");
+const ToolNews = require("../toolNews/model");
+const Tool = require("../tool/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -106,9 +108,20 @@ exports.getAllForAdmin = async (req, res, next) => {
       ...sqquery(req.query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
       attributes: newsAttributes,
-      include: {
-        model: NewsCategory,
-      },
+      include: [
+        {
+          model: NewsCategory,
+          attributes: newsCategoryAttributes,
+        },
+        {
+          model: ToolNews,
+          attributes: ["newsId", "toolId"],
+          include: {
+            model: Tool,
+            attributes: ["id", "title"],
+          },
+        },
+      ],
     });
 
     res.status(200).send({
@@ -246,28 +259,32 @@ exports.getForAdmin = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { file, body } = req;
-
     // Retrieve the old news data based on the provided news ID
     const oldNewsData = await service.findOne({ where: { id } });
 
-    // Check if an image is uploaded and update the image property in the request body
-    if (file) {
-      body.image = file.location;
+    // Check if an image is uploaded and update the image property in the request req.body
+    if (req.file) {
+      req.body.image = req.file.location;
 
       // Resize and upload the image (if needed)
-      resizeAndUploadImage(newsResizeImageSize, file.location, `news_${id}`);
-      resizeAndUploadWebP(newsResizeImageSize, file.location, `news_${id}`);
+      resizeAndUploadImage(
+        newsResizeImageSize,
+        req.file.location,
+        `news_${id}`
+      );
+      resizeAndUploadWebP(newsResizeImageSize, req.file.location, `news_${id}`);
     }
 
     // Create slug URL based on title
-    if (body.title) {
-      body.slug = slugify(body.title, {
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title, {
         replacement: "-", // Replace spaces with hyphens
         lower: true, // Convert to lowercase
         remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
       });
     }
+
+    const { tools, ...body } = req.body;
 
     // Update the news data
     const [affectedRows] = await service.update(body, { where: { id } });
@@ -275,11 +292,25 @@ exports.update = async (req, res, next) => {
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });
 
+    if (tools) {
+      // Get the comma-separated `tools` IDs
+      const toolIds = tools.split(",").map(Number);
+      // Add entries in the `toolNews` table using bulk insert
+      const toolsBulkInsertData = toolIds.map((toolId) => ({
+        newsId: id,
+        toolId,
+      }));
+      // Delete old associations
+      await toolNewsService.delete({ where: { newsId: id } });
+      //  execute bulk inserts concurrently
+      toolNewsService.bulkCreate(toolsBulkInsertData);
+    }
+
     // Clear Redis cache
     redisService.del(`news?slug=${oldNewsData.slug}`);
 
     // Handle the file deletion
-    if (file && oldNewsData?.image) {
+    if (req.file && oldNewsData?.image) {
       deleteFilesFromS3([oldNewsData.image]);
     }
   } catch (error) {

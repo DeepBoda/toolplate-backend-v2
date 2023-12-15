@@ -1,6 +1,7 @@
 "use strict";
 
 const service = require("./service");
+const newsService = require("../news/service");
 const redisService = require("../../utils/redis");
 const slugify = require("slugify");
 const { usersqquery, sqquery } = require("../../utils/query");
@@ -197,6 +198,8 @@ exports.delete = async (req, res, next) => {
     } else {
       // Delete the file from S3 if an image URL is present
       if (image) deleteFilesFromS3([image]);
+
+      newsService.delete({ where: { newsCategoryId: id } });
       redisService.del(`news-categories`);
 
       // Send response with the number of affected rows

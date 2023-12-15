@@ -1,6 +1,5 @@
 "use strict";
-
-const { Op } = require("sequelize");
+const sequelize = require("../../config/db");
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const News = require("../news/model");

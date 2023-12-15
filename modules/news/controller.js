@@ -20,6 +20,8 @@ const {
   resizeAndUploadWebP,
 } = require("../../utils/imageResize");
 const createHttpError = require("http-errors");
+const ToolNews = require("../toolNews/model");
+const Tool = require("../tool/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -106,9 +108,20 @@ exports.getAllForAdmin = async (req, res, next) => {
       ...sqquery(req.query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
       attributes: newsAttributes,
-      include: {
-        model: NewsCategory,
-      },
+      include: [
+        {
+          model: NewsCategory,
+          attributes: newsCategoryAttributes,
+        },
+        {
+          model: ToolNews,
+          attributes: ["newsId", "toolId"],
+          include: {
+            model: Tool,
+            attributes: ["id", "title"],
+          },
+        },
+      ],
     });
 
     res.status(200).send({

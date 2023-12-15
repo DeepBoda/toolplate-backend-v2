@@ -17,6 +17,7 @@ const toolRatingService = require("../toolRating/service");
 const blogCommentService = require("../blogComment/service");
 const blogCommentReplyService = require("../blogCommentReply/service");
 const newsService = require("../news/service");
+const newsCategoryService = require("../newsCategory/service");
 const newsViewService = require("../newsView/service");
 const newsWishlistService = require("../newsWishlist/service");
 
@@ -48,6 +49,7 @@ exports.overview = async (req, res, next) => {
       blogComments,
       blogCommentReplies,
       news,
+      newsCategories,
       newsViews,
       newsWishlists,
     ] = await Promise.all([
@@ -66,6 +68,7 @@ exports.overview = async (req, res, next) => {
       blogCommentService.count(query),
       blogCommentReplyService.count(query),
       newsService.count(query),
+      newsCategoryService.count(query),
       newsViewService.count(query),
       newsWishlistService.count(query),
     ]);
@@ -87,6 +90,7 @@ exports.overview = async (req, res, next) => {
         blogComments,
         blogCommentReplies,
         news,
+        newsCategories,
         newsViews,
         newsWishlists,
       },

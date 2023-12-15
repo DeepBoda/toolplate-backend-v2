@@ -6,8 +6,10 @@ const News = require("../news/model");
 const {
   toolAdminAttributes,
   newsAttributes,
+  newsCategoryAttributes,
 } = require("../../constants/queryAttributes");
 const Tool = require("../tool/model");
+const NewsCategory = require("../newsCategory/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {

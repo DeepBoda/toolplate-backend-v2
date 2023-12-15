@@ -27,13 +27,28 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
+    const userId = req.requestor ? req.requestor.id : null;
+
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
       distinct: true, // Add this option to ensure accurate counts
       include: [
         {
           model: News,
-          attributes: newsAttributes,
+          as: "news",
+          attributes: [
+            ...newsAttributes,
+            [
+              sequelize.literal(
+                `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
+              ),
+              "isWishlisted",
+            ],
+          ],
+          include: {
+            model: NewsCategory,
+            attributes: newsCategoryAttributes,
+          },
         },
         {
           model: Tool,

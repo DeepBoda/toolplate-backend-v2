@@ -2,9 +2,8 @@
 
 const router = require("express").Router();
 const admin = require("./controller");
-const joiSchema = require("./joiSchema");
 const { authMiddleware, protectRoute } = require("../../middlewares/auth");
-const {joiValidator} = require("../../middlewares/joiValidator");
+const { upload } = require("../../middlewares/multer");
 
 // <================= Public APIs =================>
 router.post("/login", admin.login); 
@@ -15,6 +14,7 @@ router.post("/login", admin.login);
 router.use(authMiddleware,protectRoute(["Admin"]));
 
 router.get("/profile",admin.getMyProfile);
+router.post("/upload",upload.single('image') , admin.uploadImage);
 
 
 

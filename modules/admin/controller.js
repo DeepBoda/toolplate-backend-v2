@@ -4,6 +4,7 @@ const createError = require("http-errors");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const service = require("./service");
+const { convertToAvifAndUpload } = require("../../utils/imageResize");
 
 exports.create = async (req, res, next) => {
   try {
@@ -87,6 +88,23 @@ exports.update = async (req, res, next) => {
       data: { affectedRows },
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+exports.uploadImage = async (req, res, next) => {
+  try {
+    console.log(req.file);
+
+    // Call the function to convert and upload the AVIF image
+    const data = await convertToAvifAndUpload(req.file);
+
+    res.status(200).json({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    console.error("Error in uploadImage controller:", error);
     next(error);
   }
 };

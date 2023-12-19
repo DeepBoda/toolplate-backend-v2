@@ -14,7 +14,7 @@ router.post("/login", admin.login);
 router.use(authMiddleware,protectRoute(["Admin"]));
 
 router.get("/profile",admin.getMyProfile);
-router.patch("/upload",upload.single('image') , admin.uploadImage);
+router.post("/upload",upload.single('image') , admin.uploadImage);
 
 
 

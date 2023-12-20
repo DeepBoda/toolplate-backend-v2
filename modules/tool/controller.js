@@ -121,10 +121,11 @@ exports.getAll = async (req, res, next) => {
   try {
     // let data = await redisService.get(`tools`);
     // if (!data)
-    const { categoryIds, ...query } = req.query;
+    const { categoryIds, price, ...query } = req.query;
 
-    if (query.price && !["Free", "Freemium", "Premium"].includes(query.price)) {
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
       return next(createHttpError(404, "Invalid value , route not found!"));
+    } else {
     }
 
     const where = {};
@@ -138,7 +139,16 @@ exports.getAll = async (req, res, next) => {
         [Op.in]: categoryIdArray,
       };
     }
+
     const userId = req.requestor ? req.requestor.id : null;
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
 
     const data = await service.findAndCountAll({
       ...sqquery(
@@ -147,6 +157,7 @@ exports.getAll = async (req, res, next) => {
           release: {
             [Op.lte]: moment(), // Less than or equal to the current date
           },
+          ...priceFilter,
         },
         ["title"]
       ),

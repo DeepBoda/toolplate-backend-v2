@@ -94,14 +94,18 @@ exports.update = async (req, res, next) => {
 
 exports.uploadImage = async (req, res, next) => {
   try {
-    console.log(req.file);
+    const cdn =
+      process.env.NODE_ENV === "production"
+        ? "https://cdn.toolplate.ai"
+        : "https://staging-cdn.toolplate.ai";
 
-    // Call the function to convert and upload the AVIF image
-    const data = await convertToAvifAndUpload(req.file);
+    const url = `${cdn}/${req.file.key}`;
+    // console.log(url);
+    // console.log(req.file);
 
     res.status(200).json({
       status: "success",
-      data,
+      data: url,
     });
   } catch (error) {
     console.error("Error in uploadImage controller:", error);

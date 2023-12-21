@@ -1,7 +1,7 @@
 "use strict";
 
 const router = require("express").Router();
-const likeSchema = require("./joiSchema");
+const joiSchema = require("./joiSchema");
 const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 const { joiValidator } = require("../../middlewares/joiValidator");
 const like = require("./controller");
@@ -13,7 +13,7 @@ router
 
 router.use( protectRoute(["User"]));
 
-router.route("/").post(joiValidator(likeSchema.create),like.likeTool);
+router.route("/").post(joiValidator(joiSchema.create),like.likeTool);
 
 
 

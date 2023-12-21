@@ -2,7 +2,7 @@
 
 const router = require("express").Router();
 const toolImages = require("./controller");
-const toolImagesSchema = require("./joiSchema");
+const joiSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 const { upload } = require("../../middlewares/multer");
 
@@ -11,10 +11,13 @@ router
   .get(toolImages.getAll)
   .post(
     upload.fields([{ name: "previews", maxCount: 10 }]),
-    joiValidator(toolImagesSchema.create),
+    joiValidator(joiSchema.create),
     toolImages.add
   );
 
-router.route("/:id").patch(toolImages.update).delete(toolImages.delete);
+router
+  .route("/:id")
+  .patch(joiValidator(joiSchema.update), toolImages.update)
+  .delete(toolImages.delete);
 
 module.exports = router;

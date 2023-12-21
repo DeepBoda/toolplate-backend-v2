@@ -2,7 +2,7 @@
 
 const router = require("express").Router();
 const comment = require("./controller");
-const commentSchema = require("./joiSchema");
+const joiSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 
@@ -14,7 +14,7 @@ router
 router.use( protectRoute(['User']));
 router
 .route("/")
-  .post(joiValidator(commentSchema.create), comment.add);
+  .post(joiValidator(joiSchema.create), comment.add);
 router
   .route("/:id")
   .get(comment.getById);

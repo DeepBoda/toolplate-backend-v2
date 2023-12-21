@@ -2,7 +2,7 @@
 
 const router = require("express").Router();
 const tool = require("./controller");
-const toolSchema = require("./joiSchema");
+const joiSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 const { upload } = require("../../middlewares/multer");
 
@@ -15,7 +15,7 @@ router
       { name: "previews", maxCount: 10 },
       { name: "videos", maxCount: 10 },
     ]),
-    joiValidator(toolSchema.create),
+    joiValidator(joiSchema.create),
     tool.add
   );
 router.route("/scheduled").get(tool.getScheduledForAdmin);
@@ -28,7 +28,7 @@ router
       { name: "image", maxCount: 1 },
       { name: "videos", maxCount: 10 },
     ]),
-    joiValidator(toolSchema.update),
+    joiValidator(joiSchema.update),
     tool.update
   )
   .delete(tool.delete);

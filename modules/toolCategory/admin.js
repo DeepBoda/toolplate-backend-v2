@@ -2,17 +2,17 @@
 
 const router = require("express").Router();
 const toolCategory = require("./controller");
-const toolCategorySchema = require("./joiSchema");
+const joiSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 
 router
   .route("/")
   .get(toolCategory.getAll)
-  .post(joiValidator(toolCategorySchema.create), toolCategory.add);
+  .post(joiValidator(joiSchema.create), toolCategory.add);
 router
   .route("/:id")
   .get(toolCategory.getById)
-  .patch(joiValidator(toolCategorySchema.update), toolCategory.update)
+  .patch(joiValidator(joiSchema.update), toolCategory.update)
   .delete(toolCategory.delete);
 
 module.exports = router;

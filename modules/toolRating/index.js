@@ -3,7 +3,7 @@
 const router = require("express").Router();
 const rating = require("./controller");
 const { authMiddleware, protectRoute } = require("../../middlewares/auth");
-const ratingSchema = require("./joiSchema");
+const joiSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 
 router.use(authMiddleware);
@@ -17,6 +17,6 @@ router.
 router.use(protectRoute(['User']));
 router
   .route("/")
-  .post(joiValidator(ratingSchema.create), rating.add);
+  .post(joiValidator(joiSchema.create), rating.add);
 
 module.exports = router;

@@ -2,17 +2,17 @@
 
 const router = require("express").Router();
 const news = require("./controller");
-const newsSchema = require("./joiSchema");
+const joiSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 
 router
   .route("/")
   .get(news.getAll)
-  .post(joiValidator(newsSchema.create), news.add);
+  .post(joiValidator(joiSchema.create), news.add);
 router
   .route("/:id")
   .get(news.getById)
-  .patch(joiValidator(newsSchema.update), news.update)
+  .patch(joiValidator(joiSchema.update), news.update)
   .delete(news.delete);
 
 module.exports = router;

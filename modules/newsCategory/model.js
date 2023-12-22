@@ -20,6 +20,12 @@ const NewsCategory = sequelize.define(
     slug: {
       type: DataTypes.STRING,
     },
+    title: {
+      type: DataTypes.STRING,
+    },
+    description: {
+      type: DataTypes.TEXT,
+    },
   },
   {
     paranoid: true,

@@ -125,7 +125,6 @@ exports.getAll = async (req, res, next) => {
 
     if (price && !["Free", "Freemium", "Premium"].includes(price)) {
       return next(createHttpError(404, "Invalid value , route not found!"));
-    } else {
     }
 
     const where = {};
@@ -369,6 +368,19 @@ exports.getByCategorySlug = async (req, res, next) => {
     if (!category) {
       return next(createHttpError(404, "Category not found!"));
     }
+    const { price, ...query } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
 
     const where = {};
 
@@ -378,11 +390,12 @@ exports.getByCategorySlug = async (req, res, next) => {
 
     const data = await service.findAndCountAll({
       ...sqquery(
-        req.query,
+        query,
         {
           release: {
             [Op.lte]: moment(), // Less than or equal to the current date
           },
+          ...priceFilter,
         },
         ["title"]
       ),
@@ -406,7 +419,7 @@ exports.getByCategorySlug = async (req, res, next) => {
         {
           model: ToolCategory,
           attributes: ["categoryId"],
-          ...req.query,
+          ...query,
           where,
           include: {
             model: Category,

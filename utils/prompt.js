@@ -29,7 +29,7 @@ exports.suggestTool = async (prompts) => {
           content: `Give me the best Ai tools for following prompt: ${prompts} ?`,
         },
       ],
-      model: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo-1106",
     });
 
     // Extract tool names from the response

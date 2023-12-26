@@ -6,24 +6,15 @@
 
 const app = require("../app");
 const http = require("http");
-const winston = require("winston");
-
-// Configure Winston logger
-const logger = winston.createLogger({
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: "error.log", level: "error" }),
-  ],
-});
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error(`Unhandled Rejection at: ${promise}. Reason: ${reason}`);
+  console.error(`Unhandled Rejection at: ${promise}. Reason: ${reason}`);
 });
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (error) => {
-  logger.error("Uncaught Exception:", error);
+  console.error("Uncaught Exception:", error);
   process.exit(1); // Exit the process after logging the uncaught exception
 });
 
@@ -31,7 +22,7 @@ process.on("uncaughtException", (error) => {
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(process.env.PORT || "3000");
+const port = normalizePort(process.env.PORT || "3001");
 app.set("port", port);
 
 /**
@@ -89,19 +80,19 @@ function onError(error) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case "EACCES":
-      logger.error(bind + " requires elevated privileges");
+      console.error(bind + " requires elevated privileges");
       break;
     case "EADDRINUSE":
-      logger.error(bind + " is already in use");
+      console.error(bind + " is already in use");
       break;
     default:
-      logger.error(error);
+      console.error(error);
       throw error;
   }
 
   // Close server and exit process on error
   server.close(() => {
-    logger.error("Server closed due to error. Exiting process.");
+    console.error("Server closed due to error. Exiting process.");
     process.exit(1);
   });
 }

@@ -56,7 +56,7 @@ exports.newsAttributes = [
   "createdAt",
 ];
 
-exports.categoryAttributes = ["id", "name", "slug"];
+exports.categoryAttributes = ["id", "name", "slug", "description"];
 exports.newsCategoryAttributes = [
   "id",
   "name",
@@ -99,7 +99,13 @@ exports.blogAllAdminAttributes = [
   "release",
 ];
 
-exports.categoryAdminAttributes = ["id", "name", "slug", "createdAt"];
+exports.categoryAdminAttributes = [
+  "id",
+  "name",
+  "slug",
+  "description",
+  "createdAt",
+];
 
 exports.ratingsAdminAttributes = [
   "id",

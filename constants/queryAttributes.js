@@ -53,6 +53,7 @@ exports.newsAttributes = [
   "views",
   "wishlists",
   "newsCategoryId",
+  "release",
   "createdAt",
 ];
 

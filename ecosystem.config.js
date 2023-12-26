@@ -2,11 +2,12 @@ module.exports = {
   apps: [
     {
       name: "toolplate-backend",
-      script: "bin/www",
+      script: "app.js",
       instances: "max",
       exec_mode: "cluster",
       autorestart: true,
-      watch: false,
+      watch: true,
+      sticky: true,
       max_restarts: 10,
       min_uptime: 5000,
       restart_delay: 2000,
@@ -18,7 +19,6 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss",
       combine_logs: true,
       merge_logs: true,
-
       env: {
         NODE_ENV: "development",
       },
@@ -30,18 +30,18 @@ module.exports = {
     },
   ],
 
-  deploy: {
-    production: {
-      user: "root",
-      host: "13.235.186.84",
-      ref: "origin/production",
-      repo: "https://github.com/TST-Technology/toolplate-backend.git",
-      path: "/root/toolplate-backend",
-      "post-deploy":
-        "npm install && pm2 reload ecosystem.config.js --env production",
-      env: {
-        NODE_ENV: "production",
-      },
-    },
-  },
+  // deploy: {
+  //   production: {
+  //     user: "root",
+  //     host: "13.235.186.84",
+  //     ref: "origin/production",
+  //     repo: "https://github.com/TST-Technology/toolplate-backend.git",
+  //     path: "/root/toolplate-backend",
+  //     "post-deploy":
+  //       "npm install && pm2 reload ecosystem.config.js --env production",
+  //     env: {
+  //       NODE_ENV: "production",
+  //     },
+  //   },
+  // },
 };

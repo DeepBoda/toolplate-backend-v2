@@ -7,6 +7,7 @@ const toolCategoryService = require("../toolCategory/service");
 const blogCategoryService = require("../blogCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { categoryAdminAttributes } = require("../../constants/queryAttributes");
+const MainCategory = require("../mainCategory/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -136,6 +137,10 @@ exports.getAllForAdmin = async (req, res, next) => {
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["name"]),
       // attributes: categoryAdminAttributes,
+      include: {
+        model: MainCategory,
+        attributes: ["id", "name"],
+      },
     });
 
     res.status(200).send({

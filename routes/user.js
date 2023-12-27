@@ -6,6 +6,7 @@ router.use("/users", require("../modules/user"));
 router.use("/prompt", require("../modules/prompt"));
 router.use("/notification", require("../modules/notification"));
 router.use("/category", require("../modules/category"));
+router.use("/main-category", require("../modules/mainCategory"));
 router.use("/tool", require("../modules/tool"));
 router.use("/toolSeo", require("../modules/toolSeo"));
 router.use("/tools/rating", require("../modules/toolRating"));

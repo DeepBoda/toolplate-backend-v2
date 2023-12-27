@@ -107,6 +107,14 @@ exports.categoryAdminAttributes = [
   "description",
   "createdAt",
 ];
+exports.mainCategoryAdminAttributes = [
+  "id",
+  "name",
+  "image",
+  "slug",
+  "description",
+  "createdAt",
+];
 
 exports.ratingsAdminAttributes = [
   "id",

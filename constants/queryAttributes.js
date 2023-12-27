@@ -105,6 +105,7 @@ exports.categoryAdminAttributes = [
   "name",
   "slug",
   "description",
+  "mainCategoryId",
   "createdAt",
 ];
 exports.mainCategoryAdminAttributes = [

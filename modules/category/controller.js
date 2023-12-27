@@ -135,7 +135,7 @@ exports.getAllForAdmin = async (req, res, next) => {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["name"]),
-      attributes: categoryAdminAttributes,
+      // attributes: categoryAdminAttributes,
     });
 
     res.status(200).send({

@@ -3,12 +3,11 @@
 const service = require("./service");
 const redisService = require("../../utils/redis");
 const slugify = require("slugify");
-const toolCategoryService = require("../toolCategory/service");
-const blogCategoryService = require("../blogCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   mainCategoryAdminAttributes,
 } = require("../../constants/queryAttributes");
+const { deleteFilesFromS3 } = require("../../middlewares/multer");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -221,8 +220,6 @@ exports.delete = async (req, res, next) => {
 
     // Wait for the service deletion and start both background deletions
     await Promise.all([
-      toolCategoryService.delete({ where: { categoryId: id } }),
-      blogCategoryService.delete({ where: { categoryId: id } }),
       redisService.del(`main-categories`),
       redisService.del(`mainCategorySitemap`),
     ]);

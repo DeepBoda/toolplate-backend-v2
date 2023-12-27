@@ -2,7 +2,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const Blog = require("../blog/model");
-const Category = require("../category/model");
+const CategoryOfBlog = require("../categoryOfBlog/model");
 const BlogCategory = sequelize.define("blogCategory", {
   id: {
     type: DataTypes.INTEGER,
@@ -18,11 +18,11 @@ Blog.hasMany(BlogCategory, {
   },
 });
 BlogCategory.belongsTo(Blog);
-Category.hasMany(BlogCategory, {
+CategoryOfBlog.hasMany(BlogCategory, {
   foreignKey: {
     allowNull: false,
   },
 });
-BlogCategory.belongsTo(Category);
+BlogCategory.belongsTo(CategoryOfBlog);
 
 module.exports = BlogCategory;

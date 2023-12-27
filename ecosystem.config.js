@@ -6,7 +6,7 @@ module.exports = {
       instances: "max",
       exec_mode: "cluster",
       autorestart: true,
-      watch: true,
+      watch: false,
       sticky: true,
       max_restarts: 10,
       min_uptime: 5000,

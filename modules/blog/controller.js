@@ -19,8 +19,8 @@ const {
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const BlogCategory = require("../blogCategory/model");
 const blogCategoryService = require("../blogCategory/service");
-const Category = require("../category/model");
-const categoryService = require("../category/service");
+const CategoryOfBlog = require("../categoryOfBlog/model");
+const categoryOfBlogService = require("../categoryOfBlog/service");
 const {
   resizeAndUploadImage,
   resizeAndUploadWebP,
@@ -65,7 +65,7 @@ exports.add = async (req, res, next) => {
     // Create an array of objects for bulk insert in `blogCategory` table
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       blogId: blog.id,
-      categoryId,
+      categoryOfBlogId: categoryId,
     }));
     const seoData = {
       blogId: blog.id,
@@ -104,7 +104,7 @@ exports.getAll = async (req, res, next) => {
       const categoryIdArray = categoryIds.split(",").map(Number);
 
       // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
-      where["$blogCategories.categoryId$"] = {
+      where["$blogCategories.categoryOfBlogId$"] = {
         [Op.in]: categoryIdArray,
       };
     }
@@ -139,11 +139,11 @@ exports.getAll = async (req, res, next) => {
       ],
       include: {
         model: BlogCategory,
-        attributes: ["categoryId"],
+        attributes: ["categoryOfBlogId"],
         ...query,
         where,
         include: {
-          model: Category,
+          model: CategoryOfBlog,
           attributes: categoryAttributes,
         },
       },
@@ -171,7 +171,7 @@ exports.getAllForAdmin = async (req, res, next) => {
       const categoryIdArray = categoryIds.split(",").map(Number);
 
       // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
-      where["$blogCategories.categoryId$"] = {
+      where["$blogCategories.categoryOfBlogId$"] = {
         [Op.in]: categoryIdArray,
       };
     }
@@ -189,11 +189,11 @@ exports.getAllForAdmin = async (req, res, next) => {
       attributes: blogAllAdminAttributes,
       include: {
         model: BlogCategory,
-        attributes: ["categoryId"],
+        attributes: ["categoryOfBlogId"],
         ...query,
         where,
         include: {
-          model: Category,
+          model: CategoryOfBlog,
           attributes: categoryAttributes,
         },
       },
@@ -218,7 +218,7 @@ exports.getScheduledForAdmin = async (req, res, next) => {
       const categoryIdArray = categoryIds.split(",").map(Number);
 
       // Use the `Op.in` operator to find blogs that match any of the specified categoryIds
-      where["$blogCategories.categoryId$"] = {
+      where["$blogCategories.categoryOfBlogId$"] = {
         [Op.in]: categoryIdArray,
       };
     }
@@ -237,11 +237,11 @@ exports.getScheduledForAdmin = async (req, res, next) => {
       include: [
         {
           model: BlogCategory,
-          attributes: ["categoryId"],
+          attributes: ["categoryOfBlogId"],
           ...query,
           where,
           include: {
-            model: Category,
+            model: CategoryOfBlog,
             attributes: categoryAttributes,
           },
         },
@@ -270,9 +270,9 @@ exports.getBySlug = async (req, res, next) => {
         include: [
           {
             model: BlogCategory,
-            attributes: ["categoryId"],
+            attributes: ["categoryOfBlogId"],
             include: {
-              model: Category,
+              model: CategoryOfBlog,
               attributes: categoryAttributes,
             },
           },
@@ -292,7 +292,7 @@ exports.getBySlug = async (req, res, next) => {
 };
 exports.getByCategorySlug = async (req, res, next) => {
   try {
-    const category = await categoryService.findOne({
+    const category = await categoryOfBlogService.findOne({
       where: {
         slug: req.params.slug,
       },
@@ -304,7 +304,7 @@ exports.getByCategorySlug = async (req, res, next) => {
 
     const where = {};
 
-    where["$blogCategories.categoryId$"] = category.id;
+    where["$blogCategories.categoryOfBlogId$"] = category.id;
 
     const userId = req.requestor ? req.requestor.id : null;
 
@@ -337,11 +337,11 @@ exports.getByCategorySlug = async (req, res, next) => {
       include: [
         {
           model: BlogCategory,
-          attributes: ["categoryId"],
+          attributes: ["categoryOfBlogId"],
           ...req.query,
           where,
           include: {
-            model: Category,
+            model: CategoryOfBlog,
             attributes: categoryAttributes,
           },
         },
@@ -429,9 +429,9 @@ exports.getForAdmin = async (req, res, next) => {
       },
       include: {
         model: BlogCategory,
-        attributes: ["categoryId"],
+        attributes: ["categoryOfBlogId"],
         include: {
-          model: Category,
+          model: CategoryOfBlog,
           attributes: ["id", "name"],
         },
       },
@@ -456,7 +456,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
       attributes: blogAttributes,
       include: {
         model: BlogCategory,
-        attributes: ["categoryId"],
+        attributes: ["categoryOfBlogId"],
       },
     });
 
@@ -466,7 +466,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
 
     // Find blogs that have the same category as the opened blog
     const categoryIds = openedBlog.blogCategories.map(
-      (blogCategory) => blogCategory.categoryId
+      (blogCategory) => blogCategory.categoryOfBlogId
     );
 
     const userId = req.requestor ? req.requestor.id : null;
@@ -475,7 +475,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
       // ...sqquery(req.query),
       where: {
         id: { [Op.ne]: req.params.id },
-        "$blogCategories.categoryId$": { [Op.in]: categoryIds },
+        "$blogCategories.categoryOfBlogId$": { [Op.in]: categoryIds },
         release: {
           [Op.lte]: moment(), // Less than or equal to the current date
         },
@@ -493,9 +493,9 @@ exports.getRelatedBlogs = async (req, res, next) => {
       include: [
         {
           model: BlogCategory,
-          attributes: ["categoryId"],
+          attributes: ["categoryOfBlogId"],
           include: {
-            model: Category,
+            model: CategoryOfBlog,
             attributes: categoryAttributes,
           },
         },
@@ -505,7 +505,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
     // Calculate matching percentage for each blog
     relatedBlogs.forEach((blog) => {
       const commonCategories = blog.blogCategories.filter((blogCategory) =>
-        categoryIds.includes(blogCategory.categoryId)
+        categoryIds.includes(blogCategory.categoryOfBlogId)
       );
 
       const totalCategories = categoryIds.length;
@@ -614,7 +614,7 @@ exports.update = async (req, res, next) => {
     // Create an array of objects for bulk insert in `blogCategory` table
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       blogId: id,
-      categoryId,
+      categoryOfBlogId: categoryId,
     }));
 
     // Use bulk create operations for `blogCategory`

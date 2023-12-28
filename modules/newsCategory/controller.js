@@ -92,7 +92,7 @@ exports.getAllNews = async (req, res, next) => {
             [Op.lte]: moment(), // Less than or equal to the current date
           },
         },
-        ["name"]
+        ["title"]
       ),
       attributes: newsAttributes,
     });
@@ -117,7 +117,7 @@ exports.getAllNewsSchedule = async (req, res, next) => {
             [Op.gt]: moment(), // Less than or equal to the current date
           },
         },
-        ["name"]
+        ["title"]
       ),
       attributes: newsAttributes,
     });

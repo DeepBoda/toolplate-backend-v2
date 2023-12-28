@@ -85,7 +85,7 @@ exports.getAll = async (req, res, next) => {
           model: BlogCategory,
           attributes: ["id", "blogId", "categoryId"],
           include: {
-            model: Category,
+            model: BlogCategory,
             attributes: categoryAttributes,
           },
         },

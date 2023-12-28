@@ -6,7 +6,10 @@ const redisService = require("../../utils/redis");
 const slugify = require("slugify");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const { newsCategoryAttributes } = require("../../constants/queryAttributes");
+const {
+  newsCategoryAttributes,
+  newsAttributes,
+} = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -64,6 +67,23 @@ exports.getAllForAdmin = async (req, res, next) => {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["name"]),
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllNews = async (req, res, next) => {
+  try {
+    // If the categories is not found in the cache
+    const data = await newsService.findAndCountAll({
+      ...sqquery(req.query, {}, ["name"]),
+      attributes: newsAttributes,
     });
 
     res.status(200).send({

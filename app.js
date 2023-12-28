@@ -113,11 +113,6 @@ app.set("trust proxy", true);
 const { validateAPIKey } = require("./middlewares/auth");
 app.use(validateAPIKey);
 
-// Use request monitoring middleware
-app.use((req, res, next) => {
-  wooffer.requestMonitoring(req, res, next);
-});
-
 // Define your routes
 const indexRouter = require("./routes");
 const logService = require("./modules/log/service");

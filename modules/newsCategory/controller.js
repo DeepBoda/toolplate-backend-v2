@@ -1,5 +1,7 @@
 "use strict";
 
+const { Op } = require("sequelize");
+const moment = require("moment");
 const service = require("./service");
 const newsService = require("../news/service");
 const redisService = require("../../utils/redis");
@@ -82,7 +84,41 @@ exports.getAllNews = async (req, res, next) => {
   try {
     // If the categories is not found in the cache
     const data = await newsService.findAndCountAll({
-      ...sqquery(req.query, {}, ["name"]),
+      ...sqquery(
+        req.query,
+        {
+          newsCategoryId: req.params.id,
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["name"]
+      ),
+      attributes: newsAttributes,
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getAllNewsSchedule = async (req, res, next) => {
+  try {
+    // If the categories is not found in the cache
+    const data = await newsService.findAndCountAll({
+      ...sqquery(
+        req.query,
+        {
+          newsCategoryId: req.params.id,
+          release: {
+            [Op.gt]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["name"]
+      ),
       attributes: newsAttributes,
     });
 

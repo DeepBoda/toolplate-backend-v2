@@ -19,8 +19,6 @@ const serviceToken =
 const app = express();
 wooffer(token, serviceToken);
 
-app.use(wooffer.requestMonitoring);
-
 // Configure environment-specific settings
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -115,6 +113,11 @@ app.set("trust proxy", true);
 const { validateAPIKey } = require("./middlewares/auth");
 app.use(validateAPIKey);
 
+// Use request monitoring middleware
+app.use((req, res, next) => {
+  wooffer.requestMonitoring(req, res, next);
+});
+
 // Define your routes
 const indexRouter = require("./routes");
 const logService = require("./modules/log/service");
@@ -155,8 +158,8 @@ if (force) {
   );
 } else {
   sequelize
-    .sync()
-    // .authenticate()
+    // .sync()
+    .authenticate()
     .then(async (result) => {
       console.log(`✔ Database connection successful! 🎯`);
     })
@@ -199,6 +202,7 @@ app.use((err, req, res, next) => {
       message: "Unauthorized attempt, login again!",
     });
   }
+
   wooffer.fail(err.message);
 
   // Handle other errors

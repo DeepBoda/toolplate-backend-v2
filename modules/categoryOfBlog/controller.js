@@ -128,7 +128,7 @@ exports.delete = async (req, res, next) => {
 
     // Wait for the service deletion and start both background deletions
     await Promise.all([
-      blogCategoryService.delete({ where: { categoryId: id } }),
+      blogCategoryService.delete({ where: { categoryOfBlogId: id } }),
       redisService.del(`blog-categories`),
       redisService.del(`blog-category-sitemap`),
     ]);

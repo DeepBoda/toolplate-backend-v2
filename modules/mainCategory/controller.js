@@ -6,7 +6,9 @@ const slugify = require("slugify");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   mainCategoryAdminAttributes,
+  categoryAdminAttributes,
 } = require("../../constants/queryAttributes");
+const categoryService = require("../category/service");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 
 // ------------- Only Admin can Create --------------
@@ -142,6 +144,22 @@ exports.getAllForAdmin = async (req, res, next) => {
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["name"]),
       attributes: mainCategoryAdminAttributes,
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getAllSubCategory = async (req, res, next) => {
+  try {
+    // If the categories is not found in the cache
+    const data = await categoryService.findAndCountAll({
+      ...sqquery(req.query, { mainCategoryId: req.params.id }, ["name"]),
+      attributes: categoryAdminAttributes,
     });
 
     res.status(200).send({

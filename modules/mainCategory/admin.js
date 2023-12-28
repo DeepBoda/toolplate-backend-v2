@@ -14,6 +14,7 @@ router
     joiValidator(joiSchema.create),
     MainCategory.add
   );
+router.route("/sub/:id").get(MainCategory.getAllSubCategory);
 router
   .route("/:id")
   .get(MainCategory.getById)

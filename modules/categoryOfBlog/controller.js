@@ -37,7 +37,7 @@ exports.getAll = async (req, res, next) => {
 
     // If the categories are not found in the cache
     if (!data) {
-      const data = await service.findAndCountAll(
+      data = await service.findAndCountAll(
         usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
       );
       redisService.set(`blog-categories`, data);

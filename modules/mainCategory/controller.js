@@ -233,6 +233,9 @@ exports.delete = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // Find the blog to get the image URL
+    const { image } = await service.findOne({ where: { id } });
+
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
 
@@ -241,6 +244,9 @@ exports.delete = async (req, res, next) => {
       redisService.del(`main-categories`),
       redisService.del(`mainCategorySitemap`),
     ]);
+
+    // Delete the file from S3 if an image URL is present
+    if (image) deleteFilesFromS3([image]);
 
     // Check if affectedRows is zero and return a meaningful response
     if (affectedRows === 0) {

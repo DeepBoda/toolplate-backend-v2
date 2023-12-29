@@ -8,10 +8,16 @@ const blogCategoryService = require("../blogCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { categoryAdminAttributes } = require("../../constants/queryAttributes");
 const MainCategory = require("../mainCategory/model");
+const { deleteFilesFromS3 } = require("../../middlewares/multer");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    // Check if an image file is provided and add the file location to the request body
+    if (req.file) {
+      req.body.image = req.file.location;
+    }
+
     // Create slug URL based on name
     req.body.slug = slugify(req.body.name, {
       replacement: "-", // Replace spaces with hyphens
@@ -172,6 +178,11 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
+    let oldData;
+    if (req.file) {
+      req.body.image = req.file.location;
+      oldData = await service.findOne({ where: { id: req.params.id } });
+    }
     // Create slug URL based on name
     if (req.body.name) {
       req.body.slug = slugify(req.body.name, {
@@ -187,6 +198,9 @@ exports.update = async (req, res, next) => {
         id: req.params.id,
       },
     });
+    if (req.file && oldData?.image) {
+      deleteFilesFromS3([oldData.image]);
+    }
     redisService.del(`categories`);
     redisService.del(`categorySitemap`);
     // Send the response
@@ -206,6 +220,9 @@ exports.delete = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // Find the blog to get the image URL
+    const { image } = await service.findOne({ where: { id } });
+
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
 
@@ -216,6 +233,9 @@ exports.delete = async (req, res, next) => {
       redisService.del(`categories`),
       redisService.del(`categorySitemap`),
     ]);
+
+    // Delete the file from S3 if an image URL is present
+    if (image) deleteFilesFromS3([image]);
 
     // Check if affectedRows is zero and return a meaningful response
     if (affectedRows === 0) {

@@ -11,7 +11,7 @@ router
   .get(category.getAllForAdmin)
   .post(upload.single("image"), joiValidator(joiSchema.create), category.add);
 router.route("/news/:id").get(category.getAllNews);
-router.route("/scheduled/:id").get(category.getAllNews);
+router.route("/scheduled/:id").get(category.getAllNewsSchedule);
 router
   .route("/:id")
   .get(category.getById)

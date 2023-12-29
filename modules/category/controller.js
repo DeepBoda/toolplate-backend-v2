@@ -4,7 +4,6 @@ const service = require("./service");
 const redisService = require("../../utils/redis");
 const slugify = require("slugify");
 const toolCategoryService = require("../toolCategory/service");
-const blogCategoryService = require("../blogCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { categoryAdminAttributes } = require("../../constants/queryAttributes");
 const MainCategory = require("../mainCategory/model");
@@ -229,7 +228,6 @@ exports.delete = async (req, res, next) => {
     // Wait for the service deletion and start both background deletions
     await Promise.all([
       toolCategoryService.delete({ where: { categoryId: id } }),
-      blogCategoryService.delete({ where: { categoryId: id } }),
       redisService.del(`categories`),
       redisService.del(`categorySitemap`),
     ]);

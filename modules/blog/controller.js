@@ -189,11 +189,15 @@ exports.getAllForAdmin = async (req, res, next) => {
       attributes: blogAllAdminAttributes,
       include: {
         model: BlogCategory,
+        required: false,
+
         attributes: ["categoryOfBlogId"],
         ...query,
         where,
         include: {
           model: CategoryOfBlog,
+          required: false,
+
           attributes: categoryAttributes,
         },
       },

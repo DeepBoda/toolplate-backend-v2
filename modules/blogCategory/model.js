@@ -18,6 +18,7 @@ Blog.hasMany(BlogCategory, {
   },
 });
 BlogCategory.belongsTo(Blog);
+
 CategoryOfBlog.hasMany(BlogCategory, {
   foreignKey: {
     allowNull: false,

@@ -7,6 +7,7 @@ const { usersqquery, sqquery } = require("../../utils/query");
 const {
   mainCategoryAdminAttributes,
   categoryAdminAttributes,
+  mainCategoryAttributes,
 } = require("../../constants/queryAttributes");
 const categoryService = require("../category/service");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
@@ -50,68 +51,16 @@ exports.getAll = async (req, res, next) => {
     // If the categories are not found in the cache
     if (!data) {
       data = await service.findAndCountAll({
-        ...usersqquery({ ...req.query, sort: "name", sortBy: "ASC" }),
+        ...usersqquery(req.query),
+
+        attributes: mainCategoryAttributes,
         include: {
           model: Category,
-          attributes: ["id", "name"],
+          attributes: ["id", "name", "slug"],
           limit: 4,
         },
       });
       redisService.set(`main-categories`, data);
-    }
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getSitemap = async (req, res, next) => {
-  try {
-    // Try to retrieve the categories from the Redis cache
-    let data = await redisService.get(`mainCategorySitemap`);
-    if (!data) {
-      const url =
-        process.env.NODE_ENV === "production"
-          ? process.env.PROD_WEB
-          : process.env.DEV_WEB;
-
-      // If the categories are not found in the cache
-      const categories = await service.findAll(
-        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-      );
-
-      data = {};
-
-      // Group the data by the first letter of the category name
-      categories.forEach((category) => {
-        const key = category.name.charAt(0).toUpperCase();
-        if (!data[key]) {
-          data[key] = [];
-        }
-        data[key].push([
-          {
-            title: category.name + " Tools",
-            url: `${url}/tools/${category.slug}`,
-          },
-          {
-            title: "Free " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/free`,
-          },
-          {
-            title: "Paid " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/premium`,
-          },
-          {
-            title: "Freemium " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/freemium`,
-          },
-        ]);
-      });
-      redisService.set(`mainCategorySitemap`, data);
     }
 
     res.status(200).send({
@@ -183,6 +132,22 @@ exports.getById = async (req, res, next) => {
     const data = await service.findOne({
       where: {
         id: req.params.id,
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getBySlug = async (req, res, next) => {
+  try {
+    const data = await service.findOne({
+      where: {
+        slug: req.params.slug,
       },
     });
 

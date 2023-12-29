@@ -61,6 +61,7 @@ exports.categoryAttributes = ["id", "name", "slug", "description"];
 exports.newsCategoryAttributes = [
   "id",
   "name",
+  "overview",
   "image",
   "slug",
   "title",

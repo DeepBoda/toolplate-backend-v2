@@ -14,6 +14,9 @@ const NewsCategory = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    overview: {
+      type: DataTypes.TEXT("long"),
+    },
     image: {
       type: DataTypes.STRING,
     },

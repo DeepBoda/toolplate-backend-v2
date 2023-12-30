@@ -19,8 +19,6 @@ const {
   toolAttributes,
   categoryAttributes,
   toolAllAdminAttributes,
-  toolAdminAttributes,
-  toolCardAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
@@ -163,7 +161,7 @@ exports.getAll = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
-        ...toolCardAttributes,
+        ...toolAttributes,
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`

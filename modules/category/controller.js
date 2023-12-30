@@ -184,7 +184,7 @@ exports.getByMain = async (req, res, next) => {
   try {
     const userId = req.requestor ? req.requestor.id : null;
     const { id } = await mainCategoryService.findOne({ slug: req.body.slug });
-    const data = await service.findAndCountAll({
+    const data = await service.findAll({
       ...usersqquery(req.query, {
         mainCategoryId: id,
       }),

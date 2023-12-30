@@ -38,6 +38,16 @@ exports.toolCardAttributes = [
   "ratingsAverage",
   "release",
 ];
+exports.toolCardAttributes = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "price",
+  "slug",
+  "ratingsAverage",
+  "release",
+];
 exports.blogAttributes = [
   "id",
   "title",

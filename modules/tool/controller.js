@@ -163,7 +163,7 @@ exports.getAll = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
-        ...toolAttributes,
+        ...toolCardAttributes,
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`

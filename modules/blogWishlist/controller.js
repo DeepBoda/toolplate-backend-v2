@@ -12,8 +12,8 @@ const {
 } = require("../../constants/queryAttributes");
 const Blog = require("../blog/model");
 const BlogCategory = require("../blogCategory/model");
-const Category = require("../category/model");
 const User = require("../user/model");
+const CategoryOfBlog = require("../categoryOfBlog/model");
 
 exports.add = async (req, res, next) => {
   try {
@@ -83,9 +83,9 @@ exports.getAll = async (req, res, next) => {
         ],
         include: {
           model: BlogCategory,
-          attributes: ["id", "blogId", "categoryId"],
+          attributes: ["id", "blogId", "categoryOfBlogId"],
           include: {
-            model: BlogCategory,
+            model: CategoryOfBlog,
             attributes: blogCategoryAttributes,
           },
         },

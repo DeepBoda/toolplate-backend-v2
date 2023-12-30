@@ -185,10 +185,10 @@ exports.getByMain = async (req, res, next) => {
     const userId = req.requestor ? req.requestor.id : null;
     const { id } = await mainCategoryService.findOne({ slug: req.body.slug });
     const data = await service.findAndCountAll({
-      where: {
+      ...usersqquery(req.query, {
         mainCategoryId: id,
-        // mainCategoryId: req.params.id,
-      },
+      }),
+      distinct: true, // Add this option to ensure accurate counts
       attributes: categoryAttributes,
       include: {
         model: ToolCategory,

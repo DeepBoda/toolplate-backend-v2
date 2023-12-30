@@ -4,10 +4,17 @@ const service = require("./service");
 const redisService = require("../../utils/redis");
 const slugify = require("slugify");
 const toolCategoryService = require("../toolCategory/service");
+const mainCategoryService = require("../mainCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
-const { categoryAdminAttributes } = require("../../constants/queryAttributes");
+const {
+  toolCardAttributes,
+  categoryAttributes,
+} = require("../../constants/queryAttributes");
 const MainCategory = require("../mainCategory/model");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
+const ToolCategory = require("../toolCategory/model");
+const Tool = require("../tool/model");
+const sequelize = require("../../config/db");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -162,6 +169,49 @@ exports.getById = async (req, res, next) => {
     const data = await service.findOne({
       where: {
         id: req.params.id,
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getByMain = async (req, res, next) => {
+  try {
+    const userId = req.requestor ? req.requestor.id : null;
+    const { id } = await mainCategoryService.findOne({ slug: req.params.slug });
+    const data = await service.findAndCountAll({
+      where: {
+        mainCategoryId: id,
+        // mainCategoryId: req.params.id,
+      },
+      attributes: categoryAttributes,
+      include: {
+        model: ToolCategory,
+        attributes: ["toolId"],
+        limit: 3,
+        include: {
+          model: Tool,
+          attributes: [
+            ...toolCardAttributes,
+            [
+              sequelize.literal(
+                `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+              ),
+              "isLiked",
+            ],
+            [
+              sequelize.literal(
+                `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+              ),
+              "isWishlisted",
+            ],
+          ],
+        },
       },
     });
 

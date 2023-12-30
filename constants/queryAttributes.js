@@ -28,6 +28,16 @@ exports.toolAttributes = [
   "release",
   "social",
 ];
+exports.toolCardAttributes = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "price",
+  "slug",
+  "ratingsAverage",
+  "release",
+];
 exports.blogAttributes = [
   "id",
   "title",
@@ -57,7 +67,15 @@ exports.newsAttributes = [
   "createdAt",
 ];
 
-exports.categoryAttributes = ["id", "name", "slug", "description"];
+exports.categoryAttributes = [
+  "id",
+  "name",
+  "slug",
+  "description",
+  "mainCategoryId",
+];
+exports.blogCategoryAttributes = ["id", "name", "slug", "description"];
+exports.mainCategoryAttributes = ["id", "name", "slug", "createdAt"];
 exports.newsCategoryAttributes = [
   "id",
   "name",

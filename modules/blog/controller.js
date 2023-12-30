@@ -13,7 +13,7 @@ const { blogResizeImageSize } = require("../../constants");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   blogAttributes,
-  categoryAttributes,
+  blogCategoryAttributes,
   blogAllAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
@@ -144,7 +144,7 @@ exports.getAll = async (req, res, next) => {
         where,
         include: {
           model: CategoryOfBlog,
-          attributes: categoryAttributes,
+          attributes: blogCategoryAttributes,
         },
       },
     });
@@ -198,7 +198,7 @@ exports.getAllForAdmin = async (req, res, next) => {
           model: CategoryOfBlog,
           required: false,
 
-          attributes: categoryAttributes,
+          attributes: blogCategoryAttributes,
         },
       },
     });
@@ -246,7 +246,7 @@ exports.getScheduledForAdmin = async (req, res, next) => {
           where,
           include: {
             model: CategoryOfBlog,
-            attributes: categoryAttributes,
+            attributes: blogCategoryAttributes,
           },
         },
       ],
@@ -277,7 +277,7 @@ exports.getBySlug = async (req, res, next) => {
             attributes: ["categoryOfBlogId"],
             include: {
               model: CategoryOfBlog,
-              attributes: categoryAttributes,
+              attributes: blogCategoryAttributes,
             },
           },
         ],
@@ -346,7 +346,7 @@ exports.getByCategorySlug = async (req, res, next) => {
           where,
           include: {
             model: CategoryOfBlog,
-            attributes: categoryAttributes,
+            attributes: blogCategoryAttributes,
           },
         },
       ],
@@ -500,7 +500,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
           attributes: ["categoryOfBlogId"],
           include: {
             model: CategoryOfBlog,
-            attributes: categoryAttributes,
+            attributes: blogCategoryAttributes,
           },
         },
       ],

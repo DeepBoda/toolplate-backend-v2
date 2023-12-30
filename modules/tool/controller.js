@@ -20,6 +20,7 @@ const {
   categoryAttributes,
   toolAllAdminAttributes,
   toolAdminAttributes,
+  toolCardAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");

@@ -6,7 +6,7 @@ const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   blogAttributes,
-  categoryAttributes,
+  blogCategoryAttributes,
   userAdminAttributes,
   blogAdminAttributes,
 } = require("../../constants/queryAttributes");
@@ -86,7 +86,7 @@ exports.getAll = async (req, res, next) => {
           attributes: ["id", "blogId", "categoryId"],
           include: {
             model: BlogCategory,
-            attributes: categoryAttributes,
+            attributes: blogCategoryAttributes,
           },
         },
       },

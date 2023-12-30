@@ -80,12 +80,13 @@ exports.newsAttributes = [
 exports.categoryAttributes = [
   "id",
   "name",
+  "image",
   "slug",
   "description",
   "mainCategoryId",
 ];
 exports.blogCategoryAttributes = ["id", "name", "slug", "description"];
-exports.mainCategoryAttributes = ["id", "name", "slug", "createdAt"];
+exports.mainCategoryAttributes = ["id", "name", "image", "slug", "createdAt"];
 exports.newsCategoryAttributes = [
   "id",
   "name",
@@ -132,6 +133,7 @@ exports.blogAllAdminAttributes = [
 exports.categoryAdminAttributes = [
   "id",
   "name",
+  "image",
   "slug",
   "description",
   "mainCategoryId",

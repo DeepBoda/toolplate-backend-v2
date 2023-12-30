@@ -30,7 +30,6 @@ exports.add = async (req, res, next) => {
 
     const data = await service.create(req.body);
     redisService.del(`main-categories`);
-    redisService.del(`mainCategorySitemap`);
 
     res.status(200).json({
       status: "success",
@@ -45,8 +44,7 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     // Try to retrieve the categories from the Redis cache
-    let data;
-    // let data = await redisService.get(`main-categories`);
+    let data = await redisService.get(`main-categories`);
 
     // If the categories are not found in the cache
     if (!data) {
@@ -145,11 +143,17 @@ exports.getById = async (req, res, next) => {
 };
 exports.getBySlug = async (req, res, next) => {
   try {
-    const data = await service.findOne({
-      where: {
-        slug: req.params.slug,
-      },
-    });
+    const cacheKey = `main-category?slug=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          slug: req.params.slug,
+        },
+      });
+      redisService.set(cacheKey, data);
+    }
 
     res.status(200).send({
       status: "success",
@@ -186,8 +190,10 @@ exports.update = async (req, res, next) => {
     if (req.file && oldData?.image) {
       deleteFilesFromS3([oldData.image]);
     }
+    // Clear Redis cache
+    redisService.del(`main-category?slug=${oldData.slug}`);
     redisService.del(`main-categories`);
-    redisService.del(`mainCategorySitemap`);
+
     // Send the response
     res.status(200).json({
       status: "success",
@@ -206,19 +212,19 @@ exports.delete = async (req, res, next) => {
     const { id } = req.params;
 
     // Find the blog to get the image URL
-    const { image } = await service.findOne({ where: { id } });
+    const data = await service.findOne({ where: { id } });
 
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
 
     // Wait for the service deletion and start both background deletions
     await Promise.all([
+      redisService.del(`main-category?slug=${data.slug}`),
       redisService.del(`main-categories`),
-      redisService.del(`mainCategorySitemap`),
     ]);
 
     // Delete the file from S3 if an image URL is present
-    if (image) deleteFilesFromS3([image]);
+    if (data?.image) deleteFilesFromS3([data.image]);
 
     // Check if affectedRows is zero and return a meaningful response
     if (affectedRows === 0) {

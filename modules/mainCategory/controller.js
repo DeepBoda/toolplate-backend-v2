@@ -191,7 +191,7 @@ exports.update = async (req, res, next) => {
       deleteFilesFromS3([oldData.image]);
     }
     // Clear Redis cache
-    redisService.del(`main-category?slug=${oldData.slug}`);
+    redisService.del(`main-category?slug=${oldData?.slug}`);
     redisService.del(`main-categories`);
 
     // Send the response

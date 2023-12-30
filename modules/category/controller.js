@@ -15,6 +15,7 @@ const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const ToolCategory = require("../toolCategory/model");
 const Tool = require("../tool/model");
 const sequelize = require("../../config/db");
+const Category = require("./model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -210,6 +211,16 @@ exports.getByMain = async (req, res, next) => {
               ),
               "isWishlisted",
             ],
+          ],
+          include: [
+            {
+              model: ToolCategory,
+              attributes: ["categoryId"],
+              include: {
+                model: Category,
+                attributes: categoryAttributes,
+              },
+            },
           ],
         },
       },

@@ -212,16 +212,14 @@ exports.getByMain = async (req, res, next) => {
               "isWishlisted",
             ],
           ],
-          include: [
-            {
-              model: ToolCategory,
-              attributes: ["categoryId"],
-              include: {
-                model: Category,
-                attributes: categoryAttributes,
-              },
+          include: {
+            model: ToolCategory,
+            attributes: ["categoryId"],
+            include: {
+              model: Category,
+              attributes: ["name", "slug"],
             },
-          ],
+          },
         },
       },
     });

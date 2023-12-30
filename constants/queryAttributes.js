@@ -84,6 +84,7 @@ exports.categoryAttributes = [
   "slug",
   "description",
   "mainCategoryId",
+  "createdAt",
 ];
 exports.blogCategoryAttributes = ["id", "name", "slug", "description"];
 exports.mainCategoryAttributes = ["id", "name", "image", "slug", "createdAt"];

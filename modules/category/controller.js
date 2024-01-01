@@ -186,9 +186,14 @@ exports.getById = async (req, res, next) => {
 exports.getByMain = async (req, res, next) => {
   try {
     const userId = req.requestor ? req.requestor.id : null;
+
+    console.log("---------------------------", req.body);
+    console.log("----------", req.params);
+    console.log("---------------------------", userId);
     const { id } = await mainCategoryService.findOne({
       where: { slug: req.body.slug },
     });
+    console.log("id:-------", id);
     const data = await service.findAll({
       ...sqquery(req.query, {
         mainCategoryId: id,

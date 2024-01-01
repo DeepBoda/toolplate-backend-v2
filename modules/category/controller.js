@@ -185,6 +185,7 @@ exports.getById = async (req, res, next) => {
 
 exports.getByMain = async (req, res, next) => {
   try {
+    console.log("---+++req+++---", req);
     const userId = req.requestor ? req.requestor.id : null;
 
     console.log("---------------------------", req.body);

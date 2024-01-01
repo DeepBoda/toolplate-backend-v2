@@ -34,6 +34,7 @@ exports.add = async (req, res, next) => {
 
     const data = await service.create(req.body);
     redisService.del(`categories`);
+    redisService.del(`main-categories`);
     redisService.del(`categorySitemap`);
 
     res.status(200).json({
@@ -181,15 +182,17 @@ exports.getById = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getByMain = async (req, res, next) => {
   try {
     const userId = req.requestor ? req.requestor.id : null;
-    const { id } = await mainCategoryService.findOne({ slug: req.body.slug });
+    const { id } = await mainCategoryService.findOne({
+      where: { slug: req.body.slug },
+    });
     const data = await service.findAll({
       ...sqquery(req.query, {
         mainCategoryId: id,
       }),
-      distinct: true, // Add this option to ensure accurate counts
       attributes: categoryAttributes,
       include: {
         model: ToolCategory,
@@ -261,6 +264,8 @@ exports.update = async (req, res, next) => {
     }
     redisService.del(`categories`);
     redisService.del(`categorySitemap`);
+    redisService.del(`main-categories`);
+
     // Send the response
     res.status(200).json({
       status: "success",
@@ -289,6 +294,7 @@ exports.delete = async (req, res, next) => {
       toolCategoryService.delete({ where: { categoryId: id } }),
       redisService.del(`categories`),
       redisService.del(`categorySitemap`),
+      redisService.del(`main-categories`),
     ]);
 
     // Delete the file from S3 if an image URL is present

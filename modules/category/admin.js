@@ -10,6 +10,7 @@ router
   .route("/")
   .get(category.getAllForAdmin)
   .post(upload.single("image"), joiValidator(joiSchema.create), category.add);
+router.route("/empty").get(category.getAllEmpty);
 router
   .route("/:id")
   .get(category.getById)

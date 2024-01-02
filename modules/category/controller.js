@@ -16,6 +16,7 @@ const ToolCategory = require("../toolCategory/model");
 const Tool = require("../tool/model");
 const sequelize = require("../../config/db");
 const Category = require("./model");
+const { Op } = require("sequelize");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -59,6 +60,30 @@ exports.getAll = async (req, res, next) => {
       );
       redisService.set(`categories`, data);
     }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getAllEmpty = async (req, res, next) => {
+  try {
+    const categoriesWithTools = await toolCategoryService.findAll({
+      attributes: ["categoryId"],
+      group: ["categoryId"],
+    });
+    const categoriesWithToolsIds = categoriesWithTools.map((e) => e.categoryId);
+
+    const data = await service.findAndCountAll({
+      ...usersqquery({ ...req.query, sort: "name", sortBy: "ASC" }),
+      // attributes: ["id", "name"],
+      where: {
+        id: { [Op.notIn]: categoriesWithToolsIds },
+      },
+    });
 
     res.status(200).send({
       status: "success",
@@ -132,12 +157,12 @@ exports.getSlugsForSitemap = async (req, res, next) => {
 
     const categories = await service.findAll();
 
-    const categorySlugs = categories.flatMap((category) => [
-      `${url}/tools/${category.slug}`,
-      `${url}/tools/${category.slug}/free`,
-      `${url}/tools/${category.slug}/premium`,
-      `${url}/tools/${category.slug}/freemium`,
-    ]);
+    const categorySlugs = categories.flatMap((category) =>
+      ["", "/free", "/premium", "/freemium"].map((suffix) => ({
+        slug: `${url}/tools/${category.slug}${suffix}`,
+        updatedAt: category.updatedAt,
+      }))
+    );
 
     res.status(200).send({ status: "success", data: categorySlugs });
   } catch (error) {
@@ -185,7 +210,6 @@ exports.getById = async (req, res, next) => {
 
 exports.getByMain = async (req, res, next) => {
   try {
-    console.log("---+++req+++---", req);
     const userId = req.requestor ? req.requestor.id : null;
 
     console.log("---------------------------", req.body);

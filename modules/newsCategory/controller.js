@@ -175,10 +175,11 @@ exports.getSlugsForSitemap = async (req, res, next) => {
     // If the categories are not found in the cache
     const categories = await service.findAll();
 
-    // Generate slugs for each category
-    const categorySlugs = categories.map(
-      (category) => `${url}/allNews/${category.slug}`
-    );
+    // Generate array of objects with slug and updatedAt
+    const categorySlugs = categories.map((c) => ({
+      slug: `${url}/blog/${c.slug}`,
+      updatedAt: c.updatedAt, // Assuming updatedAt is a field in your blog model
+    }));
 
     // Send the response
     res.status(200).json({

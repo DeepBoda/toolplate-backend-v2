@@ -86,6 +86,26 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+exports.getSlugsForSitemap = async (req, res, next) => {
+  try {
+    const url =
+      process.env.NODE_ENV === "production"
+        ? process.env.PROD_WEB
+        : process.env.DEV_WEB;
+
+    const categories = await service.findAll();
+
+    const categorySlugs = categories.map((c) => ({
+      slug: `${url}/blogs/${c.slug}`,
+      updatedAt: c.updatedAt,
+    }));
+
+    res.status(200).send({ status: "success", data: categorySlugs });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {

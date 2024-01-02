@@ -79,12 +79,10 @@ exports.getSlugsForSitemap = async (req, res, next) => {
 
     const categories = await service.findAll();
 
-    const categorySlugs = categories.flatMap((category) => [
-      `${url}/tools/${category.slug}`,
-      `${url}/tools/${category.slug}/free`,
-      `${url}/tools/${category.slug}/premium`,
-      `${url}/tools/${category.slug}/freemium`,
-    ]);
+    const categorySlugs = categories.map((c) => ({
+      slug: `${url}/category/${c.slug}`,
+      updatedAt: c.updatedAt, // Assuming updatedAt is a field in your blog model
+    }));
 
     res.status(200).send({ status: "success", data: categorySlugs });
   } catch (error) {

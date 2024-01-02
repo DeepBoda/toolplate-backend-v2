@@ -763,12 +763,14 @@ exports.getSlugsForSitemap = async (req, res, next) => {
     const tools = await service.findAll();
 
     // Generate slugs for each tool
-    const blogSlugs = tools.map((tool) => `${url}/tool/${tool.slug}`);
-
+    const toolSlugs = tools.map((tool) => ({
+      slug: `${url}/tool/${tool.slug}`,
+      updatedAt: tool.updatedAt, // Assuming updatedAt is a field in your blog model
+    }));
     // Send the response
     res.status(200).json({
       status: "success",
-      data: blogSlugs,
+      data: toolSlugs,
     });
   } catch (error) {
     next(error);

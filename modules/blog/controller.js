@@ -558,8 +558,11 @@ exports.getSlugsForSitemap = async (req, res, next) => {
     // If the blogs are not found in the cache
     const blogs = await service.findAll();
 
-    // Generate slugs for each blog
-    const blogSlugs = blogs.map((blog) => `${url}/blog/${blog.slug}`);
+    // Generate array of objects with slug and updatedAt
+    const blogSlugs = blogs.map((blog) => ({
+      slug: `${url}/blog/${blog.slug}`,
+      updatedAt: blog.updatedAt, // Assuming updatedAt is a field in your blog model
+    }));
 
     // Send the response
     res.status(200).json({

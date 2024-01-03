@@ -60,5 +60,4 @@ SubmitTool.belongsTo(MainCategory);
 User.hasMany(SubmitTool);
 SubmitTool.belongsTo(User);
 
-SubmitTool.sync({ alter: true });
 module.exports = SubmitTool;

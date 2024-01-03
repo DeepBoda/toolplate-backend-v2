@@ -30,6 +30,7 @@ exports.add = async (req, res, next) => {
 
     const data = await service.create(req.body);
     redisService.del(`main-categories`);
+    redisService.del(`main-submit`);
 
     res.status(200).json({
       status: "success",
@@ -59,6 +60,28 @@ exports.getAll = async (req, res, next) => {
         },
       });
       redisService.set(`main-categories`, data);
+    }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getAllForSubmit = async (req, res, next) => {
+  try {
+    // Try to retrieve the categories from the Redis cache
+    let data = await redisService.get(`main-submit`);
+
+    // If the categories are not found in the cache
+    if (!data) {
+      data = await service.findAll({
+        ...usersqquery({ ...req.query, sort: "name", sortBy: "ASC" }),
+        attributes: ["id", "name"],
+      });
+      redisService.set(`main-submit`, data);
     }
 
     res.status(200).send({
@@ -106,6 +129,7 @@ exports.getAllForAdmin = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getAllSubCategory = async (req, res, next) => {
   try {
     // If the categories is not found in the cache
@@ -139,6 +163,7 @@ exports.getById = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getBySlug = async (req, res, next) => {
   try {
     const cacheKey = `main-category?slug=${req.params.slug}`;
@@ -191,6 +216,7 @@ exports.update = async (req, res, next) => {
     // Clear Redis cache
     redisService.del(`main-category?slug=${oldData?.slug}`);
     redisService.del(`main-categories`);
+    redisService.del(`main-submit`);
 
     // Send the response
     res.status(200).json({
@@ -219,6 +245,7 @@ exports.delete = async (req, res, next) => {
     await Promise.all([
       redisService.del(`main-category?slug=${data.slug}`),
       redisService.del(`main-categories`),
+      redisService.del(`main-submit`),
     ]);
 
     // Delete the file from S3 if an image URL is present

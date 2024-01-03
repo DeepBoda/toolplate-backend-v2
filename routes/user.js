@@ -28,5 +28,6 @@ router.use("/news", require("../modules/news"));
 router.use("/allNews", require("../modules/news/seoRoutes"));
 router.use("/newsWishlist", require("../modules/newsWishlist"));
 router.use("/toolNews", require("../modules/toolNews"));
+router.use("/submit-tool", require("../modules/submitTool"));
 
 module.exports = router;

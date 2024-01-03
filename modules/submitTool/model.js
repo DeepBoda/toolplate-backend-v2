@@ -40,13 +40,13 @@ const SubmitTool = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    description: {
+    message: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
     status: {
-      type: DataTypes.TEXT,
-      default: "Pending",
+      type: DataTypes.STRING,
+      defaultValue: "Pending",
     },
   },
   {
@@ -59,5 +59,5 @@ SubmitTool.belongsTo(MainCategory);
 
 User.hasMany(SubmitTool);
 SubmitTool.belongsTo(User);
-
+SubmitTool.sync({ alter: true });
 module.exports = SubmitTool;

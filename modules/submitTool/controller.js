@@ -1,13 +1,8 @@
 "use strict";
 
 const service = require("./service");
-const redisService = require("../../utils/redis");
-
 const { usersqquery, sqquery } = require("../../utils/query");
-const {
-  toolCardAttributes,
-  categoryAttributes,
-} = require("../../constants/queryAttributes");
+const { submitToolAttributes } = require("../../constants/queryAttributes");
 const MainCategory = require("../mainCategory/model");
 
 // ------------- Only Admin can Create --------------
@@ -29,25 +24,10 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const data = await service.findAndCountAll(
-      usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-    );
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getAllForAdmin = async (req, res, next) => {
-  try {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
-      ...sqquery(req.query, {}, ["firstName", "lastName", "title"]),
-      // attributes: categoryAdminAttributes,
+      ...sqquery(req.query, {}, ["title"]),
+      attributes: submitToolAttributes,
       include: {
         model: MainCategory,
         attributes: ["id", "name"],

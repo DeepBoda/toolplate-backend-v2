@@ -76,6 +76,15 @@ exports.newsAttributes = [
   "release",
   "createdAt",
 ];
+exports.submitToolAttributes = [
+  "id",
+  "title",
+  "link",
+  "country",
+  "status",
+  "createdAt",
+  "mainCategoryId",
+];
 
 exports.categoryAttributes = [
   "id",

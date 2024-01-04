@@ -592,14 +592,6 @@ exports.update = async (req, res, next) => {
       resizeAndUploadWebP(blogResizeImageSize, file.location, `blog_${id}`);
     }
 
-    // Create slug URL based on title
-    if (body.title) {
-      body.slug = slugify(body.title, {
-        replacement: "-", // Replace spaces with hyphens
-        lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
-      });
-    }
     if (body.slug) {
       const exist = await service.findOne({
         where: {
@@ -609,7 +601,7 @@ exports.update = async (req, res, next) => {
       if (exist)
         return res.status(403).send({
           status: "error",
-          message: "Oops slug is already associated with existing blog.",
+          message: "Oops! slug is already associated with existing blog.",
         });
     }
 

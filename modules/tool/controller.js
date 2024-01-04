@@ -797,13 +797,17 @@ exports.update = async (req, res, next) => {
       req.body.videos = req.files.videos.map((el) => el.location);
     }
 
-    // Create slug URL based on title
-    if (req.body.title) {
-      req.body.slug = slugify(req.body.title, {
-        replacement: "-", // replace spaces with hyphens
-        lower: true, // convert to lowercase
-        remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
+    if (body.slug) {
+      const exist = await service.findOne({
+        where: {
+          slug: body.slug,
+        },
       });
+      if (exist && exist.slug != body.slug)
+        return res.status(403).send({
+          status: "error",
+          message: "Oops! slug is already associated with existing tool.",
+        });
     }
 
     const { categories, ...body } = req.body;

@@ -598,7 +598,7 @@ exports.update = async (req, res, next) => {
           slug: body.slug,
         },
       });
-      if (exist)
+      if (exist && exist.slug != body.slug)
         return res.status(403).send({
           status: "error",
           message: "Oops! slug is already associated with existing blog.",

@@ -5,7 +5,7 @@ const { dateFilter } = require("../../utils/service");
 const userService = require("../user/service");
 const toolService = require("../tool/service");
 const blogService = require("../blog/service");
-const mainCategoryService = require("../mainCategories/service");
+const mainCategoryService = require("../mainCategory/service");
 const categoryService = require("../category/service");
 const notificationService = require("../notification/service");
 const toolViewService = require("../toolView/service");
@@ -22,7 +22,7 @@ const newsService = require("../news/service");
 const newsCategoryService = require("../newsCategory/service");
 const newsViewService = require("../newsView/service");
 const newsWishlistService = require("../newsWishlist/service");
-const submitToolService = require("../submitTools/service");
+const submitToolService = require("../submitTool/service");
 
 exports.overview = async (req, res, next) => {
   try {

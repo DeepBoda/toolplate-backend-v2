@@ -800,7 +800,7 @@ exports.update = async (req, res, next) => {
     if (req.body.slug) {
       const exist = await service.findOne({
         where: {
-          slug: body.slug,
+          slug: req.body.slug,
         },
       });
       if (exist && exist.slug != req.body.slug)

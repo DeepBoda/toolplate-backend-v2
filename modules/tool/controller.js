@@ -797,13 +797,13 @@ exports.update = async (req, res, next) => {
       req.body.videos = req.files.videos.map((el) => el.location);
     }
 
-    if (body.slug) {
+    if (req.body.slug) {
       const exist = await service.findOne({
         where: {
           slug: body.slug,
         },
       });
-      if (exist && exist.slug != body.slug)
+      if (exist && exist.slug != req.body.slug)
         return res.status(403).send({
           status: "error",
           message: "Oops! slug is already associated with existing tool.",

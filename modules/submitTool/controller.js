@@ -49,6 +49,10 @@ exports.getById = async (req, res, next) => {
       where: {
         id: req.params.id,
       },
+      include: {
+        model: MainCategory,
+        attributes: ["id", "name"],
+      },
     });
 
     res.status(200).send({

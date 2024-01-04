@@ -14,6 +14,7 @@ module.exports = {
   update: Joi.object().keys({
     title: Joi.string(),
     description: Joi.string().allow(null),
+    slug: Joi.string(),
     image: Joi.string(),
     alt: Joi.string().allow(null),
     readTime: Joi.number(),

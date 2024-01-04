@@ -600,6 +600,18 @@ exports.update = async (req, res, next) => {
         remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
       });
     }
+    if (body.slug) {
+      const exist = await service.findOne({
+        where: {
+          slug: body.slug,
+        },
+      });
+      if (exist)
+        return res.status(403).send({
+          status: "error",
+          message: "Oops slug is already associated with existing blog.",
+        });
+    }
 
     const { categories, ...updatedData } = body;
 

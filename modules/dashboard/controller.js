@@ -5,9 +5,11 @@ const { dateFilter } = require("../../utils/service");
 const userService = require("../user/service");
 const toolService = require("../tool/service");
 const blogService = require("../blog/service");
+const mainCategoryService = require("../mainCategories/service");
 const categoryService = require("../category/service");
 const notificationService = require("../notification/service");
 const toolViewService = require("../toolView/service");
+const blogCategoryService = require("../categoryOfBlog/service");
 const blogViewService = require("../blogView/service");
 const toolLikeService = require("../toolLike/service");
 const blogLikeService = require("../blogLike/service");
@@ -20,6 +22,7 @@ const newsService = require("../news/service");
 const newsCategoryService = require("../newsCategory/service");
 const newsViewService = require("../newsView/service");
 const newsWishlistService = require("../newsWishlist/service");
+const submitToolService = require("../submitTools/service");
 
 exports.overview = async (req, res, next) => {
   try {
@@ -37,9 +40,11 @@ exports.overview = async (req, res, next) => {
       users,
       tools,
       blogs,
+      mainCategories,
       categories,
       notifications,
       toolViews,
+      blogCategories,
       blogViews,
       toolLikes,
       blogLikes,
@@ -52,13 +57,16 @@ exports.overview = async (req, res, next) => {
       newsCategories,
       newsViews,
       newsWishlists,
+      submitTools,
     ] = await Promise.all([
       userService.count(query),
       toolService.count(query),
       blogService.count(query),
+      mainCategoryService.count(query),
       categoryService.count(query),
       notificationService.count(query),
       toolViewService.count(query),
+      blogCategoryService.count(query),
       blogViewService.count(query),
       toolLikeService.count(query),
       blogLikeService.count(query),
@@ -71,6 +79,7 @@ exports.overview = async (req, res, next) => {
       newsCategoryService.count(query),
       newsViewService.count(query),
       newsWishlistService.count(query),
+      submitToolService.count(query),
     ]);
     res.status(200).json({
       status: "success",
@@ -78,9 +87,11 @@ exports.overview = async (req, res, next) => {
         users,
         tools,
         blogs,
+        mainCategories,
         categories,
         notifications,
         toolViews,
+        blogCategories,
         blogViews,
         toolLikes,
         blogLikes,
@@ -93,6 +104,7 @@ exports.overview = async (req, res, next) => {
         newsCategories,
         newsViews,
         newsWishlists,
+        submitTools,
       },
     });
   } catch (error) {

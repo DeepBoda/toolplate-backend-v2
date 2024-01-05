@@ -23,6 +23,8 @@ router.use("/toolWishlist", require("../modules/toolWishlist/admin"));
 router.use("/blog", require("../modules/blog/admin"));
 router.use("/blogSeo", require("../modules/blogSeo/admin"));
 router.use("/category", require("../modules/category/admin"));
+router.use("/category-blog", require("../modules/categoryOfBlog/admin"));
+router.use("/main-category", require("../modules/mainCategory/admin"));
 router.use("/blogCategory", require("../modules/blogCategory/admin"));
 router.use("/blogs/view", require("../modules/blogView/admin"));
 router.use("/blogLike", require("../modules/blogLike/admin"));
@@ -38,5 +40,6 @@ router.use("/newsCategory", require("../modules/newsCategory/admin"));
 router.use("/news", require("../modules/news/admin"));
 router.use("/newsWishlist", require("../modules/newsWishlist/admin"));
 router.use("/newsViews", require("../modules/newsView/admin"));
+router.use("/submit-tool", require("../modules/submitTool/admin"));
 
 module.exports = router;

@@ -37,6 +37,10 @@ const News = sequelize.define(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    release: {
+      type: DataTypes.DATE,
+      defaultValue: Sequelize.NOW,
+    },
   },
   {
     paranoid: true,

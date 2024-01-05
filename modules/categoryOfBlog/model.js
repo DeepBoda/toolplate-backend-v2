@@ -1,8 +1,8 @@
 "use strict";
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const NewsCategory = sequelize.define(
-  "newsCategory",
+const CategoryOfBlog = sequelize.define(
+  "categoryOfBlog",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -14,24 +14,16 @@ const NewsCategory = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    overview: {
-      type: DataTypes.TEXT("long"),
-    },
-    image: {
-      type: DataTypes.STRING,
+    description: {
+      type: DataTypes.TEXT,
     },
     slug: {
       type: DataTypes.STRING,
-    },
-    title: {
-      type: DataTypes.STRING,
-    },
-    description: {
-      type: DataTypes.TEXT,
     },
   },
   {
     paranoid: true,
   }
 );
-module.exports = NewsCategory;
+
+module.exports = CategoryOfBlog;

@@ -1,5 +1,7 @@
 "use strict";
+const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
+const moment = require("moment");
 const slugify = require("slugify");
 const service = require("./service");
 const redisService = require("../../utils/redis");
@@ -76,7 +78,15 @@ exports.getAll = async (req, res, next) => {
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
-      ...sqquery(req.query, {}, ["title", "description"]),
+      ...sqquery(
+        req.query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title", "description"]
+      ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...newsAttributes,
@@ -105,7 +115,53 @@ exports.getAll = async (req, res, next) => {
 exports.getAllForAdmin = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
-      ...sqquery(req.query, {}, ["title"]),
+      ...sqquery(
+        req.query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: newsAttributes,
+      include: [
+        {
+          model: NewsCategory,
+          attributes: newsCategoryAttributes,
+        },
+        {
+          model: ToolNews,
+          attributes: ["newsId", "toolId"],
+          include: {
+            model: Tool,
+            attributes: ["id", "title"],
+          },
+        },
+      ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getScheduledForAdmin = async (req, res, next) => {
+  try {
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        req.query,
+        {
+          release: {
+            [Op.gt]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: newsAttributes,
       include: [
@@ -181,6 +237,9 @@ exports.getByCategorySlug = async (req, res, next) => {
       ...sqquery(
         req.query,
         {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
           newsCategoryId: category.id,
         },
         ["title"]

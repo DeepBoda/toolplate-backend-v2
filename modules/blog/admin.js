@@ -10,7 +10,6 @@ router
   .route("/")
   .get(blog.getAllForAdmin)
   .post(upload.single("image"), joiValidator(joiSchema.create), blog.add);
-router;
 router.route("/scheduled").get(blog.getScheduledForAdmin);
 router
   .route("/:id")

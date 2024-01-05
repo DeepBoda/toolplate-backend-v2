@@ -1,26 +1,14 @@
 "use strict";
 
-const { Op } = require("sequelize");
-const moment = require("moment");
 const service = require("./service");
-const newsService = require("../news/service");
 const redisService = require("../../utils/redis");
 const slugify = require("slugify");
+const blogCategoryService = require("../blogCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
-const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const {
-  newsCategoryAttributes,
-  newsAttributes,
-} = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    // Check if an image file is provided and add the file location to the request body
-    if (req.file) {
-      req.body.image = req.file.location;
-    }
-
     // Create slug URL based on name
     req.body.slug = slugify(req.body.name, {
       replacement: "-", // Replace spaces with hyphens
@@ -29,7 +17,8 @@ exports.add = async (req, res, next) => {
     });
 
     const data = await service.create(req.body);
-    redisService.del(`news-categories`);
+    redisService.del(`blog-categories`);
+    redisService.del(`blog-category-sitemap`);
 
     res.status(200).json({
       status: "success",
@@ -44,15 +33,14 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     // Try to retrieve the categories from the Redis cache
-    let data = await redisService.get(`news-categories`);
+    let data = await redisService.get(`blog-categories`);
 
     // If the categories are not found in the cache
     if (!data) {
-      data = await service.findAndCountAll({
-        ...usersqquery({ ...req.query, sort: "name", sortBy: "ASC" }),
-        attributes: newsCategoryAttributes,
-      });
-      redisService.set(`news-categories`, data);
+      data = await service.findAndCountAll(
+        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
+      );
+      redisService.set(`blog-categories`, data);
     }
 
     res.status(200).send({
@@ -69,74 +57,7 @@ exports.getAllForAdmin = async (req, res, next) => {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["name"]),
-    });
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getAllNews = async (req, res, next) => {
-  try {
-    // If the categories is not found in the cache
-    const data = await newsService.findAndCountAll({
-      ...sqquery(
-        req.query,
-        {
-          newsCategoryId: req.params.id,
-          release: {
-            [Op.lte]: moment(), // Less than or equal to the current date
-          },
-        },
-        ["title"]
-      ),
-      attributes: newsAttributes,
-    });
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.getAllNewsSchedule = async (req, res, next) => {
-  try {
-    // If the categories is not found in the cache
-    const data = await newsService.findAndCountAll({
-      ...sqquery(
-        req.query,
-        {
-          newsCategoryId: req.params.id,
-          release: {
-            [Op.gt]: moment(), // Less than or equal to the current date
-          },
-        },
-        ["title"]
-      ),
-      attributes: newsAttributes,
-    });
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getBySlug = async (req, res, next) => {
-  try {
-    const data = await service.findOne({
-      where: {
-        slug: req.params.slug,
-      },
+      // attributes: categoryAdminAttributes,
     });
 
     res.status(200).send({
@@ -172,20 +93,14 @@ exports.getSlugsForSitemap = async (req, res, next) => {
         ? process.env.PROD_WEB
         : process.env.DEV_WEB;
 
-    // If the categories are not found in the cache
     const categories = await service.findAll();
 
-    // Generate array of objects with slug and updatedAt
     const categorySlugs = categories.map((c) => ({
-      slug: `${url}/news/${c.slug}`,
-      updatedAt: c.updatedAt, // Assuming updatedAt is a field in your blog model
+      slug: `${url}/blogs/${c.slug}`,
+      updatedAt: c.updatedAt,
     }));
 
-    // Send the response
-    res.status(200).json({
-      status: "success",
-      data: categorySlugs,
-    });
+    res.status(200).send({ status: "success", data: categorySlugs });
   } catch (error) {
     next(error);
   }
@@ -194,12 +109,6 @@ exports.getSlugsForSitemap = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    let oldData;
-    if (req.file) {
-      req.body.image = req.file.location;
-      oldData = await service.findOne({ where: { id: req.params.id } });
-    }
-
     // Create slug URL based on name
     if (req.body.name) {
       req.body.slug = slugify(req.body.name, {
@@ -215,11 +124,8 @@ exports.update = async (req, res, next) => {
         id: req.params.id,
       },
     });
-    if (req.file && oldData?.image) {
-      deleteFilesFromS3([oldData.image]);
-    }
-    redisService.del(`news-categories`);
-
+    redisService.del(`blog-categories`);
+    redisService.del(`blog-category-sitemap`);
     // Send the response
     res.status(200).json({
       status: "success",
@@ -236,15 +142,16 @@ exports.update = async (req, res, next) => {
 exports.delete = async (req, res, next) => {
   try {
     const { id } = req.params;
-    // Find the news to get the image URL
-    const { image } = await service.findOne({
-      where: {
-        id,
-      },
-    });
 
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
+
+    // Wait for the service deletion and start both background deletions
+    await Promise.all([
+      blogCategoryService.delete({ where: { categoryOfBlogId: id } }),
+      redisService.del(`blog-categories`),
+      redisService.del(`blog-category-sitemap`),
+    ]);
 
     // Check if affectedRows is zero and return a meaningful response
     if (affectedRows === 0) {
@@ -253,12 +160,6 @@ exports.delete = async (req, res, next) => {
         message: "No record found with the given id.",
       });
     } else {
-      // Delete the file from S3 if an image URL is present
-      if (image) deleteFilesFromS3([image]);
-
-      newsService.delete({ where: { newsCategoryId: id } });
-      redisService.del(`news-categories`);
-
       // Send response with the number of affected rows
       res.status(200).send({
         status: "success",

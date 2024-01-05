@@ -3,7 +3,7 @@ const Joi = require("joi");
 module.exports = {
   create: Joi.object().keys({
     title: Joi.string().required(),
-    description: Joi.string().required(),
+    description: Joi.string().required().allow(null),
     image: Joi.string(),
     alt: Joi.string().allow(null),
     readTime: Joi.number().required(),
@@ -13,7 +13,8 @@ module.exports = {
   }),
   update: Joi.object().keys({
     title: Joi.string(),
-    description: Joi.string(),
+    description: Joi.string().allow(null),
+    slug: Joi.string(),
     image: Joi.string(),
     alt: Joi.string().allow(null),
     readTime: Joi.number(),

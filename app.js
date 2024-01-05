@@ -19,8 +19,6 @@ const serviceToken =
 const app = express();
 wooffer(token, serviceToken);
 
-app.use(wooffer.requestMonitoring);
-
 // Configure environment-specific settings
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -199,6 +197,7 @@ app.use((err, req, res, next) => {
       message: "Unauthorized attempt, login again!",
     });
   }
+
   wooffer.fail(err.message);
 
   // Handle other errors

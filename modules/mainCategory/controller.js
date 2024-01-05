@@ -3,20 +3,15 @@
 const service = require("./service");
 const redisService = require("../../utils/redis");
 const slugify = require("slugify");
-const toolCategoryService = require("../toolCategory/service");
-const mainCategoryService = require("../mainCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
-  toolCardAttributes,
-  categoryAttributes,
+  mainCategoryAdminAttributes,
+  categoryAdminAttributes,
+  mainCategoryAttributes,
 } = require("../../constants/queryAttributes");
-const MainCategory = require("../mainCategory/model");
+const categoryService = require("../category/service");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const ToolCategory = require("../toolCategory/model");
-const Tool = require("../tool/model");
-const sequelize = require("../../config/db");
-const Category = require("./model");
-const { Op } = require("sequelize");
+const Category = require("../category/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -34,9 +29,8 @@ exports.add = async (req, res, next) => {
     });
 
     const data = await service.create(req.body);
-    redisService.del(`categories`);
     redisService.del(`main-categories`);
-    redisService.del(`categorySitemap`);
+    redisService.del(`main-submit`);
 
     res.status(200).json({
       status: "success",
@@ -51,14 +45,21 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     // Try to retrieve the categories from the Redis cache
-    let data = await redisService.get(`categories`);
+    let data = await redisService.get(`main-categories`);
 
     // If the categories are not found in the cache
     if (!data) {
-      data = await service.findAndCountAll(
-        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-      );
-      redisService.set(`categories`, data);
+      data = await service.findAndCountAll({
+        ...usersqquery(req.query),
+
+        attributes: mainCategoryAttributes,
+        include: {
+          model: Category,
+          attributes: ["id", "name", "slug"],
+          limit: 4,
+        },
+      });
+      redisService.set(`main-categories`, data);
     }
 
     res.status(200).send({
@@ -69,74 +70,18 @@ exports.getAll = async (req, res, next) => {
     next(error);
   }
 };
-exports.getAllEmpty = async (req, res, next) => {
-  try {
-    const categoriesWithTools = await toolCategoryService.findAll({
-      attributes: ["categoryId"],
-      group: ["categoryId"],
-    });
-    const categoriesWithToolsIds = categoriesWithTools.map((e) => e.categoryId);
-
-    const data = await service.findAndCountAll({
-      ...usersqquery({ ...req.query, sort: "name", sortBy: "ASC" }),
-      // attributes: ["id", "name"],
-      where: {
-        id: { [Op.notIn]: categoriesWithToolsIds },
-      },
-    });
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getSitemap = async (req, res, next) => {
+exports.getAllForSubmit = async (req, res, next) => {
   try {
     // Try to retrieve the categories from the Redis cache
-    let data = await redisService.get(`categorySitemap`);
+    let data = await redisService.get(`main-submit`);
+
+    // If the categories are not found in the cache
     if (!data) {
-      const url =
-        process.env.NODE_ENV === "production"
-          ? process.env.PROD_WEB
-          : process.env.DEV_WEB;
-
-      // If the categories are not found in the cache
-      const categories = await service.findAll(
-        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-      );
-
-      data = {};
-
-      // Group the data by the first letter of the category name
-      categories.forEach((category) => {
-        const key = category.name.charAt(0).toUpperCase();
-        if (!data[key]) {
-          data[key] = [];
-        }
-        data[key].push([
-          {
-            title: category.name + " Tools",
-            url: `${url}/tools/${category.slug}`,
-          },
-          {
-            title: "Free " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/free`,
-          },
-          {
-            title: "Paid " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/premium`,
-          },
-          {
-            title: "Freemium " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/freemium`,
-          },
-        ]);
+      data = await service.findAll({
+        ...usersqquery({ ...req.query, sort: "name", sortBy: "ASC" }),
+        attributes: ["id", "name"],
       });
-      redisService.set(`categorySitemap`, data);
+      redisService.set(`main-submit`, data);
     }
 
     res.status(200).send({
@@ -157,12 +102,10 @@ exports.getSlugsForSitemap = async (req, res, next) => {
 
     const categories = await service.findAll();
 
-    const categorySlugs = categories.flatMap((category) =>
-      ["", "/free", "/premium", "/freemium"].map((suffix) => ({
-        slug: `${url}/tools/${category.slug}${suffix}`,
-        updatedAt: category.updatedAt,
-      }))
-    );
+    const categorySlugs = categories.map((c) => ({
+      slug: `${url}/category/${c.slug}`,
+      updatedAt: c.updatedAt, // Assuming updatedAt is a field in your blog model
+    }));
 
     res.status(200).send({ status: "success", data: categorySlugs });
   } catch (error) {
@@ -175,11 +118,24 @@ exports.getAllForAdmin = async (req, res, next) => {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["name"]),
-      // attributes: categoryAdminAttributes,
-      include: {
-        model: MainCategory,
-        attributes: ["id", "name"],
-      },
+      attributes: mainCategoryAdminAttributes,
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllSubCategory = async (req, res, next) => {
+  try {
+    // If the categories is not found in the cache
+    const data = await categoryService.findAndCountAll({
+      ...sqquery(req.query, { mainCategoryId: req.params.id }, ["name"]),
+      attributes: categoryAdminAttributes,
     });
 
     res.status(200).send({
@@ -208,54 +164,19 @@ exports.getById = async (req, res, next) => {
   }
 };
 
-exports.getByMain = async (req, res, next) => {
+exports.getBySlug = async (req, res, next) => {
   try {
-    const userId = req.requestor ? req.requestor.id : null;
+    const cacheKey = `main-category?slug=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
 
-    console.log("---------------------------", req.body);
-    console.log("----------", req.params);
-    console.log("---------------------------", userId);
-    const { id } = await mainCategoryService.findOne({
-      where: { slug: req.body.slug },
-    });
-    console.log("id:-------", id);
-    const data = await service.findAll({
-      ...sqquery(req.query, {
-        mainCategoryId: id,
-      }),
-      attributes: categoryAttributes,
-      include: {
-        model: ToolCategory,
-        attributes: ["toolId"],
-        limit: 3,
-        include: {
-          model: Tool,
-          attributes: [
-            ...toolCardAttributes,
-            [
-              sequelize.literal(
-                `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-              ),
-              "isLiked",
-            ],
-            [
-              sequelize.literal(
-                `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
-              ),
-              "isWishlisted",
-            ],
-          ],
-          include: {
-            model: ToolCategory,
-            attributes: ["categoryId"],
-            include: {
-              model: Category,
-              attributes: ["name", "slug"],
-            },
-          },
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          slug: req.params.slug,
         },
-      },
-    });
+      });
+      redisService.set(cacheKey, data);
+    }
 
     res.status(200).send({
       status: "success",
@@ -292,9 +213,10 @@ exports.update = async (req, res, next) => {
     if (req.file && oldData?.image) {
       deleteFilesFromS3([oldData.image]);
     }
-    redisService.del(`categories`);
-    redisService.del(`categorySitemap`);
+    // Clear Redis cache
+    redisService.del(`main-category?slug=${oldData?.slug}`);
     redisService.del(`main-categories`);
+    redisService.del(`main-submit`);
 
     // Send the response
     res.status(200).json({
@@ -314,21 +236,20 @@ exports.delete = async (req, res, next) => {
     const { id } = req.params;
 
     // Find the blog to get the image URL
-    const { image } = await service.findOne({ where: { id } });
+    const data = await service.findOne({ where: { id } });
 
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
 
     // Wait for the service deletion and start both background deletions
     await Promise.all([
-      toolCategoryService.delete({ where: { categoryId: id } }),
-      redisService.del(`categories`),
-      redisService.del(`categorySitemap`),
+      redisService.del(`main-category?slug=${data.slug}`),
       redisService.del(`main-categories`),
+      redisService.del(`main-submit`),
     ]);
 
     // Delete the file from S3 if an image URL is present
-    if (image) deleteFilesFromS3([image]);
+    if (data?.image) deleteFilesFromS3([data.image]);
 
     // Check if affectedRows is zero and return a meaningful response
     if (affectedRows === 0) {

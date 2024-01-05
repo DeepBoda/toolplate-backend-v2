@@ -5,7 +5,9 @@ router.use("/appConfig", require("../modules/appConfig"));
 router.use("/users", require("../modules/user"));
 router.use("/prompt", require("../modules/prompt"));
 router.use("/notification", require("../modules/notification"));
+router.use("/main-category", require("../modules/mainCategory"));
 router.use("/category", require("../modules/category"));
+router.use("/category-blog", require("../modules/categoryOfBlog"));
 router.use("/tool", require("../modules/tool"));
 router.use("/toolSeo", require("../modules/toolSeo"));
 router.use("/tools/rating", require("../modules/toolRating"));
@@ -26,5 +28,6 @@ router.use("/news", require("../modules/news"));
 router.use("/allNews", require("../modules/news/seoRoutes"));
 router.use("/newsWishlist", require("../modules/newsWishlist"));
 router.use("/toolNews", require("../modules/toolNews"));
+router.use("/submit-tool", require("../modules/submitTool"));
 
 module.exports = router;

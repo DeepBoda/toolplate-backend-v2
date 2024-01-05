@@ -8,6 +8,7 @@ module.exports = {
     link: Joi.string().required(),
     newsCategoryId: Joi.number().required(),
     tools: Joi.string(),
+    release: Joi.date(),
   }),
   update: Joi.object().keys({
     title: Joi.string(),
@@ -16,5 +17,6 @@ module.exports = {
     link: Joi.string(),
     newsCategoryId: Joi.number(),
     tools: Joi.string(),
+    release: Joi.date(),
   }),
 };

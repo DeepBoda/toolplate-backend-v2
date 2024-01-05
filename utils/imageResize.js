@@ -24,9 +24,9 @@ exports.resizeAndUploadImage = async (
     const originalImageBuffer = Buffer.from(response.data, "binary");
 
     const pipeline = sharp(originalImageBuffer).avif({
-      quality: 100, // Maximum quality (0-100)
+      quality: 95, // Maximum quality (0-100)
       lossless: true, // Set to true for lossless compression
-      effort: 0, // Trade-off between file size and performance (0-6)
+      effort: 2, // Trade-off between file size and performance (0-6)
     });
 
     const resizePromises = sizes.map(async (size) => {

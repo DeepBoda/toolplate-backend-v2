@@ -1,6 +1,7 @@
 "use strict";
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
+const MainCategory = require("../mainCategory/model");
 const Category = sequelize.define(
   "category",
   {
@@ -14,7 +15,16 @@ const Category = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    description: {
+      type: DataTypes.TEXT,
+    },
+    overview: {
+      type: DataTypes.TEXT("long"),
+    },
     slug: {
+      type: DataTypes.STRING,
+    },
+    image: {
       type: DataTypes.STRING,
     },
   },
@@ -22,5 +32,8 @@ const Category = sequelize.define(
     paranoid: true,
   }
 );
+
+MainCategory.hasMany(Category);
+Category.belongsTo(MainCategory);
 
 module.exports = Category;

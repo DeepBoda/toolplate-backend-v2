@@ -1,25 +1,28 @@
 "use strict";
 
 const router = require("express").Router();
-const category = require("./controller");
+const MainCategory = require("./controller");
 const joiSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 const { upload } = require("../../middlewares/multer");
 
 router
   .route("/")
-  .get(category.getAllForAdmin)
-  .post(upload.single("image"), joiValidator(joiSchema.create), category.add);
-router.route("/news/:id").get(category.getAllNews);
-router.route("/scheduled/:id").get(category.getAllNewsSchedule);
+  .get(MainCategory.getAllForAdmin)
+  .post(
+    upload.single("image"),
+    joiValidator(joiSchema.create),
+    MainCategory.add
+  );
+router.route("/sub/:id").get(MainCategory.getAllSubCategory);
 router
   .route("/:id")
-  .get(category.getById)
+  .get(MainCategory.getById)
   .patch(
     upload.single("image"),
     joiValidator(joiSchema.update),
-    category.update
+    MainCategory.update
   )
-  .delete(category.delete);
+  .delete(MainCategory.delete);
 
 module.exports = router;

@@ -28,6 +28,26 @@ exports.toolAttributes = [
   "release",
   "social",
 ];
+exports.toolCardAttributes = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "price",
+  "slug",
+  "ratingsAverage",
+  "release",
+];
+exports.toolCardAttributes = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "price",
+  "slug",
+  "ratingsAverage",
+  "release",
+];
 exports.blogAttributes = [
   "id",
   "title",
@@ -53,13 +73,34 @@ exports.newsAttributes = [
   "views",
   "wishlists",
   "newsCategoryId",
+  "release",
   "createdAt",
 ];
+exports.submitToolAttributes = [
+  "id",
+  "title",
+  "link",
+  "country",
+  "status",
+  "createdAt",
+  "mainCategoryId",
+];
 
-exports.categoryAttributes = ["id", "name", "slug"];
+exports.categoryAttributes = [
+  "id",
+  "name",
+  "image",
+  "slug",
+  "description",
+  "mainCategoryId",
+  "createdAt",
+];
+exports.blogCategoryAttributes = ["id", "name", "slug", "description"];
+exports.mainCategoryAttributes = ["id", "name", "image", "slug", "createdAt"];
 exports.newsCategoryAttributes = [
   "id",
   "name",
+  "overview",
   "image",
   "slug",
   "title",
@@ -99,7 +140,23 @@ exports.blogAllAdminAttributes = [
   "release",
 ];
 
-exports.categoryAdminAttributes = ["id", "name", "slug", "createdAt"];
+exports.categoryAdminAttributes = [
+  "id",
+  "name",
+  "image",
+  "slug",
+  "description",
+  "mainCategoryId",
+  "createdAt",
+];
+exports.mainCategoryAdminAttributes = [
+  "id",
+  "name",
+  "image",
+  "slug",
+  "description",
+  "createdAt",
+];
 
 exports.ratingsAdminAttributes = [
   "id",

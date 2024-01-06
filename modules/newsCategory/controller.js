@@ -177,7 +177,7 @@ exports.getSlugsForSitemap = async (req, res, next) => {
 
     // Generate array of objects with slug and updatedAt
     const categorySlugs = categories.map((c) => ({
-      slug: `${url}/news/${c.slug}`,
+      slug: `${url}/allNews/${c.slug}`,
       updatedAt: c.updatedAt, // Assuming updatedAt is a field in your blog model
     }));
 

@@ -29,6 +29,7 @@ const Category = require("../category/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
 const createHttpError = require("http-errors");
+const MainCategory = require("../mainCategory/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -340,6 +341,10 @@ exports.getBySlug = async (req, res, next) => {
             include: {
               model: Category,
               attributes: categoryAttributes,
+              include: {
+                model: MainCategory,
+                attributes: ["id", "name"],
+              },
             },
           },
         ],

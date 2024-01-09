@@ -10,17 +10,18 @@ require("dotenv").config();
 
 const wooffer = require("wooffer");
 
+const isProduction = process.env.NODE_ENV === "production";
 const token = process.env.WOOFFER_TOKEN;
-const serviceToken =
-  process.env.NODE_ENV === "production"
-    ? process.env.WOOFFER_SERVICE
-    : process.env.WOOFFER_SERVICE_DEV;
+const serviceToken = isProduction
+  ? process.env.WOOFFER_SERVICE
+  : process.env.WOOFFER_SERVICE_DEV;
 
 const app = express();
+
 wooffer(token, serviceToken);
+app.use(wooffer.requestMonitoring);
 
 // Configure environment-specific settings
-const isProduction = process.env.NODE_ENV === "production";
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());

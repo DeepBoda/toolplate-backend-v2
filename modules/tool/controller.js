@@ -29,6 +29,7 @@ const Category = require("../category/model");
 const ToolImage = require("../toolImages/model");
 const toolImageService = require("../toolImages/service");
 const createHttpError = require("http-errors");
+const MainCategory = require("../mainCategory/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -340,6 +341,10 @@ exports.getBySlug = async (req, res, next) => {
             include: {
               model: Category,
               attributes: categoryAttributes,
+              include: {
+                model: MainCategory,
+                attributes: ["id", "name"],
+              },
             },
           },
         ],
@@ -742,6 +747,100 @@ exports.getAlternativeTools = async (req, res, next) => {
         },
       ],
     });
+
+    res.status(200).json({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAlternativeSchema = async (req, res, next) => {
+  try {
+    const url =
+      process.env.NODE_ENV === "production"
+        ? process.env.PROD_WEB
+        : process.env.DEV_WEB;
+
+    // Find the details of the opened tool
+    const openedTool = await service.findOne({
+      where: { slug: req.params.slug },
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+
+    if (!openedTool) {
+      throw createError(404, "Tool not found");
+    }
+
+    // Find tools that have the same category as the opened tool
+    const categoryIds = openedTool.toolCategories.map(
+      (toolCategory) => toolCategory.categoryId
+    );
+    const where = {};
+
+    where["$toolCategories.categoryId$"] = { [Op.in]: categoryIds };
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    // Find tools with the same category  IDs
+    const alternates = await service.findAll({
+      ...sqquery(
+        { ...req.query, sort: "views", sortBy: "DESC" },
+        {
+          slug: { [Op.ne]: req.params.slug },
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: [
+        ...toolAttributes,
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
+
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+    console.log("alternates ", alternates);
+
+    const data = alternates.map((alt) => ({
+      name: alt.title,
+      url: `${url}/tool/${alt.slug}`,
+      image: alt.image,
+    }));
 
     res.status(200).json({
       status: "success",

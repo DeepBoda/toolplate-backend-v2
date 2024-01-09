@@ -12,6 +12,7 @@ router.route("/data/:slug").get(tool.getDynamicBySlug);
 router.route("/view/:id").get(authMiddleware, tool.createView);
 router.route("/related/:id").get(tool.getRelatedTools);
 router.route("/alt/:id").get(tool.getAlternativeTools);
+router.route("/alt-schema/:slug").get(tool.getAlternativeSchema);
 router.route("/:slug").get(tool.getBySlug);
 
 

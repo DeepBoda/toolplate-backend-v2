@@ -77,12 +77,13 @@ exports.add = async (req, res, next) => {
       }));
 
       // Bulk insert the records into the ToolImage table
-      const toolPreviews = await toolImageService.bulkCreate(previews);
+      await toolImageService.bulkCreate(previews);
 
-      toolPreviews.forEach((e) => {
-        resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
-        resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
-      });
+      // const toolPreviews = await toolImageService.bulkCreate(previews);
+      // toolPreviews.forEach((e) => {
+      //   resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      //   resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      // });
     }
 
     // Step 2: Get the comma-separated `categories` IDs
@@ -834,7 +835,6 @@ exports.getAlternativeSchema = async (req, res, next) => {
         },
       ],
     });
-    console.log("alternates ", alternates);
 
     const data = alternates.map((alt) => ({
       name: alt.title,
@@ -878,7 +878,6 @@ exports.getSlugsForSitemap = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    console.log("body:", req.body);
     const { id } = req.params;
 
     // Retrieve the old tool data from the database based on the provided tool ID.

@@ -13,6 +13,7 @@ const {limiter} = require("../../middlewares/rateLimiter");
 router.post("/verify", limiter, user.verifyOTP); 
 router.post("/signup",limiter, joiValidator(joiSchema.signup), user.signup); 
 router.post("/google",limiter,  user.socialAuth); 
+router.post("/oauth",limiter,  user.googleOAuth); 
 router.post("/login",limiter, user.login); 
 
 // <=============== Authorized APIs ===============>

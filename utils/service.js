@@ -76,6 +76,7 @@ exports.createFirebaseUser = async (decodedToken) => {
 exports.verifyFirebaseUserToken = async (firebase_token) => {
   try {
     const firebaseUser = await admin.auth().verifyIdToken(firebase_token);
+
     return firebaseUser;
   } catch (error) {
     throw new Error("Error verifying Firebase user token");

@@ -2,6 +2,7 @@
 const sequelize = require("../../config/db");
 const bcryptjs = require("bcryptjs");
 const crypto = require("crypto");
+const client = require("../../config/OAuthGoogle");
 const createError = require("http-errors");
 const service = require("./service");
 const redisService = require("../../utils/redis");
@@ -145,21 +146,18 @@ exports.socialAuth = async (req, res, next) => {
     let user = await service.findOne({ where: { email } });
 
     if (!user) {
-      // Generate the profile picture URL using the username
-      let profilePicUrl;
-      try {
-        profilePicUrl = await generateProfilePic(name);
-      } catch (error) {
-        console.error("Error generating profile picture:", error);
-        profilePicUrl = "https://cdn.toolplate.ai/logo/ai_profile.png";
-      }
+      // Use picture if it exists, otherwise generate the profile picture URL
+      const profilePic =
+        picture ||
+        (await generateProfilePic(name)) ||
+        "https://cdn.toolplate.ai/logo/ai_profile.png";
 
       // Create the user in the local database
       user = await service.create({
         username: name,
         email,
         uid,
-        profilePic: picture || profilePicUrl,
+        profilePic,
       });
     }
 
@@ -180,6 +178,55 @@ exports.socialAuth = async (req, res, next) => {
       status: 200,
       message: "Login successful",
       token,
+      role: "User",
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+exports.googleOAuth = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    const authUser = await client.verifyToken(token);
+
+    const { email, name, picture } = authUser.payload;
+
+    let user = await service.findOne({ where: { email } });
+
+    if (!user) {
+      // Use picture if it exists, otherwise generate the profile picture URL
+      const profilePic =
+        picture ||
+        (await generateProfilePic(name)) ||
+        "https://cdn.toolplate.ai/logo/ai_profile.png";
+
+      // Create the user in the local database
+      user = await service.create({
+        username: name,
+        email,
+        profilePic,
+      });
+    }
+
+    if (user.isBlocked) {
+      return res.status(401).json({
+        status: "Permission Denied",
+        message: "You're Blocked by Admin",
+      });
+    }
+
+    const jwtToken = await getJwtToken({
+      id: user.id,
+      email: user.email,
+      role: "User",
+    });
+
+    res.status(200).json({
+      status: 200,
+      message: "Login successful",
+      token: jwtToken,
       role: "User",
     });
   } catch (error) {

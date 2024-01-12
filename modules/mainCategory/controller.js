@@ -50,7 +50,7 @@ exports.getAll = async (req, res, next) => {
     // If the categories are not found in the cache
     if (!data) {
       data = await service.findAndCountAll({
-        ...usersqquery(req.query),
+        // ...usersqquery(req.query),
 
         attributes: mainCategoryAttributes,
         include: {

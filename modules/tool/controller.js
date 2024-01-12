@@ -77,12 +77,13 @@ exports.add = async (req, res, next) => {
       }));
 
       // Bulk insert the records into the ToolImage table
-      const toolPreviews = await toolImageService.bulkCreate(previews);
+      await toolImageService.bulkCreate(previews);
 
-      toolPreviews.forEach((e) => {
-        resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
-        resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
-      });
+      // const toolPreviews = await toolImageService.bulkCreate(previews);
+      // toolPreviews.forEach((e) => {
+      //   resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      //   resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      // });
     }
 
     // Step 2: Get the comma-separated `categories` IDs

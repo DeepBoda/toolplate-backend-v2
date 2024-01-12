@@ -21,10 +21,10 @@ exports.add = async (req, res, next) => {
 
       // Bulk insert the records into the ToolImage table
       toolPreviews = await service.bulkCreate(previews);
-      toolPreviews.forEach((e) => {
-        resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
-        resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
-      });
+      // toolPreviews.forEach((e) => {
+      //   resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      //   resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      // });
     }
 
     res.status(200).json({

@@ -83,7 +83,7 @@ exports.verifyOTP = async (req, res, next) => {
 
     // Create the user in Firebase Authentication
     const firebaseUser = await createFirebaseUser(decodedToken);
-    console.log("firebaseUser : ", firebaseUser);
+    // console.log("firebaseUser : ", firebaseUser);
 
     // Generate the profile picture URL using the username
     let profilePicUrl;
@@ -128,7 +128,7 @@ exports.verifyOTP = async (req, res, next) => {
 exports.socialAuth = async (req, res, next) => {
   try {
     const { firebase_token } = req.body;
-    console.log("firebase-Token: ", firebase_token);
+    // console.log("firebase-Token: ", firebase_token);
 
     if (!firebase_token) {
       throw createError(400, "Invalid request. Missing firebase_token.");
@@ -136,7 +136,7 @@ exports.socialAuth = async (req, res, next) => {
 
     // Verify the user exist in Firebase and token is perfect
     const firebaseUser = await verifyFirebaseUserToken(firebase_token);
-    console.log("firebaseUser : social : ", firebaseUser);
+    // console.log("firebaseUser : social : ", firebaseUser);
 
     if (!firebaseUser || !firebaseUser.email) {
       throw createError(400, "Invalid firebase_token or missing email.");

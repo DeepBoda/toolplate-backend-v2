@@ -1,5 +1,7 @@
 "use strict";
 const service = require("./service");
+const redisService = require("../../utils/redis");
+const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { toolPreviewSize } = require("../../constants");
 const {
@@ -25,6 +27,12 @@ exports.add = async (req, res, next) => {
       //   resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
       //   resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
       // });
+      // Retrieve the  tool data from the database based on the provided tool ID.
+      const Tool = await toolService.findOne({
+        where: { id: req.body.toolId },
+      });
+      // Clear Redis cache
+      redisService.del(`tool?slug=${Tool.slug}`);
     }
 
     res.status(200).json({
@@ -74,7 +82,7 @@ exports.update = async (req, res, next) => {
 exports.delete = async (req, res, next) => {
   try {
     // Find the blog to get the image URL
-    const { image } = await service.findOne({
+    const { image, toolId } = await service.findOne({
       where: {
         id: req.params.id,
       },
@@ -89,6 +97,11 @@ exports.delete = async (req, res, next) => {
 
     // Delete the file from S3 if an image URL is present
     if (image) deleteFilesFromS3([image]);
+
+    // Retrieve the  tool data from the database based on the provided tool ID.
+    const Tool = await service.findOne({ where: { id: toolId } });
+    // Clear Redis cache
+    redisService.del(`tool?slug=${Tool.slug}`);
 
     // Send the response
     res.status(200).send({

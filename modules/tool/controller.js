@@ -56,7 +56,7 @@ exports.add = async (req, res, next) => {
 
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(bodyData);
-
+    console.log("tool", tool);
     // // Send a push notification with the blog title and body
     // if (blog.createdAt == blog.release) {
     // const topic =
@@ -89,19 +89,27 @@ exports.add = async (req, res, next) => {
     // Step 2: Get the comma-separated `categories` IDs
     const categoryIds = categories.split(",").map(Number);
 
+    const cats = await categoryService.findAll({
+      where: {
+        id: { [Op.in]: categoryIds },
+      },
+    });
     // Step 3: Add entries in the `toolCategory` table using bulk insert
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       toolId: tool.id,
       categoryId,
     }));
 
-    const seoData = {
-      toolId: tool.id,
-      title: tool.title,
-      description: tool.description,
-    };
     //  execute bulk inserts concurrently
     toolCategoryService.bulkCreate(categoryBulkInsertData);
+
+    // Extract category names using map
+    const categoryNames = cats.map((category) => category.name).join(" and ");
+    const seoData = {
+      toolId: tool.id,
+      title: `${tool.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
+      description: `Explore ${tool.title} on Toolplate: a ${tool.price} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${tool.title}. Your one-stop resource for ${tool.title} insights`,
+    };
     seoService.create(seoData);
 
     res.status(200).json({

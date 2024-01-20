@@ -673,7 +673,7 @@ exports.getRelatedTools = async (req, res, next) => {
     );
 
     // Limit the result to the top 3 most related tools
-    const mostRelatedTools = relatedTools.slice(0, 3);
+    const mostRelatedTools = relatedTools.slice(0, 4);
 
     res.status(200).json({
       status: "success",

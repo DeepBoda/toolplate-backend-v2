@@ -24,6 +24,7 @@ router.use("/blog", require("../modules/blog/admin"));
 router.use("/blogSeo", require("../modules/blogSeo/admin"));
 router.use("/category", require("../modules/category/admin"));
 router.use("/category-blog", require("../modules/categoryOfBlog/admin"));
+router.use("/category-listing", require("../modules/categoryOfListing/admin"));
 router.use("/main-category", require("../modules/mainCategory/admin"));
 router.use("/blogCategory", require("../modules/blogCategory/admin"));
 router.use("/blogs/view", require("../modules/blogView/admin"));

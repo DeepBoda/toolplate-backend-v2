@@ -8,6 +8,7 @@ router.use("/notification", require("../modules/notification"));
 router.use("/main-category", require("../modules/mainCategory"));
 router.use("/category", require("../modules/category"));
 router.use("/category-blog", require("../modules/categoryOfBlog"));
+router.use("/category-listing", require("../modules/categoryOfListing"));
 router.use("/tool", require("../modules/tool"));
 router.use("/toolSeo", require("../modules/toolSeo"));
 router.use("/tools/rating", require("../modules/toolRating"));

@@ -28,6 +28,7 @@ const {
 } = require("../../utils/imageResize");
 const createHttpError = require("http-errors");
 const ListingTool = require("../listingTool/model");
+const Tool = require("../tool/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -141,7 +142,11 @@ exports.getAll = async (req, res, next) => {
         {
           model: ListingTool,
           required: false,
-          // attributes: listingAllAdminAttributes,
+          attributes: ["id", "description", "toolId"],
+          include: {
+            model: Tool,
+            attributes: toolAdminAttributes,
+          },
         },
       ],
     });
@@ -192,7 +197,11 @@ exports.getAllForAdmin = async (req, res, next) => {
         {
           model: ListingTool,
           required: false,
-          attributes: toolAdminAttributes,
+          attributes: ["id", "description", "toolId"],
+          include: {
+            model: Tool,
+            attributes: toolAdminAttributes,
+          },
         },
       ],
     });
@@ -228,7 +237,11 @@ exports.getBySlug = async (req, res, next) => {
           {
             model: ListingTool,
             required: false,
-            // attributes: listingAllAdminAttributes,
+            attributes: ["id", "description", "toolId"],
+            include: {
+              model: Tool,
+              attributes: toolAdminAttributes,
+            },
           },
         ],
       });
@@ -393,7 +406,11 @@ exports.getForAdmin = async (req, res, next) => {
         {
           model: ListingTool,
           required: false,
-          attributes: toolAdminAttributes,
+          attributes: ["id", "description", "toolId"],
+          include: {
+            model: Tool,
+            attributes: toolAdminAttributes,
+          },
         },
       ],
     });

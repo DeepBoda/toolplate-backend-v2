@@ -63,6 +63,18 @@ exports.blogAttributes = [
   "wishlists",
   "release",
 ];
+exports.listingAttributes = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "alt",
+  "slug",
+  "createdAt",
+  "likes",
+  "views",
+  "comments",
+];
 exports.newsAttributes = [
   "id",
   "title",
@@ -109,6 +121,7 @@ exports.newsCategoryAttributes = [
 
 exports.toolAdminAttributes = ["id", "title", "image", "price"];
 exports.blogAdminAttributes = ["id", "title", "image", "alt"];
+exports.listingAdminAttributes = ["id", "title", "image", "alt"];
 
 exports.toolAllAdminAttributes = [
   "id",
@@ -138,6 +151,17 @@ exports.blogAllAdminAttributes = [
   "comments",
   "wishlists",
   "release",
+];
+exports.listingAllAdminAttributes = [
+  "id",
+  "title",
+  "image",
+  "alt",
+  "slug",
+  "createdAt",
+  "likes",
+  "views",
+  "comments",
 ];
 
 exports.categoryAdminAttributes = [

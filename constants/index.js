@@ -18,3 +18,7 @@ exports.toolPreviewSize = [
 exports.newsResizeImageSize = [
   { width: 430, height: 250 },
 ];
+exports.listingResizeImageSize = [
+  { width: 900, height: 540 },
+  { width: 400, height: 250 },
+];

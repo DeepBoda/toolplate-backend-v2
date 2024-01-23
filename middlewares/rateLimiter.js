@@ -1,5 +1,5 @@
 const rateLimit = require("express-rate-limit");
-const { RedisStore } = require("rate-limit-redis");
+const RedisStore = require("rate-limit-redis");
 const client = require(".././config/redis");
 
 // Set the environment variable NODE_ENV to "production" in your production environment.

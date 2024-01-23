@@ -14,6 +14,7 @@ const {
   listingAttributes,
   listingCategoryAttributes,
   listingAllAdminAttributes,
+  toolAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const ListingCategory = require("../listingCategory/model");
@@ -38,7 +39,7 @@ exports.add = async (req, res, next) => {
 
     const { categories, tools, ...bodyData } = req.body;
     // Create the new listing entry in the `listing` table
-    const listing = await service.create(bodyData);
+    const listing = await service.bulkCreate(bodyData);
 
     // Create the tool-listing-desc entry in the `listingTool` table
     const payload = JSON.parse(tools).map((tool) => ({
@@ -125,23 +126,24 @@ exports.getAll = async (req, res, next) => {
           ),
           "isLiked",
         ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
-          ),
-          "isWishlisted",
-        ],
       ],
-      include: {
-        model: ListingCategory,
-        attributes: ["categoryOfListingId"],
-        ...query,
-        where,
-        include: {
-          model: CategoryOfListing,
-          attributes: listingCategoryAttributes,
+      include: [
+        {
+          model: ListingCategory,
+          attributes: ["categoryOfListingId"],
+          ...query,
+          where,
+          include: {
+            model: CategoryOfListing,
+            attributes: listingCategoryAttributes,
+          },
         },
-      },
+        {
+          model: ListingTool,
+          required: false,
+          // attributes: listingAllAdminAttributes,
+        },
+      ],
     });
 
     // redisService.set(`listings`, data);
@@ -190,56 +192,7 @@ exports.getAllForAdmin = async (req, res, next) => {
         {
           model: ListingTool,
           required: false,
-          // attributes: listingAllAdminAttributes,
-        },
-      ],
-    });
-
-    res.status(200).send({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-exports.getScheduledForAdmin = async (req, res, next) => {
-  try {
-    const { categoryIds, ...query } = req.query;
-
-    const where = {};
-
-    if (categoryIds) {
-      // Split the comma-separated categoryIds into an array
-      const categoryIdArray = categoryIds.split(",").map(Number);
-
-      // Use the `Op.in` operator to find listings that match any of the specified categoryIds
-      where["$listingCategories.categoryOfListingId$"] = {
-        [Op.in]: categoryIdArray,
-      };
-    }
-    const data = await service.findAndCountAll({
-      ...sqquery(
-        query,
-        {
-          release: {
-            [Op.gt]: moment(), // Less than or equal to the current date
-          },
-        },
-        ["title"]
-      ),
-      distinct: true, // Add this option to ensure accurate counts
-      attributes: listingAllAdminAttributes,
-      include: [
-        {
-          model: ListingCategory,
-          attributes: ["categoryOfListingId"],
-          ...query,
-          where,
-          include: {
-            model: CategoryOfListing,
-            attributes: listingCategoryAttributes,
-          },
+          attributes: toolAdminAttributes,
         },
       ],
     });
@@ -271,6 +224,11 @@ exports.getBySlug = async (req, res, next) => {
               model: CategoryOfListing,
               attributes: listingCategoryAttributes,
             },
+          },
+          {
+            model: ListingTool,
+            required: false,
+            // attributes: listingAllAdminAttributes,
           },
         ],
       });
@@ -423,14 +381,21 @@ exports.getForAdmin = async (req, res, next) => {
       where: {
         id: req.params.id,
       },
-      include: {
-        model: ListingCategory,
-        attributes: ["categoryOfListingId"],
-        include: {
-          model: CategoryOfListing,
-          attributes: ["id", "name"],
+      include: [
+        {
+          model: ListingCategory,
+          attributes: ["categoryOfListingId"],
+          include: {
+            model: CategoryOfListing,
+            attributes: ["id", "name"],
+          },
         },
-      },
+        {
+          model: ListingTool,
+          required: false,
+          attributes: toolAdminAttributes,
+        },
+      ],
     });
 
     // redisService.set(`oneListing`, data);
@@ -606,7 +571,7 @@ exports.update = async (req, res, next) => {
         });
     }
 
-    const { categories, ...updatedData } = body;
+    const { categories, tools, ...updatedData } = body;
 
     // Update the listing data
     const [affectedRows] = await service.update(updatedData, { where: { id } });
@@ -616,6 +581,10 @@ exports.update = async (req, res, next) => {
 
     // Clear Redis cache
     redisService.del(`listing?slug=${oldListingData.slug}`);
+
+    // Delete existing associations with listingTools
+    await listingToolService.delete({ where: { listingId: id } });
+    await listingToolService.bulkCreate(tools);
 
     // Handle categories  updates
     const categoryIds = categories.split(",").map(Number);
@@ -663,6 +632,11 @@ exports.delete = async (req, res, next) => {
 
     // Delete associated categories
     listingCategoryService.delete({
+      where: {
+        listingId: req.params.id,
+      },
+    });
+    listingToolService.delete({
       where: {
         listingId: req.params.id,
       },

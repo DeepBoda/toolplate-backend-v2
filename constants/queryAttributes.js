@@ -155,6 +155,7 @@ exports.blogAllAdminAttributes = [
 exports.listingAllAdminAttributes = [
   "id",
   "title",
+  "description",
   "image",
   "alt",
   "slug",

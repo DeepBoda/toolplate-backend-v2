@@ -99,7 +99,7 @@ exports.delete = async (req, res, next) => {
     if (image) deleteFilesFromS3([image]);
 
     // Retrieve the  tool data from the database based on the provided tool ID.
-    const Tool = await service.findOne({ where: { id: toolId } });
+    const Tool = await toolService.findOne({ where: { id: toolId } });
     // Clear Redis cache
     redisService.del(`tool?slug=${Tool.slug}`);
 

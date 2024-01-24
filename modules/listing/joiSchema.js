@@ -15,6 +15,7 @@ module.exports = {
     slug: Joi.string(),
     image: Joi.string(),
     alt: Joi.string().allow(null),
+    categories: Joi.string(),
     tools: Joi.string(),
   }),
 };

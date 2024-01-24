@@ -49,7 +49,7 @@ exports.add = async (req, res, next) => {
       description: tool.description,
       listingId: listing.id,
     }));
-    listingToolService.bulkCreate(payload);
+    await listingToolService.bulkCreate(JSON.parse(payload));
 
     // // Send a push notification with the listing title and body
     // if (listing.createdAt == listing.release) {
@@ -588,7 +588,6 @@ exports.update = async (req, res, next) => {
 
     // Delete existing associations with listingTools
     await listingToolService.delete({ where: { listingId: id } });
-    await listingToolService.bulkCreate(tools);
 
     // Handle categories  updates
     const categoryIds = categories.split(",").map(Number);
@@ -602,7 +601,16 @@ exports.update = async (req, res, next) => {
       categoryOfListingId: categoryId,
     }));
 
-    // Use bulk create operations for `listingCategory`
+    // Add listingId to each object in the array
+    const payload = JSON.parse(tools).map((tool) => ({
+      ...tool,
+      listingId: id,
+    }));
+
+    // Use bulkCreate with the modified array
+    await listingToolService.bulkCreate(payload);
+
+    // Use bulk create operations for `listingCategory` & `listingTool`
     await listingCategoryService.bulkCreate(categoryBulkInsertData);
 
     // Handle the file deletion

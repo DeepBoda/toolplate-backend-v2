@@ -343,12 +343,6 @@ exports.getDynamicBySlug = async (req, res, next) => {
           ),
           "isLiked",
         ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
-          ),
-          "isWishlisted",
-        ],
       ],
     });
 
@@ -455,9 +449,6 @@ exports.getRelatedListings = async (req, res, next) => {
       where: {
         id: { [Op.ne]: req.params.id },
         "$listingCategories.categoryOfListingId$": { [Op.in]: categoryIds },
-        release: {
-          [Op.lte]: moment(), // Less than or equal to the current date
-        },
       },
       attributes: [
         ...listingAttributes,
@@ -503,7 +494,7 @@ exports.getRelatedListings = async (req, res, next) => {
     );
 
     // Limit the result to the top 3 most related listings
-    const mostRelatedListings = relatedListings.slice(0, 3);
+    const mostRelatedListings = relatedListings.slice(0, 4);
 
     // Select only the required attributes (image and title) for each listing
     const reducedData = mostRelatedListings.map(

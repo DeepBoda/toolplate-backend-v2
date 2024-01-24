@@ -42,6 +42,8 @@ router.use("/news", require("../modules/news/admin"));
 router.use("/newsWishlist", require("../modules/newsWishlist/admin"));
 router.use("/newsViews", require("../modules/newsView/admin"));
 router.use("/listing", require("../modules/listing/admin"));
+router.use("/listings/view", require("../modules/listingView/admin"));
+router.use("/listingLike", require("../modules/listingLike/admin"));
 router.use("/submit-tool", require("../modules/submitTool/admin"));
 
 module.exports = router;

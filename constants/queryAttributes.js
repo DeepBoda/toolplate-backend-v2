@@ -108,6 +108,7 @@ exports.categoryAttributes = [
   "createdAt",
 ];
 exports.blogCategoryAttributes = ["id", "name", "slug", "description"];
+exports.listingCategoryAttributes = ["id", "name", "slug", "description"];
 exports.mainCategoryAttributes = ["id", "name", "image", "slug", "createdAt"];
 exports.newsCategoryAttributes = [
   "id",
@@ -182,16 +183,9 @@ exports.mainCategoryAdminAttributes = [
   "description",
   "createdAt",
 ];
+exports.listingCategoryAdminAttributes = ["id", "name", "slug", "createdAt"];
 
-exports.ratingsAdminAttributes = [
-  "id",
-  "rating",
-  "title",
-  "review",
-  "createdAt",
-  "toolId",
-  "userId",
-];
+exports.ratingsAdminAttributes = ["id", "name", "slug", "createdAt"];
 exports.notificationAdminAttributes = [
   "id",
   "title",

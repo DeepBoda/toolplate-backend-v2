@@ -15,6 +15,7 @@ const {
   listingCategoryAttributes,
   listingAllAdminAttributes,
   toolAdminAttributes,
+  listingCategoryAdminAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const ListingCategory = require("../listingCategory/model");
@@ -136,7 +137,7 @@ exports.getAll = async (req, res, next) => {
           where,
           include: {
             model: CategoryOfListing,
-            attributes: listingCategoryAttributes,
+            attributes: listingCategoryAdminAttributes,
           },
         },
         {
@@ -191,7 +192,7 @@ exports.getAllForAdmin = async (req, res, next) => {
           include: {
             model: CategoryOfListing,
             required: false,
-            attributes: listingCategoryAttributes,
+            attributes: listingCategoryAdminAttributes,
           },
         },
         {
@@ -400,7 +401,7 @@ exports.getForAdmin = async (req, res, next) => {
           attributes: ["categoryOfListingId"],
           include: {
             model: CategoryOfListing,
-            attributes: ["id", "name"],
+            attributes: listingCategoryAdminAttributes,
           },
         },
         {

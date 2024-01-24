@@ -277,15 +277,7 @@ exports.getByCategorySlug = async (req, res, next) => {
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
-      ...sqquery(
-        req.query,
-        {
-          release: {
-            [Op.lte]: moment(), // Less than or equal to the current date
-          },
-        },
-        ["title"]
-      ),
+      ...sqquery(req.query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...listingAttributes,
@@ -294,12 +286,6 @@ exports.getByCategorySlug = async (req, res, next) => {
             `(SELECT COUNT(*) FROM listingLikes WHERE listingLikes.listingId = listing.id AND listingLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
-          ),
-          "isWishlisted",
         ],
       ],
       include: [
@@ -311,6 +297,15 @@ exports.getByCategorySlug = async (req, res, next) => {
           include: {
             model: CategoryOfListing,
             attributes: listingCategoryAttributes,
+          },
+        },
+        {
+          model: ListingTool,
+          required: false,
+          attributes: ["id", "description", "toolId"],
+          include: {
+            model: Tool,
+            attributes: toolAdminAttributes,
           },
         },
       ],

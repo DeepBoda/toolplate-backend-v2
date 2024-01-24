@@ -56,7 +56,7 @@ exports.add = async (req, res, next) => {
       description: tool.description,
       listingId: listing.id,
     }));
-    listingToolService.bulkCreate(JSON.parse(payload));
+    listingToolService.bulkCreate(payload);
 
     // // Send a push notification with the listing title and body
     // if (listing.createdAt == listing.release) {

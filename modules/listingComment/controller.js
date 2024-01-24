@@ -1,10 +1,10 @@
 "use strict";
 const sequelize = require("sequelize");
 const service = require("./service");
-const reply = require("../blogCommentReply/service");
-const blogService = require("../blog/service");
+const reply = require("../listingCommentReply/service");
+const listingService = require("../listing/service");
 const { usersqquery, sqquery } = require("../../utils/query");
-const BlogCommentReply = require("../blogCommentReply/model");
+const ListingCommentReply = require("../listingCommentReply/model");
 const User = require("../user/model");
 const { userAdminAttributes } = require("../../constants/queryAttributes");
 
@@ -13,9 +13,9 @@ exports.add = async (req, res, next) => {
     req.body.userId = req.requestor.id;
     const data = await service.create(req.body);
 
-    blogService.update(
+    listingService.update(
       { comments: sequelize.literal("comments  + 1") },
-      { where: { id: req.body.blogId } }
+      { where: { id: req.body.listingId } }
     );
 
     res.status(200).json({
@@ -38,17 +38,17 @@ exports.getAll = async (req, res, next) => {
         "id",
         "comment",
         "createdAt",
-        "blogId",
+        "listingId",
         "userId",
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogComment`.`id` = `blogCommentLikes`.`blogCommentId` )"
+            "(SELECT COUNT(*) FROM `listingCommentLikes` WHERE `listingComment`.`id` = `listingCommentLikes`.`listingCommentId` )"
           ),
           "likes",
         ],
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogCommentId` = `blogComment`.`id` AND `blogCommentLikes`.`userId` = :UserId)"
+            "(SELECT COUNT(*) FROM `listingCommentLikes` WHERE `listingCommentId` = `listingComment`.`id` AND `listingCommentLikes`.`userId` = :UserId)"
           ),
           "isLiked",
         ],
@@ -59,7 +59,7 @@ exports.getAll = async (req, res, next) => {
           attributes: userAdminAttributes,
         },
         {
-          model: BlogCommentReply,
+          model: ListingCommentReply,
           required: false,
           attributes: [
             "id",
@@ -68,13 +68,13 @@ exports.getAll = async (req, res, next) => {
             "userId",
             [
               sequelize.literal(
-                "(SELECT COUNT(*) FROM `blogCommentReplyLikes` WHERE `blogCommentReplies`.`id` = `blogCommentReplyLikes`.`blogCommentReplyId` )"
+                "(SELECT COUNT(*) FROM `listingCommentReplyLikes` WHERE `listingCommentReplies`.`id` = `listingCommentReplyLikes`.`listingCommentReplyId` )"
               ),
               "likes",
             ],
             [
               sequelize.literal(
-                "(SELECT COUNT(*) FROM `blogCommentReplyLikes` WHERE `blogCommentReplyId` = `blogCommentReplies`.`id` AND `blogCommentReplyLikes`.`userId` = :UserId)"
+                "(SELECT COUNT(*) FROM `listingCommentReplyLikes` WHERE `listingCommentReplyId` = `listingCommentReplies`.`id` AND `listingCommentReplyLikes`.`userId` = :UserId)"
               ),
               "isLiked",
             ],
@@ -90,7 +90,7 @@ exports.getAll = async (req, res, next) => {
 
     const totalComments = data.length; // Calculate the total count of comments
     const totalCommentReplies = data.reduce(
-      (total, comment) => total + (comment.blogCommentReplies || []).length,
+      (total, comment) => total + (comment.listingCommentReplies || []).length,
       0
     ); // Calculate the total count of comment replies
 
@@ -114,11 +114,11 @@ exports.getAllForAdmin = async (req, res, next) => {
         "id",
         "comment",
         "createdAt",
-        "blogId",
+        "listingId",
         "userId",
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogComment`.`id` = `blogCommentLikes`.`blogCommentId` )"
+            "(SELECT COUNT(*) FROM `listingCommentLikes` WHERE `listingComment`.`id` = `listingCommentLikes`.`listingCommentId` )"
           ),
           "likes",
         ],
@@ -130,7 +130,7 @@ exports.getAllForAdmin = async (req, res, next) => {
           paranoid: false, // Include soft-deleted users
         },
         {
-          model: BlogCommentReply,
+          model: ListingCommentReply,
           required: false,
           attributes: [
             "id",
@@ -139,7 +139,7 @@ exports.getAllForAdmin = async (req, res, next) => {
             "userId",
             [
               sequelize.literal(
-                "(SELECT COUNT(*) FROM `blogCommentReplyLikes` WHERE `blogCommentReplies`.`id` = `blogCommentReplyLikes`.`blogCommentReplyId` )"
+                "(SELECT COUNT(*) FROM `listingCommentReplyLikes` WHERE `listingCommentReplies`.`id` = `listingCommentReplyLikes`.`listingCommentReplyId` )"
               ),
               "likes",
             ],
@@ -155,7 +155,7 @@ exports.getAllForAdmin = async (req, res, next) => {
 
     const totalComments = data.length; // Calculate the total count of comments
     const totalCommentReplies = data.reduce(
-      (total, comment) => total + (comment.blogCommentReplies || []).length,
+      (total, comment) => total + (comment.listingCommentReplies || []).length,
       0
     ); // Calculate the total count of comment replies
 
@@ -183,14 +183,14 @@ exports.getById = async (req, res, next) => {
         "createdAt",
         [
           sequelize.literal(
-            "(SELECT COUNT(*) FROM `blogCommentLikes` WHERE `blogComment`.`id` = `blogCommentLikes`.`blogCommentId` )"
+            "(SELECT COUNT(*) FROM `listingCommentLikes` WHERE `listingComment`.`id` = `listingCommentLikes`.`listingCommentId` )"
           ),
           "likes",
         ],
       ],
       include: [
         {
-          model: BlogCommentReply,
+          model: ListingCommentReply,
           required: false,
           attributes: ["id", "reply"],
         },
@@ -208,7 +208,7 @@ exports.getById = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    // Update the blog data
+    // Update the listing data
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
@@ -258,10 +258,10 @@ exports.delete = async (req, res, next) => {
           },
         }),
       ]);
-      // Update the blog's comments count
-      blogService.update(
+      // Update the listing's comments count
+      listingService.update(
         { comments: sequelize.literal(`comments - ${replies + 1}`) },
-        { where: { id: data.blogId } }
+        { where: { id: data.listingId } }
       );
 
       // Send the response with a status code of 200 and affected rows count

@@ -65,7 +65,7 @@ exports.getById = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    // Update the blog data
+    // Update the listing data
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,

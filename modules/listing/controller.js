@@ -16,6 +16,7 @@ const {
   listingAllAdminAttributes,
   toolAdminAttributes,
   listingCategoryAdminAttributes,
+  listingToolAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const ListingCategory = require("../listingCategory/model");
@@ -248,7 +249,19 @@ exports.getBySlug = async (req, res, next) => {
             attributes: ["id", "description", "toolId"],
             include: {
               model: Tool,
-              attributes: toolAdminAttributes,
+              attributes: listingToolAttributes,
+              include: [
+                {
+                  model: ToolCategory,
+                  attributes: ["categoryId"],
+                  ...query,
+                  where,
+                  include: {
+                    model: Category,
+                    attributes: categoryAttributes,
+                  },
+                },
+              ],
             },
           },
         ],

@@ -19,8 +19,8 @@ router.use("/blog", require("../modules/blog"));
 router.use("/blogSeo", require("../modules/blogSeo"));
 router.use("/blogs", require("../modules/blog/seoRoutes"));
 router.use("/blogLike", require("../modules/blogLike"));
-router.use("/comment", require("../modules/blogComment"));
 router.use("/blogWishlist", require("../modules/blogWishlist"));
+router.use("/comment", require("../modules/blogComment"));
 router.use("/commentLike", require("../modules/blogCommentLike"));
 router.use("/comments/reply", require("../modules/blogCommentReply"));
 router.use("/comments/replyLike", require("../modules/blogCommentReplyLike"));
@@ -30,8 +30,18 @@ router.use("/allNews", require("../modules/news/seoRoutes"));
 router.use("/newsWishlist", require("../modules/newsWishlist"));
 router.use("/toolNews", require("../modules/toolNews"));
 router.use("/listing", require("../modules/listing"));
-router.use("/listingLike", require("../modules/listingLike"));
 router.use("/listings", require("../modules/listing/seoRoutes"));
+router.use("/listingLike", require("../modules/listingLike"));
+router.use("/listing-comment", require("../modules/listingComment"));
+router.use("/listing-commentLike", require("../modules/listingCommentLike"));
+router.use(
+  "/listing-comments/reply",
+  require("../modules/listingCommentReply")
+);
+router.use(
+  "/listing-comments/replyLike",
+  require("../modules/listingCommentReplyLike")
+);
 router.use("/submit-tool", require("../modules/submitTool"));
 
 module.exports = router;

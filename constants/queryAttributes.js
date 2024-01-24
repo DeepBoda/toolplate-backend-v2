@@ -121,6 +121,16 @@ exports.newsCategoryAttributes = [
 ];
 
 exports.toolAdminAttributes = ["id", "title", "image", "price"];
+exports.listingToolAttributes = [
+  "id",
+  "title",
+  "description",
+  "ratingsAverage",
+  "image",
+  "link",
+  "slug",
+  "price",
+];
 exports.blogAdminAttributes = ["id", "title", "image", "alt"];
 exports.listingAdminAttributes = ["id", "title", "image", "alt"];
 

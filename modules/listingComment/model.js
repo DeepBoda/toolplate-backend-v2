@@ -1,9 +1,9 @@
 "use strict";
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const Blog = require("../blog/model");
+const Listing = require("../listing/model");
 const User = require("../user/model");
-const BlogComment = sequelize.define("blogComment", {
+const ListingComment = sequelize.define("listingComment", {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -16,18 +16,18 @@ const BlogComment = sequelize.define("blogComment", {
   },
 });
 
-Blog.hasMany(BlogComment, {
+Listing.hasMany(ListingComment, {
   foreignKey: {
     allowNull: false,
   },
 });
-BlogComment.belongsTo(Blog);
+ListingComment.belongsTo(Listing);
 
-User.hasMany(BlogComment, {
+User.hasMany(ListingComment, {
   foreignKey: {
     allowNull: false,
   },
 });
-BlogComment.belongsTo(User);
+ListingComment.belongsTo(User);
 
-module.exports = BlogComment;
+module.exports = ListingComment;

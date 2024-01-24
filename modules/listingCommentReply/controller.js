@@ -1,10 +1,10 @@
 "use strict";
 const sequelize = require("sequelize");
 const service = require("./service");
-const blogService = require("../blog/service");
-const commentService = require("../blogComment/service");
+const listingService = require("../listing/service");
+const commentService = require("../listingComment/service");
 const { usersqquery, sqquery } = require("../../utils/query");
-const BlogComment = require("../blogComment/model");
+const ListingComment = require("../listingComment/model");
 
 exports.add = async (req, res, next) => {
   try {
@@ -14,13 +14,13 @@ exports.add = async (req, res, next) => {
       service.create(req.body),
 
       commentService.findOne({
-        where: { id: req.body.blogCommentId },
+        where: { id: req.body.listingCommentId },
       }),
     ]);
 
-    blogService.update(
+    listingService.update(
       { comments: sequelize.literal("comments  + 1") },
-      { where: { id: comment.blogId } }
+      { where: { id: comment.listingId } }
     );
 
     res.status(200).json({
@@ -65,7 +65,7 @@ exports.getById = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    // Update the blog data
+    // Update the listing data
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
@@ -91,7 +91,7 @@ exports.delete = async (req, res, next) => {
       where: {
         id: req.params.id,
       },
-      include: { model: BlogComment },
+      include: { model: ListingComment },
     });
 
     if (data) {
@@ -100,9 +100,9 @@ exports.delete = async (req, res, next) => {
           id: req.params.id,
         },
       });
-      blogService.update(
+      listingService.update(
         { comments: sequelize.literal("comments  - 1") },
-        { where: { id: data.blogComment.blogId } }
+        { where: { id: data.listingComment.listingId } }
       );
 
       res.status(200).send({

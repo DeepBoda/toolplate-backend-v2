@@ -2,9 +2,9 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const User = require("../user/model");
-const BlogComment = require("../blogComment/model");
-const BlogCommentLike = sequelize.define(
-  "blogCommentLike",
+const ListingComment = require("../listingComment/model");
+const ListingCommentLike = sequelize.define(
+  "listingCommentLike",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -15,26 +15,26 @@ const BlogCommentLike = sequelize.define(
   },
   {
     uniqueKeys: {
-      blogCommentId_userId: {
-        fields: ["blogCommentId", "userId"],
+      listingCommentId_userId: {
+        fields: ["listingCommentId", "userId"],
       },
     },
   }
 );
 
-BlogComment.hasMany(BlogCommentLike, {
+ListingComment.hasMany(ListingCommentLike, {
   foreignKey: {
     allowNull: false,
   },
 });
-BlogCommentLike.belongsTo(BlogComment);
+ListingCommentLike.belongsTo(ListingComment);
 
-// without login blog can be accessible so userId not required
-User.hasMany(BlogCommentLike, {
+// without login listing can be accessible so userId not required
+User.hasMany(ListingCommentLike, {
   foreignKey: {
     allowNull: false,
   },
 });
-BlogCommentLike.belongsTo(User);
+ListingCommentLike.belongsTo(User);
 
-module.exports = BlogCommentLike;
+module.exports = ListingCommentLike;

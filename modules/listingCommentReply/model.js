@@ -1,9 +1,9 @@
 "use strict";
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const BlogComment = require("../blogComment/model");
+const ListingComment = require("../listingComment/model");
 const User = require("../user/model");
-const BlogCommentReply = sequelize.define("blogCommentReply", {
+const ListingCommentReply = sequelize.define("listingCommentReply", {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -16,19 +16,19 @@ const BlogCommentReply = sequelize.define("blogCommentReply", {
   },
 });
 
-BlogComment.hasMany(BlogCommentReply, {
+ListingComment.hasMany(ListingCommentReply, {
   foreignKey: {
     allowNull: false,
   },
 });
-BlogCommentReply.belongsTo(BlogComment);
+ListingCommentReply.belongsTo(ListingComment);
 
-// without login blog can be accessible so userId not required
-User.hasMany(BlogCommentReply, {
+// without login listing can be accessible so userId not required
+User.hasMany(ListingCommentReply, {
   foreignKey: {
     allowNull: false,
   },
 });
-BlogCommentReply.belongsTo(User);
+ListingCommentReply.belongsTo(User);
 
-module.exports = BlogCommentReply;
+module.exports = ListingCommentReply;

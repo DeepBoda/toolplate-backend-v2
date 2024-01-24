@@ -39,6 +39,13 @@ exports.add = async (req, res, next) => {
       req.body.image = req.file.location;
     }
 
+    // Create slug URL based on title
+    req.body.slug = slugify(req.body.title, {
+      replacement: "-", // Replace spaces with hyphens
+      lower: true, // Convert to lowercase
+      remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
+    });
+
     const { categories, tools, ...bodyData } = req.body;
     // Create the new listing entry in the `listing` table
     const listing = await service.create(bodyData);
@@ -49,7 +56,7 @@ exports.add = async (req, res, next) => {
       description: tool.description,
       listingId: listing.id,
     }));
-    await listingToolService.bulkCreate(JSON.parse(payload));
+    listingToolService.bulkCreate(JSON.parse(payload));
 
     // // Send a push notification with the listing title and body
     // if (listing.createdAt == listing.release) {

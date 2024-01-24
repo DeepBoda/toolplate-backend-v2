@@ -31,6 +31,7 @@ router.use("/newsWishlist", require("../modules/newsWishlist"));
 router.use("/toolNews", require("../modules/toolNews"));
 router.use("/listing", require("../modules/listing"));
 router.use("/listingLike", require("../modules/listingLike"));
+router.use("/listings", require("../modules/listing/seoRoutes"));
 router.use("/submit-tool", require("../modules/submitTool"));
 
 module.exports = router;

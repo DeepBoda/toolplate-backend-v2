@@ -17,6 +17,7 @@ const {
   toolAdminAttributes,
   listingCategoryAdminAttributes,
   listingToolAttributes,
+  categoryAttributes,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const ListingCategory = require("../listingCategory/model");
@@ -31,6 +32,8 @@ const {
 const createHttpError = require("http-errors");
 const ListingTool = require("../listingTool/model");
 const Tool = require("../tool/model");
+const Category = require("../category/model");
+const ToolCategory = require("../toolCategory/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -254,8 +257,6 @@ exports.getBySlug = async (req, res, next) => {
                 {
                   model: ToolCategory,
                   attributes: ["categoryId"],
-                  ...query,
-                  where,
                   include: {
                     model: Category,
                     attributes: categoryAttributes,

@@ -41,7 +41,7 @@ exports.add = async (req, res, next) => {
 
     const { categories, tools, ...bodyData } = req.body;
     // Create the new listing entry in the `listing` table
-    const listing = await service.bulkCreate(bodyData);
+    const listing = await service.create(bodyData);
 
     // Create the tool-listing-desc entry in the `listingTool` table
     const payload = JSON.parse(tools).map((tool) => ({

@@ -109,14 +109,14 @@ exports.getSlugsForSitemap = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    // Create slug URL based on name
-    if (req.body.name) {
-      req.body.slug = slugify(req.body.name, {
-        replacement: "-", // Replace spaces with hyphens
-        lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
-      });
-    }
+    // // Create slug URL based on name
+    // if (req.body.name) {
+    //   req.body.slug = slugify(req.body.name, {
+    //     replacement: "-", // Replace spaces with hyphens
+    //     lower: true, // Convert to lowercase
+    //     remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
+    //   });
+    // }
 
     // Update the blog data
     const [affectedRows] = await service.update(req.body, {

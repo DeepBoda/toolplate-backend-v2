@@ -9,7 +9,7 @@ const { upload } = require("../../middlewares/multer");
 
 // <================= Public APIs =================>
 router.post("/login", admin.login); 
-// router.post("/add", joiValidator(joiSchema.create), admin.create);
+router.post("/add", joiValidator(joiSchema.create), admin.create);
 // router.patch("/update/:id", joiValidator(joiSchema.update), admin.update); //TODO: Protect the api
 
 // <================ Authorized APIs ================>

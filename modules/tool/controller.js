@@ -903,18 +903,18 @@ exports.update = async (req, res, next) => {
       req.body.videos = req.files.videos.map((el) => el.location);
     }
 
-    if (req.body.slug) {
-      const exist = await service.findOne({
-        where: {
-          slug: req.body.slug,
-        },
-      });
-      if (exist && exist.slug != req.body.slug)
-        return res.status(403).send({
-          status: "error",
-          message: "Oops! slug is already associated with existing tool.",
-        });
-    }
+    // if (req.body.slug) {
+    //   const exist = await service.findOne({
+    //     where: {
+    //       slug: req.body.slug,
+    //     },
+    //   });
+    //   if (exist && exist.slug != req.body.slug)
+    //     return res.status(403).send({
+    //       status: "error",
+    //       message: "Oops! slug is already associated with existing tool.",
+    //     });
+    // }
 
     const { categories, ...body } = req.body;
 

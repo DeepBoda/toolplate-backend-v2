@@ -8,7 +8,7 @@ exports.blogResizeImageSize = [
   { width: 100, height: 60 },
 ];
 exports.toolSize = [
-  // { width: 80, height: 80 },
+  { width: 180, height: 180 },
   { width: 120, height: 120 },
   { width: 60, height: 60 },
 ];

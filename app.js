@@ -16,6 +16,11 @@ const serviceToken = isProduction
   ? process.env.WOOFFER_SERVICE
   : process.env.WOOFFER_SERVICE_DEV;
 
+// // Add V8 heap statistics logging
+// const v8 = require("v8");
+// console.log(v8.getHeapCodeStatistics());
+// console.log(v8.getHeapStatistics());
+
 const app = express();
 
 wooffer(token, serviceToken);

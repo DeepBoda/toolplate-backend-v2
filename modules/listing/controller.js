@@ -439,9 +439,10 @@ exports.getForAdmin = async (req, res, next) => {
 
 exports.getRelatedListings = async (req, res, next) => {
   try {
+    const listing = await service.findOne({ where: { slug: req.params.slug } });
     // Find the details of the opened listing
     const openedListing = await service.findOne({
-      where: { id: req.params.id },
+      where: { id: listing.id },
       attributes: listingAttributes,
       include: {
         model: ListingCategory,

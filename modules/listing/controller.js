@@ -439,10 +439,11 @@ exports.getForAdmin = async (req, res, next) => {
 
 exports.getRelatedListings = async (req, res, next) => {
   try {
-    const listing = await service.findOne({ where: { slug: req.params.slug } });
+    const { id } = await service.findOne({ where: { slug: req.params.slug } });
+    // console.log("--------------", listing);
     // Find the details of the opened listing
     const openedListing = await service.findOne({
-      where: { id: listing.id },
+      where: { id },
       attributes: listingAttributes,
       include: {
         model: ListingCategory,
@@ -464,7 +465,7 @@ exports.getRelatedListings = async (req, res, next) => {
     const relatedListings = await service.findAll({
       // ...sqquery(req.query),
       where: {
-        id: { [Op.ne]: req.params.id },
+        id: { [Op.ne]: id },
         "$listingCategories.categoryOfListingId$": { [Op.in]: categoryIds },
       },
       attributes: [

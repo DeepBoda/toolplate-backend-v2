@@ -59,6 +59,7 @@ exports.add = async (req, res, next) => {
       toolId: tool.toolId,
       description: tool.description,
       listingId: listing.id,
+      index: tool.index || 0,
     }));
     listingToolService.bulkCreate(payload);
 
@@ -154,7 +155,7 @@ exports.getAll = async (req, res, next) => {
         {
           model: ListingTool,
           required: false,
-          attributes: ["id", "description", "toolId"],
+          attributes: ["id", "description", "toolId", "index"],
           include: {
             model: Tool,
             attributes: toolAdminAttributes,
@@ -209,7 +210,7 @@ exports.getAllForAdmin = async (req, res, next) => {
         {
           model: ListingTool,
           required: false,
-          attributes: ["id", "description", "toolId"],
+          attributes: ["id", "description", "toolId", "index"],
           include: {
             model: Tool,
             attributes: toolAdminAttributes,
@@ -249,7 +250,7 @@ exports.getBySlug = async (req, res, next) => {
           {
             model: ListingTool,
             required: false,
-            attributes: ["id", "description", "toolId"],
+            attributes: ["id", "description", "toolId", "index"],
             include: {
               model: Tool,
               attributes: listingToolAttributes,
@@ -323,7 +324,7 @@ exports.getByCategorySlug = async (req, res, next) => {
         {
           model: ListingTool,
           required: false,
-          attributes: ["id", "description", "toolId"],
+          attributes: ["id", "description", "toolId", "index"],
           include: {
             model: Tool,
             attributes: toolAdminAttributes,
@@ -417,7 +418,7 @@ exports.getForAdmin = async (req, res, next) => {
         {
           model: ListingTool,
           required: false,
-          attributes: ["id", "description", "toolId"],
+          attributes: ["id", "description", "toolId", "index"],
           include: {
             model: Tool,
             attributes: toolAdminAttributes,

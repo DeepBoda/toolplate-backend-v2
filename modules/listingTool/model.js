@@ -13,6 +13,10 @@ const ListingTool = sequelize.define("listingTool", {
   description: {
     type: DataTypes.TEXT,
   },
+  index: {
+    type: DataTypes.STRING,
+    defaultValue: 0,
+  },
 });
 
 Listing.hasMany(ListingTool, {

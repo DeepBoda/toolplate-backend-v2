@@ -5,10 +5,12 @@ module.exports = {
     listingId: Joi.number().required(),
     toolId: Joi.number().required(),
     description: Joi.string(),
+    index: Joi.string(),
   }),
   update: Joi.object().keys({
     listingId: Joi.number(),
     toolId: Joi.number(),
     description: Joi.string(),
+    index: Joi.string(),
   }),
 };

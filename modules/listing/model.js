@@ -44,5 +44,4 @@ const Listing = sequelize.define(
     paranoid: true,
   }
 );
-
 module.exports = Listing;

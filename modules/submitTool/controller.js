@@ -8,7 +8,7 @@ const MainCategory = require("../mainCategory/model");
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
-    req.body.userId = req.requestor.id || null;
+    req.body.userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.create(req.body);
 

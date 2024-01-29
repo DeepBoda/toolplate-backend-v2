@@ -909,7 +909,7 @@ exports.update = async (req, res, next) => {
     //       slug: req.body.slug,
     //     },
     //   });
-    //   if (exist && exist.slug != req.body.slug)
+    //   if (exist && exist.id != id)
     //     return res.status(403).send({
     //       status: "error",
     //       message: "Oops! slug is already associated with existing tool.",

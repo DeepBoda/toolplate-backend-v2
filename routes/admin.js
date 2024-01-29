@@ -31,12 +31,7 @@ router.use("/blogs/view", require("../modules/blogView/admin"));
 router.use("/blogLike", require("../modules/blogLike/admin"));
 router.use("/blogWishlist", require("../modules/blogWishlist/admin"));
 router.use("/comment", require("../modules/blogComment/admin"));
-router.use("/commentLike", require("../modules/blogCommentLike/admin"));
 router.use("/comments/reply", require("../modules/blogCommentReply/admin"));
-router.use(
-  "/comments/replyLike",
-  require("../modules/blogCommentReplyLike/admin")
-);
 router.use("/newsCategory", require("../modules/newsCategory/admin"));
 router.use("/news", require("../modules/news/admin"));
 router.use("/newsWishlist", require("../modules/newsWishlist/admin"));
@@ -47,16 +42,8 @@ router.use("/listingLike", require("../modules/listingLike/admin"));
 router.use("/submit-tool", require("../modules/submitTool/admin"));
 router.use("/listing-comment", require("../modules/listingComment/admin"));
 router.use(
-  "/listing-commentLike",
-  require("../modules/listingCommentLike/admin")
-);
-router.use(
   "/listing-comments/reply",
   require("../modules/listingCommentReply/admin")
-);
-router.use(
-  "/listing-comments/replyLike",
-  require("../modules/listingCommentReplyLike/admin")
 );
 
 module.exports = router;

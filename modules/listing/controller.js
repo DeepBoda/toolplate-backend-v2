@@ -146,26 +146,16 @@ exports.getAll = async (req, res, next) => {
           "isLiked",
         ],
       ],
-      include: [
-        {
-          model: ListingCategory,
-          attributes: ["categoryOfListingId"],
-          ...query,
-          where,
-          include: {
-            model: CategoryOfListing,
-            attributes: listingCategoryAdminAttributes,
-          },
+      include: {
+        model: ListingCategory,
+        attributes: ["categoryOfListingId"],
+        ...query,
+        where,
+        include: {
+          model: CategoryOfListing,
+          attributes: listingCategoryAdminAttributes,
         },
-        {
-          model: ListingTool,
-          attributes: ["id", "description", "toolId", "index"],
-          include: {
-            model: Tool,
-            attributes: toolAdminAttributes,
-          },
-        },
-      ],
+      },
     });
 
     // redisService.set(`listings`, data);
@@ -240,8 +230,8 @@ exports.getBySlug = async (req, res, next) => {
           },
           {
             model: ListingTool,
-
             attributes: ["id", "description", "toolId", "index"],
+            order: [["index", "ASC"]], // Sort by index in ascending order
             include: {
               model: Tool,
               attributes: listingToolAttributes,
@@ -314,8 +304,8 @@ exports.getByCategorySlug = async (req, res, next) => {
         },
         {
           model: ListingTool,
-
           attributes: ["id", "description", "toolId", "index"],
+          order: [["index", "ASC"]], // Sort by index in ascending order
           include: {
             model: Tool,
             attributes: toolAdminAttributes,
@@ -409,6 +399,7 @@ exports.getForAdmin = async (req, res, next) => {
         {
           model: ListingTool,
           attributes: ["id", "description", "toolId", "index"],
+          order: [["index", "ASC"]], // Sort by index in ascending order
           include: {
             model: Tool,
             attributes: toolAdminAttributes,

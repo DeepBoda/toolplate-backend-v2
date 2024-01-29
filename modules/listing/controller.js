@@ -44,7 +44,7 @@ exports.add = async (req, res, next) => {
     }
 
     if (req.body.slug) {
-      exist = await service.findOne({
+      const exist = await service.findOne({
         where: {
           slug: req.body.slug,
         },

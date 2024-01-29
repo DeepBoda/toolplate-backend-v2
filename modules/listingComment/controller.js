@@ -191,7 +191,6 @@ exports.getById = async (req, res, next) => {
       include: [
         {
           model: ListingCommentReply,
-          required: false,
           attributes: ["id", "reply"],
         },
       ],

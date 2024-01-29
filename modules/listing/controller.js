@@ -159,7 +159,6 @@ exports.getAll = async (req, res, next) => {
         },
         {
           model: ListingTool,
-          required: false,
           attributes: ["id", "description", "toolId", "index"],
           include: {
             model: Tool,
@@ -212,7 +211,7 @@ exports.getAllForAdmin = async (req, res, next) => {
         },
         {
           model: ListingTool,
-          required: false,
+
           attributes: ["id", "description", "toolId", "index"],
           include: {
             model: Tool,
@@ -252,7 +251,7 @@ exports.getBySlug = async (req, res, next) => {
           },
           {
             model: ListingTool,
-            required: false,
+
             attributes: ["id", "description", "toolId", "index"],
             include: {
               model: Tool,
@@ -326,7 +325,7 @@ exports.getByCategorySlug = async (req, res, next) => {
         },
         {
           model: ListingTool,
-          required: false,
+
           attributes: ["id", "description", "toolId", "index"],
           include: {
             model: Tool,
@@ -420,7 +419,6 @@ exports.getForAdmin = async (req, res, next) => {
         },
         {
           model: ListingTool,
-          required: false,
           attributes: ["id", "description", "toolId", "index"],
           include: {
             model: Tool,

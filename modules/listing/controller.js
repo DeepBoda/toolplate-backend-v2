@@ -44,7 +44,7 @@ exports.add = async (req, res, next) => {
     }
 
     if (req.body.slug) {
-      exist = await findOne({
+      exist = await service.findOne({
         where: {
           slug: req.body.slug,
         },
@@ -202,13 +202,11 @@ exports.getAllForAdmin = async (req, res, next) => {
       include: [
         {
           model: ListingCategory,
-          required: false,
           attributes: ["categoryOfListingId"],
           ...query,
           where,
           include: {
             model: CategoryOfListing,
-            required: false,
             attributes: listingCategoryAdminAttributes,
           },
         },

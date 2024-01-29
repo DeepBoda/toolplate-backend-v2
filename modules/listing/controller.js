@@ -198,27 +198,16 @@ exports.getAllForAdmin = async (req, res, next) => {
       ...sqquery(query, {}, ["title"]),
       distinct: true, // Add this option to ensure accurate counts
       attributes: listingAllAdminAttributes,
-      include: [
-        {
-          model: ListingCategory,
-          attributes: ["categoryOfListingId"],
-          ...query,
-          where,
-          include: {
-            model: CategoryOfListing,
-            attributes: listingCategoryAdminAttributes,
-          },
+      include: {
+        model: ListingCategory,
+        attributes: ["categoryOfListingId"],
+        ...query,
+        where,
+        include: {
+          model: CategoryOfListing,
+          attributes: listingCategoryAdminAttributes,
         },
-        {
-          model: ListingTool,
-
-          attributes: ["id", "description", "toolId", "index"],
-          include: {
-            model: Tool,
-            attributes: toolAdminAttributes,
-          },
-        },
-      ],
+      },
     });
 
     res.status(200).send({

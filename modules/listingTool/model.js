@@ -15,7 +15,7 @@ const ListingTool = sequelize.define("listingTool", {
   },
   index: {
     type: DataTypes.STRING,
-    defaultValue: 0,
+    defaultValue: "0",
   },
 });
 

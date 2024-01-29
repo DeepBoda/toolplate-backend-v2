@@ -20,6 +20,7 @@ exports.toolAttributes = [
   "link",
   "slug",
   "createdAt",
+  "updatedAt",
   "likes",
   "views",
   "wishlists",
@@ -57,6 +58,7 @@ exports.blogAttributes = [
   "readTime",
   "slug",
   "createdAt",
+  "updatedAt",
   "likes",
   "views",
   "comments",
@@ -75,6 +77,7 @@ exports.newsAttributes = [
   "newsCategoryId",
   "release",
   "createdAt",
+  "updatedAt",
 ];
 exports.submitToolAttributes = [
   "id",
@@ -117,6 +120,7 @@ exports.toolAllAdminAttributes = [
   "price",
   "slug",
   "createdAt",
+  "updatedAt",
   "likes",
   "views",
   "wishlists",
@@ -133,6 +137,7 @@ exports.blogAllAdminAttributes = [
   "readTime",
   "slug",
   "createdAt",
+  "updatedAt",
   "likes",
   "views",
   "comments",
@@ -164,6 +169,7 @@ exports.ratingsAdminAttributes = [
   "title",
   "review",
   "createdAt",
+  "updatedAt",
   "toolId",
   "userId",
 ];

@@ -45,5 +45,18 @@ router.use("/listing", require("../modules/listing/admin"));
 router.use("/listings/view", require("../modules/listingView/admin"));
 router.use("/listingLike", require("../modules/listingLike/admin"));
 router.use("/submit-tool", require("../modules/submitTool/admin"));
+router.use("/listing-comment", require("../modules/listingComment/admin"));
+router.use(
+  "/listing-commentLike",
+  require("../modules/listingCommentLike/admin")
+);
+router.use(
+  "/listing-comments/reply",
+  require("../modules/listingCommentReply/admin")
+);
+router.use(
+  "/listing-comments/replyLike",
+  require("../modules/listingCommentReplyLike/admin")
+);
 
 module.exports = router;

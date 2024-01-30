@@ -5,19 +5,25 @@ const { dateFilter } = require("../../utils/service");
 const userService = require("../user/service");
 const toolService = require("../tool/service");
 const blogService = require("../blog/service");
+const listingService = require("../listing/service");
 const mainCategoryService = require("../mainCategory/service");
 const categoryService = require("../category/service");
 const notificationService = require("../notification/service");
 const toolViewService = require("../toolView/service");
 const blogCategoryService = require("../categoryOfBlog/service");
+const listingCategoryService = require("../categoryOfListing/service");
 const blogViewService = require("../blogView/service");
+const listingViewService = require("../listingView/service");
 const toolLikeService = require("../toolLike/service");
 const blogLikeService = require("../blogLike/service");
+const listingLikeService = require("../listingLike/service");
 const toolWishlistService = require("../toolWishlist/service");
 const blogWishlistService = require("../blogWishlist/service");
 const toolRatingService = require("../toolRating/service");
 const blogCommentService = require("../blogComment/service");
 const blogCommentReplyService = require("../blogCommentReply/service");
+const listingCommentService = require("../listingComment/service");
+const listingCommentReplyService = require("../listingCommentReply/service");
 const newsService = require("../news/service");
 const newsCategoryService = require("../newsCategory/service");
 const newsViewService = require("../newsView/service");
@@ -40,19 +46,25 @@ exports.overview = async (req, res, next) => {
       users,
       tools,
       blogs,
+      listings,
       mainCategories,
       categories,
       notifications,
       toolViews,
       blogCategories,
       blogViews,
+      listingCategories,
+      listingViews,
       toolLikes,
       blogLikes,
+      listingLikes,
       toolWishlists,
       blogWishlists,
       toolRatings,
       blogComments,
       blogCommentReplies,
+      listingComments,
+      listingCommentReplies,
       news,
       newsCategories,
       newsViews,
@@ -62,19 +74,25 @@ exports.overview = async (req, res, next) => {
       userService.count(query),
       toolService.count(query),
       blogService.count(query),
+      listingService.count(query),
       mainCategoryService.count(query),
       categoryService.count(query),
       notificationService.count(query),
       toolViewService.count(query),
       blogCategoryService.count(query),
       blogViewService.count(query),
+      listingCategoryService.count(query),
+      listingViewService.count(query),
       toolLikeService.count(query),
       blogLikeService.count(query),
+      listingLikeService.count(query),
       toolWishlistService.count(query),
       blogWishlistService.count(query),
       toolRatingService.count(query),
       blogCommentService.count(query),
       blogCommentReplyService.count(query),
+      listingCommentService.count(query),
+      listingCommentReplyService.count(query),
       newsService.count(query),
       newsCategoryService.count(query),
       newsViewService.count(query),
@@ -87,19 +105,25 @@ exports.overview = async (req, res, next) => {
         users,
         tools,
         blogs,
+        listings,
         mainCategories,
         categories,
         notifications,
         toolViews,
         blogCategories,
         blogViews,
+        listingCategories,
+        listingViews,
         toolLikes,
         blogLikes,
+        listingLikes,
         toolWishlists,
         blogWishlists,
         toolRatings,
         blogComments,
         blogCommentReplies,
+        listingComments,
+        listingCommentReplies,
         news,
         newsCategories,
         newsViews,

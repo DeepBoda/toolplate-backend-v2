@@ -13,6 +13,7 @@ router
 
 router
   .route("/meta/:id")
+  .get(listing.getMetaForAdmin)
   .patch(joiValidator(joiSchema.meta), listing.updateMeta);
 
 router

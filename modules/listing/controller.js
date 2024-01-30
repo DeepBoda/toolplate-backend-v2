@@ -418,6 +418,28 @@ exports.getForAdmin = async (req, res, next) => {
     next(error);
   }
 };
+exports.getMetaForAdmin = async (req, res, next) => {
+  try {
+    // let data = await redisService.get(`oneListing`);
+    // if (!data)
+
+    const data = await service.findOne({
+      where: {
+        id: req.params.id,
+      },
+      attributes: ["id", "metaTitle", "metaDescription"],
+    });
+
+    // redisService.set(`oneListing`, data);
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getRelatedListings = async (req, res, next) => {
   try {

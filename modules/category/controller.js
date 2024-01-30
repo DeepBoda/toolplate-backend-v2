@@ -111,61 +111,31 @@ exports.getSitemap = async (req, res, next) => {
 
       data = {};
 
-      // Loop through categories
-      for (const category of categories) {
-        // Check if the category has more than 2 tools
-        const toolCategoryCount = await toolCategoryService.count({
-          where: { categoryId: category.id },
-        });
-
-        if (toolCategoryCount > 2) {
-          // Generate URLs based on tool prices
-          const freeToolCount = await toolCategoryService.count({
-            where: { categoryId: category.id, "$tool.price$": "Free" },
-            include: { model: Tool, attributes: ["id", "price"] },
-          });
-
-          const premiumToolCount = await toolCategoryService.count({
-            where: { categoryId: category.id, "$tool.price$": "Premium" },
-            include: { model: Tool, attributes: ["id", "price"] },
-          });
-
-          const freemiumToolCount = await toolCategoryService.count({
-            where: { categoryId: category.id, "$tool.price$": "Freemium" },
-            include: { model: Tool, attributes: ["id", "price"] },
-          });
-
-          const key = category.name.charAt(0).toUpperCase();
-
-          if (!data[key]) {
-            data[key] = [];
-          }
-          data[key].push({
+      // Group the data by the first letter of the category name
+      categories.forEach((category) => {
+        const key = category.name.charAt(0).toUpperCase();
+        if (!data[key]) {
+          data[key] = [];
+        }
+        data[key].push([
+          {
             title: category.name + " Tools",
             url: `${url}/tools/${category.slug}`,
-          });
-
-          if (freeToolCount > 0) {
-            data[key].push({
-              title: "Free " + category.name + " Tools",
-              url: `${url}/tools/${category.slug}/free`,
-            });
-          }
-          if (premiumToolCount > 0) {
-            data[key].push({
-              title: "Paid " + category.name + " Tools",
-              url: `${url}/tools/${category.slug}/premium`,
-            });
-          }
-          if (freemiumToolCount > 0) {
-            data[key].push({
-              title: "Freemium " + category.name + " Tools",
-              url: `${url}/tools/${category.slug}/freemium`,
-            });
-          }
-        }
-      }
-
+          },
+          {
+            title: "Free " + category.name + " Tools",
+            url: `${url}/tools/${category.slug}/free`,
+          },
+          {
+            title: "Paid " + category.name + " Tools",
+            url: `${url}/tools/${category.slug}/premium`,
+          },
+          {
+            title: "Freemium " + category.name + " Tools",
+            url: `${url}/tools/${category.slug}/freemium`,
+          },
+        ]);
+      });
       redisService.set(`categorySitemap`, data);
     }
 

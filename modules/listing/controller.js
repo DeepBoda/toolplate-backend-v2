@@ -627,6 +627,26 @@ exports.update = async (req, res, next) => {
     next(error);
   }
 };
+exports.updateMeta = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Update the listing data
+    const [affectedRows] = await service.update(req.body, { where: { id } });
+
+    // Send the response
+    res.status(200).json({ status: "success", data: { affectedRows } });
+
+    // Retrieve the old listing data based on the provided listing ID
+    const listing = await service.findOne({ where: { id } });
+
+    // Clear Redis cache
+    redisService.del(`listing?slug=${listing.slug}`);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 
 exports.delete = async (req, res, next) => {
   try {

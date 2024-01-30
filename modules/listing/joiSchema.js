@@ -19,4 +19,8 @@ module.exports = {
     categories: Joi.string(),
     tools: Joi.string(),
   }),
+  meta: Joi.object().keys({
+    metaTitle: Joi.string(),
+    metaDescription: Joi.string().allow(null),
+  }),
 };

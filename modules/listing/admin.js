@@ -12,6 +12,10 @@ router
   .post(upload.single("image"), joiValidator(joiSchema.create), listing.add);
 
 router
+  .route("/meta/:id")
+  .patch(joiValidator(joiSchema.meta), listing.updateMeta);
+
+router
   .route("/:id")
   .get(listing.getForAdmin)
   .patch(upload.single("image"), joiValidator(joiSchema.update), listing.update)

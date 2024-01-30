@@ -527,7 +527,7 @@ exports.getSlugsForSitemap = async (req, res, next) => {
 
     // Generate array of objects with slug and updatedAt
     const listingSlugs = listings.map((listing) => ({
-      slug: `${url}/listing/${listing.slug}`,
+      slug: `${url}/list/${listing.slug}`,
       updatedAt: listing.updatedAt, // Assuming updatedAt is a field in your listing model
     }));
 

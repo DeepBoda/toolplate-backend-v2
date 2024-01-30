@@ -107,25 +107,27 @@ exports.getAllForAdmin = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery(req.query),
-      attributes: [
-        ...ratingsAdminAttributes,
-        [
-          sequelize.fn(
-            "ROUND",
-            sequelize.literal(
-              `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+      attributes: {
+        include: [
+          [
+            sequelize.fn(
+              "ROUND",
+              sequelize.literal(
+                `(SELECT IFNULL(AVG(rating), 0) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+              ),
+              1
             ),
-            1
-          ),
-          "ratingsAverage",
+            "ratingsAverage",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
+            ),
+            "totalRatings",
+          ],
         ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolRatings WHERE toolRatings.toolId = tool.id AND deletedAt is null)`
-          ),
-          "totalRatings",
-        ],
-      ],
+      },
+
       include: [
         {
           model: User,

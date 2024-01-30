@@ -94,6 +94,7 @@ exports.add = async (req, res, next) => {
         id: { [Op.in]: categoryIds },
       },
     });
+
     // Step 3: Add entries in the `toolCategory` table using bulk insert
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       toolId: tool.id,
@@ -946,6 +947,13 @@ exports.update = async (req, res, next) => {
 
     // Update categories
     const categoryIds = categories.split(",").map(Number);
+
+    const cats = await categoryService.findAll({
+      where: {
+        id: { [Op.in]: categoryIds },
+      },
+    });
+
     // Delete old associations
     await toolCategoryService.delete({ where: { toolId: id } });
 
@@ -955,7 +963,20 @@ exports.update = async (req, res, next) => {
       categoryId,
     }));
 
+    //  execute bulk inserts concurrently
     toolCategoryService.bulkCreate(categoryBulkInsertData);
+
+    // Extract category names using map
+    const categoryNames = cats.map((category) => category.name).join(" and ");
+    const seoData = {
+      // title: `${req.body.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
+      description: `Explore ${req.body.title} on Toolplate: a ${req.body.price} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${req.body.title}. Your one-stop resource for ${req.body.title} insights`,
+    };
+    seoService.update(seoData, {
+      where: {
+        toolId: id,
+      },
+    });
   } catch (error) {
     console.error(error);
     next(error);

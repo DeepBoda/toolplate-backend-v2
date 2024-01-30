@@ -188,6 +188,10 @@ exports.userData = async (req, res, next) => {
       replies,
       newsViews,
       newsWishlists,
+      listingViews,
+      listingLikes,
+      listingComments,
+      listingCommentReplies,
     ] = await Promise.all([
       toolViewService.count({ where: { userId, ...query?.where } }),
       toolLikeService.count({ where: { userId, ...query?.where } }),
@@ -214,6 +218,18 @@ exports.userData = async (req, res, next) => {
       newsWishlistService.count({
         where: { userId, ...query?.where },
       }),
+      listingViewService.count({
+        where: { userId, ...query?.where },
+      }),
+      listingLikeService.count({
+        where: { userId, ...query?.where },
+      }),
+      listingCommentService.count({
+        where: { userId, ...query?.where },
+      }),
+      listingCommentReplyService.count({
+        where: { userId, ...query?.where },
+      }),
     ]);
 
     res.status(200).send({
@@ -230,6 +246,10 @@ exports.userData = async (req, res, next) => {
         replies,
         newsViews,
         newsWishlists,
+        listingViews,
+        listingLikes,
+        listingComments,
+        listingCommentReplies,
       },
     });
   } catch (error) {

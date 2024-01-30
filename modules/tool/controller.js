@@ -110,7 +110,7 @@ exports.add = async (req, res, next) => {
       toolId: tool.id,
       title: `${tool.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
       description: `Explore ${tool.title} on Toolplate: a ${(tool.price =
-        "premium"
+        "Premium"
           ? "Paid"
           : tool.price)} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
         tool.title
@@ -972,7 +972,7 @@ exports.update = async (req, res, next) => {
       // title: `${req.body.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
       description: `Explore ${
         req.body.title
-      } on Toolplate: a ${(req.body.price = "premium"
+      } on Toolplate: a ${(req.body.price = "Premium"
         ? "Paid"
         : req.body
             .price)} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${

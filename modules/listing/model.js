@@ -39,9 +39,22 @@ const Listing = sequelize.define(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    metaTitle: {
+      type: DataTypes.STRING,
+      defaultValue: function () {
+        return this.getDataValue("title");
+      },
+    },
+    metaDescription: {
+      type: DataTypes.TEXT,
+      defaultValue: function () {
+        return this.getDataValue("description");
+      },
+    },
   },
   {
     paranoid: true,
   }
 );
+
 module.exports = Listing;

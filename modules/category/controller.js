@@ -151,76 +151,83 @@ exports.getSitemap = async (req, res, next) => {
 
 exports.getSlugsForSitemap = async (req, res, next) => {
   try {
-    let data;
-    // let data = await redisService.get(`category-slugs`);
-    let categorySlugs;
-
+    // Try to retrieve the categories from the Redis cache
+    let data = await redisService.get(`category-slugs`);
     if (!data) {
       const url =
         process.env.NODE_ENV === "production"
           ? process.env.PROD_WEB
           : process.env.DEV_WEB;
-      const categories = await service.findAll(
-        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-      );
 
-      data = {};
+      const categories = await service.findAll();
 
-      categorySlugs = categories.flatMap((category) =>
-        ["", "/free", "/premium", "/freemium"].map((suffix) => ({
-          slug: `${url}/tools/${category.slug}${suffix}`,
-          updatedAt: category.updatedAt,
-        }))
-      );
-
-      await Promise.all(
+      const categorySlugs = await Promise.all(
         categories.map(async (category) => {
           const toolCategoryCount = await toolCategoryService.count({
             where: { categoryId: category.id },
           });
 
-          if (toolCategoryCount > 2) {
-            const toolCounts = await Promise.all(
-              ["Free", "Premium", "Freemium"].map(async (price) => {
-                return {
-                  count: await toolCategoryService.count({
-                    where: { categoryId: category.id, "$tool.price$": price },
-                    include: { model: Tool, attributes: ["id", "price"] },
-                  }),
-                  price,
-                };
-              })
-            );
-
-            const key = category.name.charAt(0).toUpperCase();
-            if (!data[key]) data[key] = [];
-
-            data[key].push({
-              title: category.name + " Tools",
-              url: `${url}/tools/${category.slug}`,
-            });
-
-            toolCounts.forEach(({ count, price }) => {
-              if (count > 1) {
-                data[key].push({
-                  title: `${price} ${category.name} Tools`,
-                  url: `${url}/tools/${category.slug}/${price.toLowerCase()}`,
-                });
-              }
-            });
+          if (toolCategoryCount <= 2) {
+            return null; // Skip categories with less than 2 tool categories
           }
+
+          const slugs = [
+            {
+              slug: `${url}/tools/${category.slug}`,
+              updatedAt: category.updatedAt,
+            },
+            {
+              slug: `${url}/tools/${category.slug}/free`,
+              updatedAt: category.updatedAt,
+            },
+            {
+              slug: `${url}/tools/${category.slug}/premium`,
+              updatedAt: category.updatedAt,
+            },
+            {
+              slug: `${url}/tools/${category.slug}/freemium`,
+              updatedAt: category.updatedAt,
+            },
+          ];
+
+          const [freeToolCount, premiumToolCount, freemiumToolCount] =
+            await Promise.all([
+              toolCategoryService.count({
+                where: { categoryId: category.id, "$tool.price$": "Free" },
+                include: { model: Tool, attributes: ["id", "price"] },
+              }),
+              toolCategoryService.count({
+                where: { categoryId: category.id, "$tool.price$": "Premium" },
+                include: { model: Tool, attributes: ["id", "price"] },
+              }),
+              toolCategoryService.count({
+                where: { categoryId: category.id, "$tool.price$": "Freemium" },
+                include: { model: Tool, attributes: ["id", "price"] },
+              }),
+            ]);
+
+          if (freeToolCount < 2) {
+            slugs.splice(1, 1); // Remove the free slug
+          }
+
+          if (premiumToolCount < 2) {
+            slugs.splice(2, 1); // Remove the premium slug
+          }
+
+          if (freemiumToolCount < 2) {
+            slugs.splice(3, 1); // Remove the freemium slug
+          }
+
+          return slugs;
         })
       );
 
+      // Flatten the array of arrays and filter out null results
+      data = categorySlugs.flat().filter((slugs) => slugs !== null);
       redisService.set(`category-slugs`, data);
     }
 
-    const combinedData = Object.values(data).flat(); // Combine data values into a flat array
-
-    res.status(200).send({
-      status: "success",
-      data: categorySlugs.concat(combinedData),
-    });
+    res.status(200).send({ status: "success", data: data });
   } catch (error) {
     next(error);
   }

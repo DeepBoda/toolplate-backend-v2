@@ -36,6 +36,7 @@ exports.add = async (req, res, next) => {
     const data = await service.create(req.body);
     redisService.del(`categories`);
     redisService.del(`main-categories`);
+    redisService.del(`category-slugs`);
     redisService.del(`categorySitemap`);
 
     res.status(200).json({
@@ -150,21 +151,76 @@ exports.getSitemap = async (req, res, next) => {
 
 exports.getSlugsForSitemap = async (req, res, next) => {
   try {
-    const url =
-      process.env.NODE_ENV === "production"
-        ? process.env.PROD_WEB
-        : process.env.DEV_WEB;
+    let data;
+    // let data = await redisService.get(`category-slugs`);
+    let categorySlugs;
 
-    const categories = await service.findAll();
+    if (!data) {
+      const url =
+        process.env.NODE_ENV === "production"
+          ? process.env.PROD_WEB
+          : process.env.DEV_WEB;
+      const categories = await service.findAll(
+        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
+      );
 
-    const categorySlugs = categories.flatMap((category) =>
-      ["", "/free", "/premium", "/freemium"].map((suffix) => ({
-        slug: `${url}/tools/${category.slug}${suffix}`,
-        updatedAt: category.updatedAt,
-      }))
-    );
+      data = {};
 
-    res.status(200).send({ status: "success", data: categorySlugs });
+      categorySlugs = categories.flatMap((category) =>
+        ["", "/free", "/premium", "/freemium"].map((suffix) => ({
+          slug: `${url}/tools/${category.slug}${suffix}`,
+          updatedAt: category.updatedAt,
+        }))
+      );
+
+      await Promise.all(
+        categories.map(async (category) => {
+          const toolCategoryCount = await toolCategoryService.count({
+            where: { categoryId: category.id },
+          });
+
+          if (toolCategoryCount > 2) {
+            const toolCounts = await Promise.all(
+              ["Free", "Premium", "Freemium"].map(async (price) => {
+                return {
+                  count: await toolCategoryService.count({
+                    where: { categoryId: category.id, "$tool.price$": price },
+                    include: { model: Tool, attributes: ["id", "price"] },
+                  }),
+                  price,
+                };
+              })
+            );
+
+            const key = category.name.charAt(0).toUpperCase();
+            if (!data[key]) data[key] = [];
+
+            data[key].push({
+              title: category.name + " Tools",
+              url: `${url}/tools/${category.slug}`,
+            });
+
+            toolCounts.forEach(({ count, price }) => {
+              if (count > 1) {
+                data[key].push({
+                  title: `${price} ${category.name} Tools`,
+                  url: `${url}/tools/${category.slug}/${price.toLowerCase()}`,
+                });
+              }
+            });
+          }
+        })
+      );
+
+      redisService.set(`category-slugs`, data);
+    }
+
+    const combinedData = Object.values(data).flat(); // Combine data values into a flat array
+
+    res.status(200).send({
+      status: "success",
+      data: categorySlugs.concat(combinedData),
+    });
   } catch (error) {
     next(error);
   }
@@ -319,6 +375,7 @@ exports.delete = async (req, res, next) => {
     await Promise.all([
       toolCategoryService.delete({ where: { categoryId: id } }),
       redisService.del(`categories`),
+      redisService.del(`category-slugs`),
       redisService.del(`categorySitemap`),
       redisService.del(`main-categories`),
     ]);

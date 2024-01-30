@@ -41,19 +41,23 @@ const Listing = sequelize.define(
     },
     metaTitle: {
       type: DataTypes.STRING,
-      defaultValue: function () {
-        return this.getDataValue("title");
-      },
     },
     metaDescription: {
       type: DataTypes.TEXT,
-      defaultValue: function () {
-        return this.getDataValue("description");
-      },
     },
   },
   {
     paranoid: true,
+    hooks: {
+      beforeValidate: (listing, options) => {
+        if (!listing.metaTitle) {
+          listing.metaTitle = listing.title;
+        }
+        if (!listing.metaDescription) {
+          listing.metaDescription = listing.description;
+        }
+      },
+    },
   }
 );
 

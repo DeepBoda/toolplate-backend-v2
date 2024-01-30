@@ -20,7 +20,14 @@ const DataEntrySeo = async () => {
       const categoryNames = Tools[i].toolCategories
         .map((c) => c.category.name)
         .join(" and ");
-      const description = `Explore ${Tools[i].title} on Toolplate: a ${Tools[i].price} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${Tools[i].title}. Your one-stop resource for ${Tools[i].title} insights`;
+      const description = `Explore ${Tools[i].title} on Toolplate: a ${(Tools[
+        i
+      ].price = "Premium"
+        ? "Paid"
+        : Tools[i]
+            .price)} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
+        Tools[i].title
+      }. Your one-stop resource for ${Tools[i].title} insights`;
 
       const payload = {
         // title: title,

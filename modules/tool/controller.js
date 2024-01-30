@@ -108,7 +108,12 @@ exports.add = async (req, res, next) => {
     const seoData = {
       toolId: tool.id,
       title: `${tool.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
-      description: `Explore ${tool.title} on Toolplate: a ${tool.price} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${tool.title}. Your one-stop resource for ${tool.title} insights`,
+      description: `Explore ${tool.title} on Toolplate: a ${(tool.price =
+        "premium"
+          ? "Paid"
+          : tool.price)} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
+        tool.title
+      }. Your one-stop resource for ${tool.title} insights`,
     };
     seoService.create(seoData);
 

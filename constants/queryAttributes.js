@@ -202,7 +202,6 @@ exports.mainCategoryAdminAttributes = [
 ];
 exports.listingCategoryAdminAttributes = ["id", "name", "slug", "createdAt"];
 
-exports.ratingsAdminAttributes = ["id", "name", "slug", "createdAt"];
 exports.notificationAdminAttributes = [
   "id",
   "title",

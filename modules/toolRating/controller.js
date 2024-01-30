@@ -9,7 +9,6 @@ const User = require("../user/model");
 const {
   userAdminAttributes,
   toolAdminAttributes,
-  ratingsAdminAttributes,
 } = require("../../constants/queryAttributes");
 
 exports.add = async (req, res, next) => {

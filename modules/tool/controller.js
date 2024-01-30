@@ -970,7 +970,14 @@ exports.update = async (req, res, next) => {
     const categoryNames = cats.map((category) => category.name).join(" and ");
     const seoData = {
       // title: `${req.body.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
-      description: `Explore ${req.body.title} on Toolplate: a ${req.body.price} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${req.body.title}. Your one-stop resource for ${req.body.title} insights`,
+      description: `Explore ${
+        req.body.title
+      } on Toolplate: a ${(req.body.price = "premium"
+        ? "Paid"
+        : req.body
+            .price)} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
+        req.body.title
+      }. Your one-stop resource for ${req.body.title} insights`,
     };
     seoService.update(seoData, {
       where: {

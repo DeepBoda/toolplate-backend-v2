@@ -74,6 +74,7 @@ exports.listingAttributes = [
   "slug",
   "createdAt",
   "updatedAt",
+  "deletedAt",
   "likes",
   "views",
   "comments",

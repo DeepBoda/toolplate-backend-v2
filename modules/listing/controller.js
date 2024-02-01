@@ -446,6 +446,40 @@ exports.getRelatedListings = async (req, res, next) => {
     const { id } = await service.findOne({ where: { slug: req.params.slug } });
     // console.log("--------------", listing);
     // Find the details of the opened listing
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const relatedListings = await service.findAll({
+      // ...sqquery(req.query),
+      where: {
+        id: { [Op.ne]: id },
+      },
+      attributes: [
+        ...listingAttributes,
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingLikes WHERE listingLikes.listingId = listing.id AND listingLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+      ],
+
+      include: [
+        {
+          model: ListingCategory,
+          attributes: ["categoryOfListingId"],
+          include: {
+            model: CategoryOfListing,
+            attributes: listingCategoryAttributes,
+          },
+          required: true,
+        },
+      ],
+      order: sequelize.random(),
+      limit: 4,
+    });
+
+    /*
     const openedListing = await service.findOne({
       where: { id },
       attributes: listingAttributes,
@@ -527,10 +561,12 @@ exports.getRelatedListings = async (req, res, next) => {
         }
       )
     );
+    */
 
     res.status(200).json({
       status: "success",
-      data: reducedData,
+      data: relatedListings,
+      // data: reducedData,
     });
   } catch (error) {
     next(error);

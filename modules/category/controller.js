@@ -312,6 +312,7 @@ exports.getByMain = async (req, res, next) => {
               attributes: ["name", "slug"],
             },
           },
+          required: true,
         },
       },
     });

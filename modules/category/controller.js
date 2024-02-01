@@ -312,9 +312,9 @@ exports.getByMain = async (req, res, next) => {
               attributes: ["name", "slug"],
             },
           },
-          required: true,
         },
       },
+      required: true,
     });
 
     res.status(200).send({

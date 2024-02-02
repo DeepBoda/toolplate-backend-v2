@@ -314,6 +314,7 @@ exports.getByMain = async (req, res, next) => {
           },
         },
       },
+      required: true,
     });
 
     res.status(200).send({

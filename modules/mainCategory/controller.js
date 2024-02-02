@@ -70,6 +70,7 @@ exports.getAll = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getAllForSubmit = async (req, res, next) => {
   try {
     // Try to retrieve the categories from the Redis cache

@@ -108,7 +108,7 @@ exports.add = async (req, res, next) => {
     const categoryNames = cats.map((category) => category.name).join(" and ");
     const seoData = {
       toolId: tool.id,
-      title: `${tool.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
+      title: `${tool.title} AI Reviews, Features, Pricing, & Alternative Tools`,
       description: `Explore ${tool.title} on Toolplate: a ${(tool.price =
         "Premium"
           ? "Paid"

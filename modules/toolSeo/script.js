@@ -54,4 +54,26 @@ const DataEntrySeo = async () => {
   }
 };
 
-DataEntrySeo();
+// DataEntrySeo();
+
+const updateTitles = async () => {
+  try {
+    const tools = await service.findAll({
+      attributes: ["id", "title"],
+    });
+
+    for (const tool of tools) {
+      const updatedTitle = tool.title.replace(" Pricing", " Pricing,");
+
+      // Update the tool title
+      await service.update({ title: updatedTitle }, { where: { id: tool.id } });
+      console.log(`Title updated for tool ${tool.id}`);
+    }
+
+    console.log("All titles updated successfully!");
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// updateTitles();

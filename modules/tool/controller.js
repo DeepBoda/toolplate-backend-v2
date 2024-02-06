@@ -694,7 +694,8 @@ exports.getAlternativeTools = async (req, res, next) => {
   try {
     // Find the details of the opened tool
     const openedTool = await service.findOne({
-      where: { id: req.params.id },
+      where: { slug: req.params.slug },
+      // attributes: ["id", "title", "description", "image", "price", "slug"],
       include: [
         {
           model: ToolCategory,
@@ -724,9 +725,9 @@ exports.getAlternativeTools = async (req, res, next) => {
     // Find tools with the same category  IDs
     const data = await service.findAndCountAll({
       ...sqquery(
-        { ...req.query, sort: "views", sortBy: "DESC" },
+        req.query,
         {
-          id: { [Op.ne]: req.params.id },
+          slug: { [Op.ne]: req.params.slug },
           release: {
             [Op.lte]: moment(), // Less than or equal to the current date
           },
@@ -735,19 +736,13 @@ exports.getAlternativeTools = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
-        ...toolAttributes,
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
-          ),
-          "isWishlisted",
-        ],
+        "id",
+        "title",
+        "description",
+        "image",
+        "price",
+        "slug",
+        "createdAt",
       ],
 
       include: [
@@ -772,6 +767,84 @@ exports.getAlternativeTools = async (req, res, next) => {
   }
 };
 
+exports.getAlternativeDynamicTools = async (req, res, next) => {
+  try {
+    // Find the details of the opened tool
+    const openedTool = await service.findOne({
+      where: { slug: req.params.slug },
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+
+    if (!openedTool) {
+      throw createError(404, "Tool not found");
+    }
+
+    // Find tools that have the same category as the opened tool
+    const categoryIds = openedTool.toolCategories.map(
+      (toolCategory) => toolCategory.categoryId
+    );
+    const where = {};
+
+    where["$toolCategories.categoryId$"] = { [Op.in]: categoryIds };
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    // Find tools with the same category  IDs
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        req.query,
+        {
+          slug: { [Op.ne]: req.params.slug },
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: [
+        "id",
+        "createdAt",
+        "ratingsAverage",
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          where,
+        },
+      ],
+    });
+
+    res.status(200).json({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 exports.getAlternativeSchema = async (req, res, next) => {
   try {
     const url =

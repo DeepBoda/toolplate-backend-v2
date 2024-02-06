@@ -476,7 +476,7 @@ exports.getRelatedListings = async (req, res, next) => {
         },
       ],
       order: sequelize.random(),
-      limit: 4,
+      limit: 2,
     });
 
     /*

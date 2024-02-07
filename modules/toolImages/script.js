@@ -6,23 +6,25 @@ const {
 } = require("../../utils/imageResize");
 const service = require("./service");
 const toolService = require("../tool/service");
+
 const imageResize = async () => {
   try {
-    const toolImages = await service.findAll();
-
+    const toolImages = await service.findAll({
+      order: [["createdAt", "DESC"]],
+    });
     for (let i in toolImages) {
-      await Promise.all([
-        resizeAndUploadImage(
-          toolImages[i].image,
-          `toolPreview_${toolImages[i].id}`
-        ),
-        resizeAndUploadWebP(
-          toolPreviewSize,
-          toolImages[i].image,
-          `toolPreview_${toolImages[i].id}`
-        ),
-      ]);
-      console.log(toolImages[i].id);
+      // await Promise.all([
+      //   resizeAndUploadImage(
+      //     toolImages[i].image,
+      //     `toolPreview_${toolImages[i].id}`
+      //   ),
+      await resizeAndUploadWebP(
+        toolPreviewSize,
+        toolImages[i].image,
+        `toolPreview_${toolImages[i].id}`
+      ),
+        // ]);
+        console.log(toolImages[i].id);
     }
   } catch (error) {
     console.error(error);

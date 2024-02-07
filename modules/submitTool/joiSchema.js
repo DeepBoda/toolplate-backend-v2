@@ -11,7 +11,7 @@ module.exports = {
     link: Joi.string().required(),
     message: Joi.string().required(),
     status: Joi.string().valid("Pending", "OnGoing", "Approved", "Denied"),
-    mainCategoryId: Joi.number().required(),
+    categories: Joi.array().required(),
   }),
   update: Joi.object().keys({
     firstName: Joi.string(),
@@ -23,6 +23,6 @@ module.exports = {
     link: Joi.string(),
     message: Joi.string(),
     status: Joi.string().valid("Pending", "OnGoing", "Approved", "Denied"),
-    mainCategoryId: Joi.number(),
+    categories: Joi.array(),
   }),
 };

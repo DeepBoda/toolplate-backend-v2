@@ -100,7 +100,6 @@ exports.submitToolAttributes = [
   "country",
   "status",
   "createdAt",
-  "mainCategoryId",
 ];
 
 exports.categoryAttributes = [

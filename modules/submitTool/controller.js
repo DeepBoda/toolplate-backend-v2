@@ -3,7 +3,8 @@
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { submitToolAttributes } = require("../../constants/queryAttributes");
-const MainCategory = require("../mainCategory/model");
+const Category = require("../category/model");
+const SubmitToolCategory = require("../submitToolCategory/model");
 const submitToolCategoryService = require("../submitToolCategory/service");
 
 // ------------- Only Admin can Create --------------
@@ -40,8 +41,12 @@ exports.getAll = async (req, res, next) => {
       ...sqquery(req.query, {}, ["title"]),
       attributes: submitToolAttributes,
       include: {
-        model: MainCategory,
-        attributes: ["id", "name"],
+        model: SubmitToolCategory,
+        attributes: ["categoryId"],
+        include: {
+          model: Category,
+          attributes: ["id", "name"],
+        },
       },
     });
 
@@ -61,8 +66,12 @@ exports.getById = async (req, res, next) => {
         id: req.params.id,
       },
       include: {
-        model: MainCategory,
-        attributes: ["id", "name"],
+        model: SubmitToolCategory,
+        attributes: ["categoryId"],
+        include: {
+          model: Category,
+          attributes: ["id", "name"],
+        },
       },
     });
 

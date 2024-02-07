@@ -57,6 +57,4 @@ const SubmitTool = sequelize.define(
 User.hasMany(SubmitTool);
 SubmitTool.belongsTo(User);
 
-// SubmitTool.sync({ alter: true });
-
 module.exports = SubmitTool;

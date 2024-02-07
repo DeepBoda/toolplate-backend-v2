@@ -4,13 +4,24 @@ const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const { submitToolAttributes } = require("../../constants/queryAttributes");
 const MainCategory = require("../mainCategory/model");
+const submitToolCategoryService = require("../submitToolCategory/service");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor ? req.requestor.id : null;
+    const { categories, ...bodyData } = req.body;
 
-    const data = await service.create(req.body);
+    const data = await service.create(bodyData);
+
+    // Step 1: Add entries in the `toolCategory` table using bulk insert
+    const categoryBulkInsertData = categories.map((categoryId) => ({
+      submitToolId: data.id,
+      categoryId,
+    }));
+
+    //  execute bulk inserts concurrently
+    submitToolCategoryService.bulkCreate(categoryBulkInsertData);
 
     res.status(200).json({
       status: "success",
@@ -68,12 +79,27 @@ exports.getById = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     // Update the blog data
-    const [affectedRows] = await service.update(req.body, {
+    const { categories, ...body } = req.body;
+
+    const [affectedRows] = await service.update(body, {
       where: {
         id: req.params.id,
       },
     });
 
+    // Delete old associations
+    await submitToolCategoryService.delete({
+      where: { submitToolId: req.params.id },
+    });
+
+    // Create new associations using bulk create operations
+    const categoryBulkInsertData = categories.map((categoryId) => ({
+      toolId: id,
+      categoryId,
+    }));
+
+    //  execute bulk inserts concurrently
+    submitToolCategoryService.bulkCreate(categoryBulkInsertData);
     // Send the response
     res.status(200).json({
       status: "success",

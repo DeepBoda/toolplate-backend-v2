@@ -7,6 +7,7 @@ const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 router.use(authMiddleware,)
 router.route("/").get(category.getAll);
 router.route("/main").post(category.getByMain);
+router.route("/main-data").post(category.getByMainDynamic);
 router.route("/slugs").get(category.getSlugsForSitemap);
 router.route("/sitemap").get(category.getSitemap);
 router.route("/:id").get(category.getById);

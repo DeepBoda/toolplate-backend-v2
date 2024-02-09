@@ -59,14 +59,21 @@ const DataEntrySeo = async () => {
 const updateTitles = async () => {
   try {
     const tools = await service.findAll({
-      attributes: ["id", "title"],
+      attributes: ["id", "title", "description"],
     });
 
     for (const tool of tools) {
-      const updatedTitle = tool.title.replace(" Pricing", " Pricing,");
+      const TIT = tool.title.replace(/\s{2,}/g, " ");
+      const DESC = tool.description.replace(/\s{2,}/g, " ");
 
       // Update the tool title
-      await service.update({ title: updatedTitle }, { where: { id: tool.id } });
+      await service.update(
+        {
+          title: TIT,
+          description: DESC,
+        },
+        { where: { id: tool.id } }
+      );
       console.log(`Title updated for tool ${tool.id}`);
     }
 
@@ -76,4 +83,4 @@ const updateTitles = async () => {
   }
 };
 
-// updateTitles();
+updateTitles();

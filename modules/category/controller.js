@@ -33,6 +33,8 @@ exports.add = async (req, res, next) => {
       remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
     });
 
+    req.body.name = req.body.name.trim();
+
     const data = await service.create(req.body);
     redisService.del(`categories`);
     redisService.del(`main-categories`);

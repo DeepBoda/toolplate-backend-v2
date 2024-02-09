@@ -27,6 +27,7 @@ exports.add = async (req, res, next) => {
       lower: true, // Convert to lowercase
       remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
     });
+    req.body.name = req.body.name.trim();
 
     const data = await service.create(req.body);
     redisService.del(`main-categories`);

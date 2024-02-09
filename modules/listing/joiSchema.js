@@ -5,6 +5,7 @@ module.exports = {
     title: Joi.string().required(),
     slug: Joi.string().required(),
     description: Joi.string().required().allow(null),
+    overview: Joi.string().allow(null),
     image: Joi.string(),
     alt: Joi.string().allow(null),
     categories: Joi.string().required(),
@@ -13,6 +14,7 @@ module.exports = {
   update: Joi.object().keys({
     title: Joi.string(),
     description: Joi.string().allow(null),
+    overview: Joi.string().allow(null),
     slug: Joi.string(),
     image: Joi.string(),
     alt: Joi.string().allow(null),

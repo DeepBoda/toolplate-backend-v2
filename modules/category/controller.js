@@ -33,6 +33,8 @@ exports.add = async (req, res, next) => {
       remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
     });
 
+    req.body.name = req.body.name.trim();
+
     const data = await service.create(req.body);
     redisService.del(`categories`);
     redisService.del(`main-categories`);
@@ -273,8 +275,6 @@ exports.getById = async (req, res, next) => {
 
 exports.getByMain = async (req, res, next) => {
   try {
-    const userId = req.requestor ? req.requestor.id : null;
-
     const { id } = await mainCategoryService.findOne({
       where: { slug: req.body.slug },
     });
@@ -289,8 +289,49 @@ exports.getByMain = async (req, res, next) => {
         limit: 3,
         include: {
           model: Tool,
+          attributes: toolCardAttributes,
+          include: {
+            model: ToolCategory,
+            attributes: ["categoryId"],
+            include: {
+              model: Category,
+              attributes: ["name", "slug"],
+            },
+          },
+        },
+      },
+      required: true,
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getByMainDynamic = async (req, res, next) => {
+  try {
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const { id } = await mainCategoryService.findOne({
+      where: { slug: req.body.slug },
+    });
+    const data = await service.findAll({
+      ...sqquery(req.query, {
+        mainCategoryId: id,
+      }),
+      attributes: ["id", "createdAt"],
+      include: {
+        model: ToolCategory,
+        attributes: ["toolId"],
+        limit: 3,
+        include: {
+          model: Tool,
           attributes: [
-            ...toolCardAttributes,
+            "id",
+            "ratingsAverage",
             [
               sequelize.literal(
                 `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
@@ -304,14 +345,6 @@ exports.getByMain = async (req, res, next) => {
               "isWishlisted",
             ],
           ],
-          include: {
-            model: ToolCategory,
-            attributes: ["categoryId"],
-            include: {
-              model: Category,
-              attributes: ["name", "slug"],
-            },
-          },
         },
       },
       required: true,

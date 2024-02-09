@@ -18,6 +18,9 @@ const Listing = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    overview: {
+      type: DataTypes.TEXT("long"),
+    },
     image: {
       type: DataTypes.STRING,
     },

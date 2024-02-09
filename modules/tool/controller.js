@@ -46,6 +46,7 @@ exports.add = async (req, res, next) => {
       }
     }
 
+    req.body.title = req.body.title.trim();
     // Create slug URL based on title
     req.body.slug = slugify(req.body.title, {
       replacement: "-", // replace spaces with hyphens
@@ -981,6 +982,7 @@ exports.update = async (req, res, next) => {
     if (req.files?.videos) {
       req.body.videos = req.files.videos.map((el) => el.location);
     }
+    req.body.title = req.body.title.trim();
 
     // if (req.body.slug) {
     //   const exist = await service.findOne({

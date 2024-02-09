@@ -69,6 +69,7 @@ exports.listingAttributes = [
   "id",
   "title",
   "description",
+  "overview",
   "image",
   "alt",
   "slug",

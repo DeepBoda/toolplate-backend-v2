@@ -275,8 +275,6 @@ exports.getById = async (req, res, next) => {
 
 exports.getByMain = async (req, res, next) => {
   try {
-    const userId = req.requestor ? req.requestor.id : null;
-
     const { id } = await mainCategoryService.findOne({
       where: { slug: req.body.slug },
     });
@@ -291,21 +289,7 @@ exports.getByMain = async (req, res, next) => {
         limit: 3,
         include: {
           model: Tool,
-          attributes: [
-            ...toolCardAttributes,
-            [
-              sequelize.literal(
-                `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-              ),
-              "isLiked",
-            ],
-            [
-              sequelize.literal(
-                `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
-              ),
-              "isWishlisted",
-            ],
-          ],
+          attributes: toolCardAttributes,
           include: {
             model: ToolCategory,
             attributes: ["categoryId"],

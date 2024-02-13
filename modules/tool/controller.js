@@ -19,6 +19,7 @@ const {
   toolAttributes,
   categoryAttributes,
   toolAllAdminAttributes,
+  toolAttributesAll,
 } = require("../../constants/queryAttributes");
 const { deleteFilesFromS3 } = require("../../middlewares/multer");
 const blogService = require("../blog/service");
@@ -177,8 +178,81 @@ exports.getAll = async (req, res, next) => {
         ["title"]
       ),
       distinct: true, // Add this option to ensure accurate counts
+      attributes: toolAttributesAll,
+
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+
+    // redisService.set(`tools`, data);
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllDynamic = async (req, res, next) => {
+  try {
+    // let data = await redisService.get(`tools`);
+    // if (!data)
+    const { categoryIds, price, ...query } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    const where = {};
+
+    if (categoryIds) {
+      // Split the comma-separated categoryIds into an array
+      const categoryIdArray = categoryIds.split(",").map(Number);
+
+      // Use the `Op.in` operator to find tools that match any of the specified categoryIds
+      where["$toolCategories.categoryId$"] = {
+        [Op.in]: categoryIdArray,
+      };
+    }
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+          ...priceFilter,
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
       attributes: [
-        ...toolAttributes,
+        "id",
+        "title",
+
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
@@ -191,6 +265,14 @@ exports.getAll = async (req, res, next) => {
           ),
           "isWishlisted",
         ],
+        "views",
+        "likes",
+        "wishlists",
+
+        "ratingsAverage",
+        "release",
+        "totalRatings",
+        "createdAt",
       ],
       include: [
         {
@@ -198,10 +280,6 @@ exports.getAll = async (req, res, next) => {
           attributes: ["categoryId"],
           ...query,
           where,
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
         },
       ],
     });

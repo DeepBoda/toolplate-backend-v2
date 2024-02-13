@@ -46,20 +46,21 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     // Try to retrieve the categories from the Redis cache
-    // let data = await redisService.get(`main-categories`);
-    let data;
+    let data = await redisService.get(`main-categories`);
+
     // If the categories are not found in the cache
     if (!data) {
       data = await service.findAndCountAll({
-        // ...usersqquery(req.query),
-
         attributes: mainCategoryAttributes,
         include: {
           model: Category,
           attributes: ["id", "name", "slug"],
           limit: 4,
         },
+        order: [["createdAt", "DESC"]], // Order by createdAt in descending order
       });
+
+      // Cache the fetched data in Redis
       redisService.set(`main-categories`, data);
     }
 

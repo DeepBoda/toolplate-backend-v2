@@ -29,6 +29,22 @@ exports.toolAttributes = [
   "release",
   "social",
 ];
+exports.toolAttributesAll = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "price",
+  "link",
+  "slug",
+  "createdAt",
+  "updatedAt",
+  "likes",
+  "views",
+  "ratingsAverage",
+  "release",
+  "social",
+];
 exports.toolCardAttributes = [
   "id",
   "title",

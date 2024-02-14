@@ -678,7 +678,7 @@ exports.getRelatedTools = async (req, res, next) => {
   try {
     // Find the details of the opened tool
     const openedTool = await service.findOne({
-      where: { id: req.params.id },
+      where: { slug: req.params.slug },
       include: [
         {
           model: ToolCategory,
@@ -706,14 +706,101 @@ exports.getRelatedTools = async (req, res, next) => {
     const relatedTools = await service.findAll({
       // ...sqquery(req.query),
       where: {
-        id: { [Op.ne]: req.params.id },
+        slug: { [Op.ne]: req.params.slug },
+        "$toolCategories.categoryId$": { [Op.in]: categoryIds },
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
+      },
+      attributes: toolAttributes,
+
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+
+    // Calculate matching percentage for each tool
+    relatedTools.forEach((tool) => {
+      const commonCategories = tool.toolCategories.filter((toolCategory) =>
+        categoryIds.includes(toolCategory.categoryId)
+      );
+
+      const totalCategories = categoryIds.length;
+
+      const matchingCategories = commonCategories.length;
+
+      // Calculate matching percentage
+      tool.dataValues.matchingPercentage =
+        (matchingCategories / totalCategories) * 100;
+    });
+
+    // Sort tools based on matching percentage in descending order
+    relatedTools.sort(
+      (a, b) =>
+        b.dataValues.matchingPercentage - a.dataValues.matchingPercentage
+    );
+
+    // Limit the result to the top 3 most related tools
+    const mostRelatedTools = relatedTools.slice(0, 4);
+
+    res.status(200).json({
+      status: "success",
+      data: mostRelatedTools,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getRelatedToolsDynamic = async (req, res, next) => {
+  try {
+    // Find the details of the opened tool
+    const openedTool = await service.findOne({
+      where: { slug: req.params.slug },
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+        },
+      ],
+    });
+
+    if (!openedTool) {
+      throw createError(404, "Tool not found");
+    }
+
+    // Find tools that have the same category as the opened tool
+    const categoryIds = openedTool.toolCategories.map(
+      (toolCategory) => toolCategory.categoryId
+    );
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    // Find tools with the same category  IDs
+    const relatedTools = await service.findAll({
+      // ...sqquery(req.query),
+      where: {
+        slug: { [Op.ne]: req.params.slug },
         "$toolCategories.categoryId$": { [Op.in]: categoryIds },
         release: {
           [Op.lte]: moment(), // Less than or equal to the current date
         },
       },
       attributes: [
-        ...toolAttributes,
+        "id",
+        "likes",
+        "views",
+        "wishlists",
+        "ratingsAverage",
+        "totalRatings",
+        "createdAt",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
@@ -732,10 +819,6 @@ exports.getRelatedTools = async (req, res, next) => {
         {
           model: ToolCategory,
           attributes: ["categoryId"],
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
         },
       ],
     });

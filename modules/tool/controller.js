@@ -488,6 +488,69 @@ exports.getByCategorySlug = async (req, res, next) => {
 
     where["$toolCategories.categoryId$"] = category.id;
 
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+          ...priceFilter,
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: toolAttributes,
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
+          include: {
+            model: Category,
+            attributes: categoryAttributes,
+          },
+        },
+      ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getDynamicByCategorySlug = async (req, res, next) => {
+  try {
+    const category = await categoryService.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+    if (!category) {
+      return next(createHttpError(404, "Category not found!"));
+    }
+    const { price, ...query } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
+    const where = {};
+
+    where["$toolCategories.categoryId$"] = category.id;
+
     const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
@@ -503,7 +566,14 @@ exports.getByCategorySlug = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
-        ...toolAttributes,
+        "id",
+        "title",
+        "createdAt",
+        "likes",
+        "views",
+        "wishlists",
+        "ratingsAverage",
+        "totalRatings",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
@@ -523,10 +593,6 @@ exports.getByCategorySlug = async (req, res, next) => {
           attributes: ["categoryId"],
           ...query,
           where,
-          include: {
-            model: Category,
-            attributes: categoryAttributes,
-          },
         },
       ],
     });

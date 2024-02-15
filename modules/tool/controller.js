@@ -487,6 +487,7 @@ exports.getByCategorySlug = async (req, res, next) => {
     const where = {};
 
     where["$toolCategories.categoryId$"] = category.id;
+    const userId = req.requestor ? req.requestor.id : null;
 
     const data = await service.findAndCountAll({
       ...sqquery(
@@ -500,7 +501,21 @@ exports.getByCategorySlug = async (req, res, next) => {
         ["title"]
       ),
       distinct: true, // Add this option to ensure accurate counts
-      attributes: toolAttributes,
+      attributes: [
+        ...toolAttributes,
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
       include: [
         {
           model: ToolCategory,

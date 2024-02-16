@@ -5,7 +5,8 @@ const blog = require("./controller");
 const {authMiddleware,protectRoute} = require("../../middlewares/auth");
 
 router.use( authMiddleware);
-router.route("/").get( blog.getAll);
+router.route("/").get(blog.getAll);
+router.route("/all").get( blog.getAllDynamic);
 router.route("/slugs").get( blog.getSlugsForSitemap);
 router.route("/data/:slug").get(blog.getDynamicBySlug);
 router.route("/view/:id").get(blog.createView);

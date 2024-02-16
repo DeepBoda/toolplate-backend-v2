@@ -522,7 +522,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
   try {
     // Find the details of the opened blog
     const openedBlog = await service.findOne({
-      where: { id: req.params.id },
+      where: { slug: req.params.slug },
       attributes: blogAttributes,
       include: {
         model: BlogCategory,
@@ -544,7 +544,7 @@ exports.getRelatedBlogs = async (req, res, next) => {
     const relatedBlogs = await service.findAll({
       // ...sqquery(req.query),
       where: {
-        id: { [Op.ne]: req.params.id },
+        slug: { [Op.ne]: req.params.slug },
         "$blogCategories.categoryOfBlogId$": { [Op.in]: categoryIds },
         release: {
           [Op.lte]: moment(), // Less than or equal to the current date
@@ -568,6 +568,103 @@ exports.getRelatedBlogs = async (req, res, next) => {
             model: CategoryOfBlog,
             attributes: blogCategoryAttributes,
           },
+        },
+      ],
+    });
+
+    // Calculate matching percentage for each blog
+    relatedBlogs.forEach((blog) => {
+      const commonCategories = blog.blogCategories.filter((blogCategory) =>
+        categoryIds.includes(blogCategory.categoryOfBlogId)
+      );
+
+      const totalCategories = categoryIds.length;
+      const matchingCategories = commonCategories.length;
+
+      // Calculate matching percentage
+      blog.dataValues.matchingPercentage =
+        (matchingCategories / totalCategories) * 100;
+    });
+
+    // Sort blogs based on matching percentage in descending order
+    relatedBlogs.sort(
+      (a, b) =>
+        b.dataValues.matchingPercentage - a.dataValues.matchingPercentage
+    );
+
+    // Limit the result to the top 3 most related blogs
+    const mostRelatedBlogs = relatedBlogs.slice(0, 3);
+
+    // Select only the required attributes (image and title) for each blog
+    const reducedData = mostRelatedBlogs.map(
+      (blog) => (
+        (blog = blog.toJSON()),
+        {
+          ...blog,
+        }
+      )
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: reducedData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getRelatedBlogsDynamic = async (req, res, next) => {
+  try {
+    // Find the details of the opened blog
+    const openedBlog = await service.findOne({
+      where: { slug: req.params.slug },
+      attributes: blogAttributes,
+      include: {
+        model: BlogCategory,
+        attributes: ["categoryOfBlogId"],
+      },
+    });
+
+    if (!openedBlog) {
+      throw createError(404, "Blog not found");
+    }
+
+    // Find blogs that have the same category as the opened blog
+    const categoryIds = openedBlog.blogCategories.map(
+      (blogCategory) => blogCategory.categoryOfBlogId
+    );
+
+    const userId = req.requestor ? req.requestor.id : null;
+    // Find blogs with the same category
+    const relatedBlogs = await service.findAll({
+      // ...sqquery(req.query),
+      where: {
+        slug: { [Op.ne]: req.params.slug },
+        "$blogCategories.categoryOfBlogId$": { [Op.in]: categoryIds },
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
+      },
+      attributes: [
+        "id",
+        "title",
+        "likes",
+        "views",
+        "comments",
+        "wishlists",
+        "createdAt",
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+      ],
+
+      include: [
+        {
+          model: BlogCategory,
+          attributes: ["categoryOfBlogId"],
         },
       ],
     });

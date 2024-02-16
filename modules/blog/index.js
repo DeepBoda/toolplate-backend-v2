@@ -10,7 +10,8 @@ router.route("/all").get( blog.getAllDynamic);
 router.route("/slugs").get( blog.getSlugsForSitemap);
 router.route("/data/:slug").get(blog.getDynamicBySlug);
 router.route("/view/:id").get(blog.createView);
-router.route("/related/:id").get(blog.getRelatedBlogs);
+router.route("/related/:slug").get(blog.getRelatedBlogs);
+router.route("/related-data/:slug").get(blog.getRelatedBlogsDynamic);
 router.route("/:slug").get(blog.getBySlug);
 
 

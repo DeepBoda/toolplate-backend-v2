@@ -169,6 +169,63 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
+exports.getAllDynamic = async (req, res, next) => {
+  try {
+    // let data = await redisService.get(`listings`);
+    // if (!data)
+    const { categoryIds, ...query } = req.query;
+
+    const where = {};
+
+    if (categoryIds) {
+      // Split the comma-separated categoryIds into an array
+      const categoryIdArray = categoryIds.split(",").map(Number);
+
+      // Use the `Op.in` operator to find listings that match any of the specified categoryIds
+      where["$listingCategories.categoryOfListingId$"] = {
+        [Op.in]: categoryIdArray,
+      };
+    }
+
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findAndCountAll({
+      ...sqquery(query, {}, ["title"]),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: [
+        "id",
+        "title",
+        "slug",
+        "createdAt",
+        "likes",
+        "views",
+        "comments",
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingLikes WHERE listingLikes.listingId = listing.id AND listingLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+      ],
+      include: {
+        model: ListingCategory,
+        attributes: ["categoryOfListingId"],
+        ...query,
+        where,
+      },
+    });
+
+    // redisService.set(`listings`, data);
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getAllForAdmin = async (req, res, next) => {
   try {
     const { categoryIds, ...query } = req.query;

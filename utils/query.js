@@ -62,9 +62,10 @@ exports.sqquery = (
   });
 
   if (search && searchFrom.length) {
+    const final = search.trim().replace(/\s+/g, "%");
     const searchData = searchFrom.map((columnName) => ({
       [columnName]: {
-        [Op.like]: `%${search}%`,
+        [Op.like]: `%${final}%`,
       },
     }));
 

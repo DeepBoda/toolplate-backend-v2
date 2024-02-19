@@ -153,6 +153,28 @@ exports.getSitemap = async (req, res, next) => {
 
 exports.getSlugsForSitemap = async (req, res, next) => {
   try {
+    const url =
+      process.env.NODE_ENV === "production"
+        ? process.env.PROD_WEB
+        : process.env.DEV_WEB;
+
+    const categories = await service.findAll();
+
+    const categorySlugs = categories.flatMap((category) =>
+      ["", "/free", "/premium", "/freemium"].map((suffix) => ({
+        slug: `${url}/tools/${category.slug}${suffix}`,
+        updatedAt: category.updatedAt,
+      }))
+    );
+
+    res.status(200).send({ status: "success", data: categorySlugs });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getSlugsForSitemapFiltered = async (req, res, next) => {
+  try {
     // Try to retrieve the categories from the Redis cache
     let data = await redisService.get(`category-slugs`);
     if (!data) {

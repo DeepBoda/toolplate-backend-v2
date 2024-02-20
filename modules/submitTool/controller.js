@@ -88,27 +88,13 @@ exports.getById = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     // Update the blog data
-    const { categories, ...body } = req.body;
 
-    const [affectedRows] = await service.update(body, {
+    const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
       },
     });
 
-    // Delete old associations
-    await submitToolCategoryService.delete({
-      where: { submitToolId: req.params.id },
-    });
-
-    // Create new associations using bulk create operations
-    const categoryBulkInsertData = categories.map((categoryId) => ({
-      toolId: id,
-      categoryId,
-    }));
-
-    //  execute bulk inserts concurrently
-    submitToolCategoryService.bulkCreate(categoryBulkInsertData);
     // Send the response
     res.status(200).json({
       status: "success",

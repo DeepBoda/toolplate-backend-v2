@@ -14,9 +14,6 @@ const config = {
     host: process.env.DEVHOST,
     port: 3306,
     dialect: "mysql",
-    dialectOptions: {
-      ssl: "Amazon RDS",
-    },
     pool: {
       max: 50,
       min: 0,

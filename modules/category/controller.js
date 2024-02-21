@@ -278,6 +278,23 @@ exports.getAllForAdmin = async (req, res, next) => {
   }
 };
 
+exports.getById = async (req, res, next) => {
+  try {
+    const data = await service.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getBySlug = async (req, res, next) => {
   try {
     // Try to retrieve the categories from the Redis cache

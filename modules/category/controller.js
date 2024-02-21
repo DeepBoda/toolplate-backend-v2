@@ -278,14 +278,21 @@ exports.getAllForAdmin = async (req, res, next) => {
   }
 };
 
-exports.getById = async (req, res, next) => {
+exports.getBySlug = async (req, res, next) => {
   try {
-    const data = await service.findOne({
-      where: {
-        id: req.params.id,
-      },
-    });
+    // Try to retrieve the categories from the Redis cache
+    let data = await redisService.get(`category-${req.params.slug}`);
 
+    // If the categories are not found in the cache
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          slug: req.params.slug,
+        },
+        attributes: ["id", "name", "slug", "overview", "createdAt", "image"],
+      });
+      redisService.set(`category-${req.params.slug}`, data);
+    }
     res.status(200).send({
       status: "success",
       data,
@@ -408,6 +415,7 @@ exports.update = async (req, res, next) => {
       deleteFilesFromS3([oldData.image]);
     }
     redisService.del(`categories`);
+    redisService.del(`category-${oldData?.slug}`);
     redisService.del(`categorySitemap`);
     redisService.del(`main-categories`);
 

@@ -10,7 +10,7 @@ router.route("/main").post(category.getByMain);
 router.route("/main-data").post(category.getByMainDynamic);
 router.route("/slugs").get(category.getSlugsForSitemap);
 router.route("/sitemap").get(category.getSitemap);
-router.route("/:id").get(category.getById);
+router.route("/:slug").get(category.getBySlug);
 
 
 

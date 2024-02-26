@@ -44,9 +44,10 @@ exports.add = async (req, res, next) => {
 
     const { categories, ...bodyData } = req.body;
 
+    console.log("categories : ", categories);
     // Create the new blog entry in the `blog` table
     const blog = await service.create(bodyData);
-
+    console.log("blog : ", blog);
     // Send a push notification with the blog title and body
     if (blog.createdAt == blog.release) {
       const topic =
@@ -61,12 +62,13 @@ exports.add = async (req, res, next) => {
 
     // Get the comma-separated `categories`  IDs
     const categoryIds = categories.split(",").map(Number);
-
+    console.log("categoryIds : ", categoryIds);
     // Create an array of objects for bulk insert in `blogCategory` table
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       blogId: blog.id,
       categoryOfBlogId: categoryId,
     }));
+    console.log("categoryBulkInsertData : ", categoryBulkInsertData);
     const seoData = {
       blogId: blog.id,
       title: blog.title,

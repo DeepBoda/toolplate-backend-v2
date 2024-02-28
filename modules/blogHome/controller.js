@@ -5,10 +5,11 @@ const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
 const {
   AdminAttributes,
-  toolAdminAttributes,
+  blogAttributes,
+  blogAdminAttributes,
 } = require("../../constants/queryAttributes");
-const Tool = require("../tool/model");
 const Admin = require("../admin/model");
+const Blog = require("../blog/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -32,8 +33,8 @@ exports.getAll = async (req, res, next) => {
       ...sqquery({ ...req.query, sort: "index", sortBy: "ASC" }),
       distinct: true, // Add this option to ensure accurate counts
       include: {
-        model: Tool,
-        attributes: toolAdminAttributes,
+        model: Blog,
+        attributes: blogAdminAttributes,
       },
     });
 
@@ -58,8 +59,8 @@ exports.getById = async (req, res, next) => {
           attributes: AdminAttributes,
         },
         {
-          model: Tool,
-          attributes: toolAttributes,
+          model: Blog,
+          attributes: blogAttributes,
         },
       ],
     });

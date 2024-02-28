@@ -10,7 +10,7 @@ router
   .route("/")
   .get(listing.getAllForAdmin)
   .post(upload.single("image"), joiValidator(joiSchema.create), listing.add);
-
+router.route("/all").get(listing.getAllForDropDown);
 router
   .route("/meta/:id")
   .get(listing.getMetaForAdmin)

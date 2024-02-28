@@ -266,6 +266,23 @@ exports.getAllForAdmin = async (req, res, next) => {
   }
 };
 
+exports.getAllForDropDown = async (req, res, next) => {
+  try {
+    const data = await service.findAll({
+      ...usersqquery({ ...req.query, sort: "title", sortBy: "ASC" }),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: ["id", "title"],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getBySlug = async (req, res, next) => {
   try {
     const cacheKey = `listing?slug=${req.params.slug}`;

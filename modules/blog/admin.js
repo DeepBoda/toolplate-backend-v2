@@ -11,6 +11,7 @@ router
   .get(blog.getAllForAdmin)
   .post(upload.single("image"), joiValidator(joiSchema.create), blog.add);
 router.route("/scheduled").get(blog.getScheduledForAdmin);
+router.route("/all").get(blog.getAllForDropDown);
 router
   .route("/:id")
   .get(blog.getForAdmin)

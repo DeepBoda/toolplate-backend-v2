@@ -26,7 +26,7 @@ exports.set = async (endPoint, data, expirationTime) => {
     const jsonData = JSON.stringify(data);
 
     if (expirationTime) {
-      await redisClient.SET(endPoint, jsonData, "EX", expirationTime);
+      await redisClient.SET(endPoint, jsonData, { EX: expirationTime });
     } else {
       await redisClient.SET(endPoint, jsonData);
     }

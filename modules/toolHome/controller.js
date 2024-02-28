@@ -13,6 +13,7 @@ const Admin = require("../admin/model");
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    req.body.AdminId = req.requestor.id;
     const data = await service.create(req.body);
 
     res.status(200).json({

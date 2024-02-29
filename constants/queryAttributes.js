@@ -62,6 +62,7 @@ exports.blogCardAttributes = [
   "description",
   "image",
   "alt",
+  "readTime",
   "slug",
   "updatedAt",
   "release",

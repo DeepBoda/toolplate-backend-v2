@@ -66,6 +66,16 @@ exports.blogCardAttributes = [
   "updatedAt",
   "release",
 ];
+
+exports.listingCardAttributes = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "alt",
+  "slug",
+  "updatedAt",
+];
 exports.blogAttributes = [
   "id",
   "title",

@@ -7,7 +7,7 @@ const { joiValidator } = require("../../middlewares/joiValidator");
 
 router
   .route("/")
-  .get(view.getAll)
+  .get(view.getAllForAdmin)
   .post(joiValidator(joiSchema.create), view.add);
 router
   .route("/:id")

@@ -6,7 +6,7 @@ const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 
 router.use(authMiddleware,)
 router.route("/").get(view.getAll);
-router.route("/:id").get(view.getById);
+router.route("/data").get(view.getAllDynamic);
 
 
 

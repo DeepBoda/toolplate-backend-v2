@@ -7,6 +7,7 @@ router.use("/prompt", require("../modules/prompt"));
 router.use("/notification", require("../modules/notification"));
 router.use("/home/tool", require("../modules/toolHome"));
 router.use("/home/blog", require("../modules/blogHome"));
+router.use("/home/listing", require("../modules/listingHome"));
 router.use("/main-category", require("../modules/mainCategory"));
 router.use("/category", require("../modules/category"));
 router.use("/category-blog", require("../modules/categoryOfBlog"));

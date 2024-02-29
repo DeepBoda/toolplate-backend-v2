@@ -6,9 +6,14 @@ const { usersqquery, sqquery } = require("../../utils/query");
 const {
   AdminAttributes,
   toolAdminAttributes,
+  toolCardAttributes,
+  categoryAttributes,
 } = require("../../constants/queryAttributes");
 const Tool = require("../tool/model");
 const Admin = require("../admin/model");
+const ToolCategory = require("../toolCategory/model");
+const Category = require("../category/model");
+const sequelize = require("../../config/db");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -27,6 +32,71 @@ exports.add = async (req, res, next) => {
 };
 
 exports.getAll = async (req, res, next) => {
+  try {
+    const data = await service.findAndCountAll({
+      ...sqquery({ ...req.query, sort: "index", sortBy: "ASC" }),
+      include: {
+        model: Tool,
+        attributes: toolCardAttributes,
+        include: [
+          {
+            model: ToolCategory,
+            attributes: ["categoryId"],
+            include: {
+              model: Category,
+              attributes: categoryAttributes,
+            },
+          },
+        ],
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getAllDynamic = async (req, res, next) => {
+  try {
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findAndCountAll({
+      ...sqquery({ ...req.query, sort: "index", sortBy: "ASC" }),
+      attributes: ["id", "index", "toolId"],
+      include: {
+        model: Tool,
+        attributes: [
+          "id",
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+            ),
+            "isWishlisted",
+          ],
+          "ratingsAverage",
+        ],
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllForAdmin = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery({ ...req.query, sort: "index", sortBy: "ASC" }),

@@ -7,9 +7,14 @@ const {
   AdminAttributes,
   blogAttributes,
   blogAdminAttributes,
+  blogCategoryAttributes,
+  blogCardAttributes,
 } = require("../../constants/queryAttributes");
 const Admin = require("../admin/model");
 const Blog = require("../blog/model");
+const BlogCategory = require("../blogCategory/model");
+const CategoryOfBlog = require("../categoryOfBlog/model");
+const sequelize = require("../../config/db");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -28,6 +33,71 @@ exports.add = async (req, res, next) => {
 };
 
 exports.getAll = async (req, res, next) => {
+  try {
+    const data = await service.findAndCountAll({
+      ...sqquery({ ...req.query, sort: "index", sortBy: "ASC" }),
+      include: {
+        model: Blog,
+        attributes: blogCardAttributes,
+        include: [
+          {
+            model: BlogCategory,
+            attributes: ["categoryOfBlogId"],
+            include: {
+              model: CategoryOfBlog,
+              attributes: blogCategoryAttributes,
+            },
+          },
+        ],
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllDynamic = async (req, res, next) => {
+  try {
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findAndCountAll({
+      ...sqquery({ ...req.query, sort: "index", sortBy: "ASC" }),
+      attributes: ["id", "index", "blogId"],
+      include: {
+        model: Blog,
+        attributes: [
+          "id",
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
+            ),
+            "isLiked",
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+            ),
+            "isWishlisted",
+          ],
+        ],
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllForAdmin = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
       ...sqquery({ ...req.query, sort: "index", sortBy: "ASC" }),

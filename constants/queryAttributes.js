@@ -53,16 +53,17 @@ exports.toolCardAttributes = [
   "price",
   "slug",
   "ratingsAverage",
+  "updatedAt",
   "release",
 ];
-exports.toolCardAttributes = [
+exports.blogCardAttributes = [
   "id",
   "title",
   "description",
   "image",
-  "price",
+  "alt",
   "slug",
-  "ratingsAverage",
+  "updatedAt",
   "release",
 ];
 exports.blogAttributes = [

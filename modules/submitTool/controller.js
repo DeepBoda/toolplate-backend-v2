@@ -6,6 +6,7 @@ const { submitToolAttributes } = require("../../constants/queryAttributes");
 const Category = require("../category/model");
 const SubmitToolCategory = require("../submitToolCategory/model");
 const submitToolCategoryService = require("../submitToolCategory/service");
+const { replySubmittedTool } = require("../../utils/mail");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -20,6 +21,17 @@ exports.add = async (req, res, next) => {
       submitToolId: data.id,
       categoryId,
     }));
+
+    const { firstName, lastName, email, title } = bodyData;
+
+    // Combine firstName and lastName with a space in between
+    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    const username = `${capitalize(firstName.trim())} ${capitalize(
+      lastName.trim()
+    )}`;
+
+    // Send reply  email for submission
+    replySubmittedTool({ email, username, title });
 
     //  execute bulk inserts concurrently
     submitToolCategoryService.bulkCreate(categoryBulkInsertData);

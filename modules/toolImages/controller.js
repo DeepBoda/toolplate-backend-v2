@@ -23,10 +23,10 @@ exports.add = async (req, res, next) => {
 
       // Bulk insert the records into the ToolImage table
       toolPreviews = await service.bulkCreate(previews);
-      // toolPreviews.forEach((e) => {
-      //   resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
-      //   resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
-      // });
+      toolPreviews.forEach((e) => {
+        // resizeAndUploadImage(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+        resizeAndUploadWebP(toolPreviewSize, e.image, `toolPreview_${e.id}`);
+      });
       // Retrieve the  tool data from the database based on the provided tool ID.
       const Tool = await toolService.findOne({
         where: { id: req.body.toolId },

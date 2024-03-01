@@ -39,7 +39,7 @@ exports.sendOTP = async (options) => {
     };
 
     await transport.sendMail(mailOptions);
-    console.log("Email sent successfully.");
+    console.log("OTP email sent successfully.");
   } catch (error) {
     console.error("Error sending email:", error);
     throw error;
@@ -67,7 +67,7 @@ exports.replySubmittedTool = async (options) => {
     };
 
     await transport.sendMail(mailOptions);
-    console.log("Email sent successfully.");
+    console.log("Email for Submission reply sent successfully.");
   } catch (error) {
     console.error("Error sending email:", error);
     throw error;

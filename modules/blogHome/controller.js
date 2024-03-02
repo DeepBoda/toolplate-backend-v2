@@ -72,6 +72,7 @@ exports.getAllDynamic = async (req, res, next) => {
         model: Blog,
         attributes: [
           "id",
+          "views",
           [
             sequelize.literal(
               `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`

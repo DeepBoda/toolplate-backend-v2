@@ -5,8 +5,6 @@
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light" />
-  <meta name="supported-color-schemes" content="light" />
   <title>Toolplate</title>
 
   <style>
@@ -119,10 +117,6 @@
     .image-column img {
       height: 40px;
       width: auto;
-    }
-
-    .bottom-text {
-      font-size: 1.094vw;
     }
 
     @media only screen and (max-width: 2800px) {
@@ -647,10 +641,6 @@
       .bottom-text {
         font-size: 5.6vw;
       }
-
-      .bottom-text {
-        font-size: 6vw;
-      }
     }
 
     @media only screen and (max-width: 165px) {
@@ -673,7 +663,7 @@
       }
 
       td {
-        font-size: 8vw;
+        font-size: 6vw;
       }
 
       .two-columns .column {
@@ -700,6 +690,10 @@
       #social-img {
         width: 7px;
         margin: 0 1px;
+      }
+
+      .bottom-text {
+        font-size: 6vw;
       }
     }
   </style>
@@ -738,37 +732,58 @@
           </tr>
         </tbody>
       </table>
+
       <img src="https://cdn.toolplate.ai/v2/main-image.png" width="100%" />
       <div class="main-wrapper">
         <table class="main">
           <tbody>
             <tr>
-              <td colspan="2" class="heading">Hi, {{name}},</td>
-            </tr>
-            <tr>
-              <td colspan="2">Hope you're doing well.</td>
-            </tr>
-            <tr>
-              <td colspan="2">
-                I get that you're busy, but we're genuinely excited about
-                having {{tool}} on Toolplate.ai. Your tool's cool features
-                match perfectly with our goal to highlight awesome Al tools.
+              <td colspan="2" class="heading">
+                Hello {{name}} Team,
               </td>
             </tr>
+
+            <tr>
+              <td colspan="2" style="font-weight: 600">
+                Hope all’s well with you!.
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="2">
+                You’ve got a great tool in
+                <a href="#" style="color: #5a4fcf; text-decoration: none">AI- {{tool}}</a>, and we’ve used it too. 
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="2">
+                We’re also in the AI domain, our website- Toolplate.ai- is an
+                online AI tools platform where we feature AI tools that make
+                our users productive and efficient.
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="2">
+                Your tool will be a great addition to Toolplate.
+              </td>
+            </tr>
+
             <tr>
               <td colspan="2"></td>
             </tr>
 
             <tr>
               <td colspan="2" class="color-heading">
-                Here's what Toolplate.ai offers:
+                On Toolplate, we’ve got:
               </td>
             </tr>
-
             <tr class="offer-list">
               <td>👉🏻</td>
               <td style="width: 100%; font-weight: 500; padding-left: 5px">
-                <span style="color: #5a4fcf"> 7K+</span> users/month
+                <span style="color: #5a4fcf"> 7K+</span>
+                users/month
               </td>
             </tr>
             <tr class="offer-list">
@@ -788,43 +803,41 @@
               <td colspan="2"></td>
             </tr>
             <tr>
-              <td colspan="2"></td>
+              <td colspan="2">
+                Get your tool the reach it deserves on
+                <a href="https://toolplate.ai/" style="color: #5a4fcf; text-decoration: none"
+                  target="_blank">Toolplate.ai.</a>
+                🚀
+              </td>
             </tr>
             <tr>
-              <td colspan="2">
-                Submitting {{tool}} is quick and easy:
-                <a href="https://toolplate.ai/submit-tool" style="color: #5a4fcf">Let's Do it</a>.
-              </td>
+              <td colspan="2"></td>
             </tr>
 
             <tr>
-              <td colspan="2">
-                Any questions? Need help? We've got your back.
-              </td>
-            </tr>
-
-            <tr>
-              <td colspan="2"></td>
+              <td colspan="2">What do you say? Up for a collab?</td>
             </tr>
 
             <tr>
               <td colspan="2" style="font-weight: 500">
-                Just schedule a meeting per your convenience right here and
-                <a href="https://calendly.com/toolplate/30min" style="color: #5a4fcf">let's talk!</a>
+                Just submit your tool to Toolplate in a super easy and super
+                quick process right here:
+                <a href="https://toolplate.ai/submit-tool" style="color: #5a4fcf">https://toolplate.ai/submit-tool</a>
               </td>
             </tr>
 
             <tr>
               <td colspan="2">
-                Eager to collaborate and showcase {{tool}} to our awesome
-                community. For any queries, we'll be happy to answer them via
-                email at
-                <a href="mailto:contact@toolplate.ai" style="color: #5a4fcf">contact@toolplate.ai</a>!
+                Looking forward to having {{tool}} on Toolplate!
               </td>
             </tr>
             <tr class="cheers-space">
               <td colspan="2"></td>
             </tr>
+            <tr>
+              <td colspan="2"></td>
+            </tr>
+
             <tr>
               <td colspan="2" style="font-weight: 700; padding: 0">
                 Cheers!
@@ -842,7 +855,6 @@
       <br />
       <br />
       <br />
-
       <table style="width: 100%; max-width: 700px; margin: 0 auto">
         <tr>
           <td colspan="7">

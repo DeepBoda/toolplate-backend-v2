@@ -2,40 +2,29 @@
 
 const service = require("./service");
 const { usersqquery, sqquery } = require("../../utils/query");
-const { submitToolAttributes } = require("../../constants/queryAttributes");
-const Category = require("../category/model");
-const SubmitToolCategory = require("../submitToolCategory/model");
-const submitToolCategoryService = require("../submitToolCategory/service");
-const { replySubmittedTool, sampleMailTemplate } = require("../../utils/mail");
+const {
+  initialPitch,
+  firstFollowUp,
+  secondFollowUp,
+  thirdFollowUp,
+  featured,
+  rejected,
+} = require("../../utils/mail");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor ? req.requestor.id : null;
-    const { categories, ...bodyData } = req.body;
+    const { company, tool, email } = req.body;
 
-    // const data = await service.create(bodyData);
-
-    // // Step 1: Add entries in the `toolCategory` table using bulk insert
-    // const categoryBulkInsertData = categories.map((categoryId) => ({
-    //   submitToolId: data.id,
-    //   categoryId,
-    // }));
-
-    const { firstName, lastName, email, title } = bodyData;
+    const data = await service.create(req.body);
 
     // Combine firstName and lastName with a space in between
     const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
-    const username = `${capitalize(firstName.trim())} ${capitalize(
-      lastName.trim()
-    )}`;
+    const username = capitalize(company.trim());
 
-    // Send reply  email for submission
-    replySubmittedTool({ email, username, title });
-    // sampleMailTemplate(email);
-    return;
-    //  execute bulk inserts concurrently
-    submitToolCategoryService.bulkCreate(categoryBulkInsertData);
+    // Send reply  email for pitch
+    initialPitch({ email, username, tool });
 
     res.status(200).json({
       status: "success",
@@ -52,15 +41,6 @@ exports.getAll = async (req, res, next) => {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["title"]),
-      attributes: submitToolAttributes,
-      include: {
-        model: SubmitToolCategory,
-        attributes: ["categoryId"],
-        include: {
-          model: Category,
-          attributes: ["id", "name"],
-        },
-      },
     });
 
     res.status(200).send({
@@ -78,14 +58,6 @@ exports.getById = async (req, res, next) => {
       where: {
         id: req.params.id,
       },
-      include: {
-        model: SubmitToolCategory,
-        attributes: ["categoryId"],
-        include: {
-          model: Category,
-          attributes: ["id", "name"],
-        },
-      },
     });
 
     res.status(200).send({
@@ -101,12 +73,43 @@ exports.getById = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     // Update the blog data
+    const { status } = req.body;
 
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
       },
     });
+
+    const org = await service.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+    const { company, email, tool } = org;
+
+    // Combine firstName and lastName with a space in between
+    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    const username = capitalize(company.trim());
+
+    // Send email for pitch
+    if (status == "FollowUp1") {
+      firstFollowUp({ email, username, tool });
+    } else if (status == "FollowUp2") {
+      secondFollowUp({ email, username, tool });
+    } else if (status == "FollowUp3") {
+      thirdFollowUp({ email, username, tool });
+    } else if (status == "Featured") {
+      featured({ email, username, tool });
+    } else if (status == "Rejected") {
+      rejected({ email, username, tool });
+    }
+
+    // firstFollowUp({ email, username, tool });
+    // secondFollowUp({ email, username, tool });
+    // thirdFollowUp({ email, username, tool });
+    // featured({ email, username, tool });
+    // rejected({ email, username, tool });
 
     // Send the response
     res.status(200).json({

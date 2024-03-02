@@ -39,6 +39,7 @@ router.use("/newsViews", require("../modules/newsView/admin"));
 router.use("/listing", require("../modules/listing/admin"));
 router.use("/listings/view", require("../modules/listingView/admin"));
 router.use("/listingLike", require("../modules/listingLike/admin"));
+router.use("/pitch", require("../modules/pitch/admin"));
 router.use("/submit-tool", require("../modules/submitTool/admin"));
 router.use("/listing-comment", require("../modules/listingComment/admin"));
 router.use(

@@ -15,7 +15,7 @@ const {
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor ? req.requestor.id : null;
-    const { company, tool, email } = req.body;
+    const { company, tool = toolName, email } = req.body;
 
     const data = await service.create(req.body);
 

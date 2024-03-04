@@ -2,6 +2,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const User = require("../user/model");
+const Tool = require("../tool/model");
 const Pitch = sequelize.define(
   "pitch",
   {
@@ -15,7 +16,7 @@ const Pitch = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    tool: {
+    toolName: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -27,6 +28,9 @@ const Pitch = sequelize.define(
       type: DataTypes.STRING,
       defaultValue: "Initial",
     },
+    reason: {
+      type: DataTypes.STRING,
+    },
   },
   {
     paranoid: true,
@@ -36,4 +40,12 @@ const Pitch = sequelize.define(
 User.hasMany(Pitch);
 Pitch.belongsTo(User);
 
+Tool.hasMany(Pitch, {
+  foreignKey: {
+    allowNull: true,
+  },
+});
+Pitch.belongsTo(Tool);
+
+Pitch.sync({ alter: true });
 module.exports = Pitch;

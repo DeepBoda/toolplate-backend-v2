@@ -15,7 +15,7 @@ const {
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor ? req.requestor.id : null;
-    const { company, tool = toolName, email } = req.body;
+    const { company, toolName, email } = req.body;
 
     const data = await service.create(req.body);
 
@@ -24,7 +24,7 @@ exports.add = async (req, res, next) => {
     const username = capitalize(company.trim());
 
     // Send reply  email for pitch
-    initialPitch({ email, username, tool });
+    initialPitch({ email, username, tool: toolName });
 
     res.status(200).json({
       status: "success",

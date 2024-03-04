@@ -77,7 +77,7 @@ exports.replySubmittedTool = async (options) => {
 
 exports.initialPitch = async (options) => {
   try {
-    const templatePath = path.join(__dirname, "../public/emails/Initial.html");
+    const templatePath = path.join(__dirname, "../public/emails/initial.html");
 
     const Template = fs.readFileSync(templatePath, "utf-8");
 

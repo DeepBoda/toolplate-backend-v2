@@ -47,5 +47,4 @@ Tool.hasMany(Pitch, {
 });
 Pitch.belongsTo(Tool);
 
-Pitch.sync({ alter: true });
 module.exports = Pitch;

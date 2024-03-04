@@ -195,9 +195,16 @@ exports.featured = async (options) => {
     const Template = fs.readFileSync(templatePath, "utf-8");
 
     // Replace the placeholder {{tool}} with the actual Tool name
-    const emailContent = Template.replace(/{{name}}|{{tool}}/g, (match) => {
-      return match === "{{tool}}" ? options.tool : options.username;
-    });
+    const emailContent = Template.replace(
+      /{{name}}|{{tool}}|{{site}}/g,
+      (match) => {
+        return match === "{{tool}}"
+          ? options.tool.name
+          : match === "name"
+          ? options.username
+          : "https://toolplate.ai/tool/options.tool.slug";
+      }
+    );
 
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
@@ -221,9 +228,16 @@ exports.rejected = async (options) => {
     const Template = fs.readFileSync(templatePath, "utf-8");
 
     // Replace the placeholder {{tool}} with the actual Tool name
-    const emailContent = Template.replace(/{{name}}|{{tool}}/g, (match) => {
-      return match === "{{tool}}" ? options.tool : options.username;
-    });
+    const emailContent = Template.replace(
+      /{{name}}|{{tool}}|{{reason}}/g,
+      (match) => {
+        return match === "{{tool}}"
+          ? options.tool
+          : match === "{{name}}"
+          ? options.username
+          : options.reason;
+      }
+    );
 
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,

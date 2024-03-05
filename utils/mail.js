@@ -199,7 +199,7 @@ exports.featured = async (options) => {
       /{{name}}|{{tool}}|{{site}}/g,
       (match) => {
         return match === "{{tool}}"
-          ? options.tool.name
+          ? options.tool
           : match === "{{name}}"
           ? options.username
           : options.slug;

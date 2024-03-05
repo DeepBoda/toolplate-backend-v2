@@ -200,9 +200,9 @@ exports.featured = async (options) => {
       (match) => {
         return match === "{{tool}}"
           ? options.tool.name
-          : match === "name"
+          : match === "{{name}}"
           ? options.username
-          : "https://toolplate.ai/tool/options.tool.slug";
+          : options.slug;
       }
     );
 

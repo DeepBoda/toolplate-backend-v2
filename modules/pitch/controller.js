@@ -101,12 +101,12 @@ exports.update = async (req, res, next) => {
     } else if (status == "FollowUp3") {
       thirdFollowUp({ email, username, tool: toolName });
     } else if (status == "Featured" && toolId) {
-      const tool = await toolService.findOne({
+      const { title, slug } = await toolService.findOne({
         where: {
           id: toolId,
         },
       });
-      featured({ email, username, tool });
+      featured({ email, username, tool: title, slug });
     } else if (status == "Rejected" && reason) {
       rejected({ email, username, tool: toolName, reason });
     }

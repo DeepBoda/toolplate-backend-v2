@@ -16,7 +16,7 @@ module.exports = {
   }),
   update: Joi.object().keys({
     toolId: Joi.number(),
-    reason: Joi.number(),
+    reason: Joi.string(),
     status: Joi.string().valid(
       "Initial",
       "FollowUp1",

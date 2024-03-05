@@ -40,7 +40,7 @@ exports.getAll = async (req, res, next) => {
   try {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
-      ...sqquery(req.query, {}, ["title"]),
+      ...sqquery(req.query, {}, ["toolName", "company"]),
     });
 
     res.status(200).send({

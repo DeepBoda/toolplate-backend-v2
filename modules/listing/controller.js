@@ -199,12 +199,19 @@ exports.getAllDynamic = async (req, res, next) => {
         "createdAt",
         "likes",
         "views",
+        "wishlists",
         "comments",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM listingLikes WHERE listingLikes.listingId = listing.id AND listingLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
         ],
       ],
       include: {

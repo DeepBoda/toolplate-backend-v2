@@ -106,6 +106,7 @@ exports.listingAttributes = [
   "deletedAt",
   "likes",
   "views",
+  "wishlists",
   "comments",
 ];
 exports.newsAttributes = [
@@ -209,6 +210,7 @@ exports.listingAllAdminAttributes = [
   "updatedAt",
   "likes",
   "views",
+  "wishlists",
   "comments",
 ];
 

@@ -38,6 +38,10 @@ const Listing = sequelize.define(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    wishlists: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
     comments: {
       type: DataTypes.INTEGER,
       defaultValue: 0,

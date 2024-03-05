@@ -35,6 +35,7 @@ router.use("/toolNews", require("../modules/toolNews"));
 router.use("/listing", require("../modules/listing"));
 router.use("/listings", require("../modules/listing/seoRoutes"));
 router.use("/listingLike", require("../modules/listingLike"));
+router.use("/listingWishlist", require("../modules/listingWishlist"));
 router.use("/listing-comment", require("../modules/listingComment"));
 router.use("/listing-commentLike", require("../modules/listingCommentLike"));
 router.use(

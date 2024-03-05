@@ -2,8 +2,9 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const User = require("../user/model");
-const SubmitTool = sequelize.define(
-  "submitTool",
+const Tool = require("../tool/model");
+const Pitch = sequelize.define(
+  "pitch",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -11,11 +12,11 @@ const SubmitTool = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    firstName: {
+    company: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    lastName: {
+    toolName: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -23,29 +24,12 @@ const SubmitTool = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    phone: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    country: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    link: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    message: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
     status: {
       type: DataTypes.STRING,
-      defaultValue: "Pending",
+      defaultValue: "Initial",
+    },
+    reason: {
+      type: DataTypes.STRING,
     },
   },
   {
@@ -53,7 +37,14 @@ const SubmitTool = sequelize.define(
   }
 );
 
-User.hasMany(SubmitTool);
-SubmitTool.belongsTo(User);
+User.hasMany(Pitch);
+Pitch.belongsTo(User);
 
-module.exports = SubmitTool;
+Tool.hasMany(Pitch, {
+  foreignKey: {
+    allowNull: true,
+  },
+});
+Pitch.belongsTo(Tool);
+
+module.exports = Pitch;

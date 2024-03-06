@@ -145,6 +145,12 @@ exports.getAll = async (req, res, next) => {
           ),
           "isLiked",
         ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
       include: {
         model: ListingCategory,
@@ -371,6 +377,12 @@ exports.getByCategorySlug = async (req, res, next) => {
           ),
           "isLiked",
         ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
       include: [
         {
@@ -542,6 +554,12 @@ exports.getRelatedListings = async (req, res, next) => {
             `(SELECT COUNT(*) FROM listingLikes WHERE listingLikes.listingId = listing.id AND listingLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
         ],
       ],
 

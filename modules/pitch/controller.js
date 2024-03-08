@@ -88,7 +88,7 @@ exports.update = async (req, res, next) => {
         id: req.params.id,
       },
     });
-    const { company, email, toolName } = org;
+    const { company, email, toolName, isCompany } = org;
 
     // Combine firstName and lastName with a space in between
     const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -96,20 +96,20 @@ exports.update = async (req, res, next) => {
 
     // Send email for pitch
     if (status == "FollowUp1") {
-      firstFollowUp({ email, username, tool: toolName });
+      firstFollowUp({ email, username, tool: toolName, isCompany });
     } else if (status == "FollowUp2") {
-      secondFollowUp({ email, username, tool: toolName });
+      secondFollowUp({ email, username, tool: toolName, isCompany });
     } else if (status == "FollowUp3") {
-      thirdFollowUp({ email, username, tool: toolName });
+      thirdFollowUp({ email, username, tool: toolName, isCompany });
     } else if (status == "Featured" && toolId) {
       const { title, slug } = await toolService.findOne({
         where: {
           id: toolId,
         },
       });
-      featured({ email, username, tool: title, slug });
+      featured({ email, username, tool: title, slug, isCompany });
     } else if (status == "Rejected" && reason) {
-      rejected({ email, username, tool: toolName, reason });
+      rejected({ email, username, tool: toolName, reason, isCompany });
     }
 
     // firstFollowUp({ email, username, tool });

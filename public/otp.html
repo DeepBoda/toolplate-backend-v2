@@ -1,103 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Verification</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Onest+Display&display=swap');
+
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+            font-family: 'Onest Display', sans-serif;
             background-color: #f9f9f9;
             margin: 0;
             padding: 0;
+            color: #333;
+            line-height: 1.6;
         }
 
         .container {
-            width: 100%;
             max-width: 450px;
-            margin: 0 auto;
+            width: 100%;
+            margin: 50px auto;
             padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
             background-color: #fff;
-        }
-
-        .header {
-            height: 100px;
-            background-color: #1E1E1E;
-            padding: 10px;
-            border-radius: 10px 10px 0 0;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .logo {
-            max-width: 100%;
-        }
-
-        .title {
-            font-size: 24px;
-            margin: 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
-        .otp-code-container {
-            margin-top: 20px;
+        .header img {
+            width: 240px;
+            height: auto;
         }
 
-        .copy-button {
-            display: block;
-            padding: 10px;
-            text-align: center;
-            background-color: #1E1E1E;
+        .content {
+            padding: 0 20px;
+        }
+
+        .otp-button {
+            background-color: #5A4FCF;
             color: #fff;
-            border: solid #1E1E1E;
+            padding: 10px 20px;
             border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            font-size: 20px;
-            font-weight: bold;
-            position: relative;
+            font-size: 18px;
+            text-decoration: none;
+            margin: 20px auto;
+            display: block;
+            width: max-content;
         }
 
         .footer {
-            margin-top: 20px;
+            background-color: #1E1E1E;
+            color: #fff;
+            padding: 25px;
+            font-size: 14px;
+            line-height: 1.8;
             text-align: center;
-            color: #666;
+            /* Ensures text is centered */
         }
 
         .footer a {
-            color: #007bff;
+            color: #5A4FCF;
             text-decoration: none;
-        }
-
-        /* Media Queries for Mobile Devices */
-        @media (max-width: 600px) {
-            .container {
-                padding: 10px;
-                border-radius: 0;
-            }
-
-            .header {
-                height: auto;
-                background-color: transparent;
-            }
-
-            .logo {
-                max-width: 200px;
-                margin: 0 auto;
-            }
-
-            .title {
-                font-size: 20px;
-            }
-
-            .copy-button {
-                font-size: 18px;
-            }
         }
     </style>
 </head>
@@ -105,21 +69,26 @@
 <body>
     <div class="container">
         <div class="header">
-            <img class="logo" src="https://tool-plate.s3.ap-south-1.amazonaws.com/logo/logo4x.png"
-                alt="Toolplate.ai Logo">
+            <img src="https://cdn.toolplate.ai/v2/new-logo-gradiant.png" alt="Toolplate Logo">
         </div>
-        <h2 class="title">Hello, <strong>{{name}}</strong>!</h2>
-        <p>Your OTP for verification is:</p>
-        <div class="otp-code-container">
-            <p class="copy-button">{{otp}}</p>
+        <hr />
+        <div class="content">
+            <h2>Welcome, <strong>{{name}}</strong>!</h2>
+            <p>Your secure One-Time Password (OTP) is ready:</p>
+            <div class="otp-code-container">
+                <a class="otp-button" href="#" onclick="event.preventDefault();">{{otp}}</a>
+            </div>
+            <p>Enter this code on the prompt screen. It expires in 5 minutes—so be quick!</p>
+            <p>Unfamiliar with this request? It's okay to disregard this message, but feel free to alert our support if
+                something seems amiss. Your security is crucial to us.</p>
         </div>
-        <p>Please use this OTP to complete your verification process.</p>
-        <p>If you did not request this OTP, please ignore this email.</p>
     </div>
+
     <div class="footer">
-        <p>© 2023 Toolplate. All rights reserved.</p>
-        <p style="font-weight: bold;"><a href="https://toolplate.ai">toolplate.ai</a></p>
+        <p>© 2024 <a href="https://toolplate.ai">Toolplate.ai</a></p>
+        <p class="p2">For support email us: <a href="mailto:contact@toolplate.ai">contact@toolplate.ai</a>
     </div>
+
 </body>
 
 </html>

@@ -14,13 +14,13 @@ exports.add = async (req, res, next) => {
     req.body.userId = req.requestor ? req.requestor.id : null;
     const { categories, ...bodyData } = req.body;
 
-    // const data = await service.create(bodyData);
+    const data = await service.create(bodyData);
 
-    // // Step 1: Add entries in the `toolCategory` table using bulk insert
-    // const categoryBulkInsertData = categories.map((categoryId) => ({
-    //   submitToolId: data.id,
-    //   categoryId,
-    // }));
+    // Step 1: Add entries in the `toolCategory` table using bulk insert
+    const categoryBulkInsertData = categories.map((categoryId) => ({
+      submitToolId: data.id,
+      categoryId,
+    }));
 
     const { firstName, lastName, email, title } = bodyData;
 
@@ -32,8 +32,7 @@ exports.add = async (req, res, next) => {
 
     // Send reply  email for submission
     replySubmittedTool({ email, username, title });
-    // sampleMailTemplate(email);
-    return;
+
     //  execute bulk inserts concurrently
     submitToolCategoryService.bulkCreate(categoryBulkInsertData);
 

@@ -85,9 +85,9 @@ exports.initialPitch = async (options) => {
     const emailContent = Template.replace(/{{name}}|{{tool}}/g, (match) => {
       return match === "{{tool}}"
         ? options.tool
-        : (options.isCompany = true
-            ? `${options.username} Team`
-            : options.username);
+        : options.isCompany
+        ? `${options.username} Team`
+        : options.username;
     });
 
     const mailOptions = {
@@ -116,7 +116,11 @@ exports.firstFollowUp = async (options) => {
 
     // Replace the placeholder {{tool}} with the actual Tool name
     const emailContent = Template.replace(/{{name}}|{{tool}}/g, (match) => {
-      return match === "{{tool}}" ? options.tool : options.username;
+      return match === "{{tool}}"
+        ? options.tool
+        : options.isCompany
+        ? `Team ${options.username}`
+        : options.username;
     });
 
     const mailOptions = {
@@ -145,7 +149,11 @@ exports.secondFollowUp = async (options) => {
 
     // Replace the placeholder {{tool}} with the actual Tool name
     const emailContent = Template.replace(/{{name}}|{{tool}}/g, (match) => {
-      return match === "{{tool}}" ? options.tool : options.username;
+      return match === "{{tool}}"
+        ? options.tool
+        : options.isCompany
+        ? `Team ${options.username}`
+        : options.username;
     });
 
     const mailOptions = {
@@ -174,7 +182,11 @@ exports.thirdFollowUp = async (options) => {
 
     // Replace the placeholder {{tool}} with the actual Tool name
     const emailContent = Template.replace(/{{name}}|{{tool}}/g, (match) => {
-      return match === "{{tool}}" ? options.tool : options.username;
+      return match === "{{tool}}"
+        ? options.tool
+        : options.isCompany
+        ? `Team ${options.username}`
+        : options.username;
     });
 
     const mailOptions = {
@@ -205,7 +217,9 @@ exports.featured = async (options) => {
         return match === "{{tool}}"
           ? options.tool
           : match === "{{name}}"
-          ? options.username
+          ? options.isCompany
+            ? `Team ${options.username}`
+            : options.username
           : options.slug;
       }
     );
@@ -238,7 +252,9 @@ exports.rejected = async (options) => {
         return match === "{{tool}}"
           ? options.tool
           : match === "{{name}}"
-          ? options.username
+          ? options.isCompany
+            ? `Team ${options.username}`
+            : options.username
           : options.reason;
       }
     );

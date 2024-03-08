@@ -1,994 +1,953 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light" />
-    <meta name="supported-color-schemes" content="light" />
-    <title>Toolplate</title>
 
-    <style>
-      * {
-        margin: 0;
-        box-sizing: border-box;
-        font-family: sans-serif;
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
+  <title>Toolplate</title>
+
+  <style>
+    * {
+      margin: 0;
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+
+    .wrapper {
+      width: 100%;
+      background-color: #f7f7f9;
+      padding: 55px 125px;
+    }
+
+    .container {
+      max-width: 1084px;
+      background-color: white;
+      margin: 0 auto;
+      padding: 25px 0;
+    }
+
+    .main-wrapper {
+      padding: 25px;
+    }
+
+    table,
+    tr,
+    td {
+      font-weight: 400;
+      color: #384860;
+      word-break: normal;
+      border-collapse: collapse;
+      text-align: justify;
+      /* line-height: 1; */
+    }
+
+    .heading {
+      font-weight: bold;
+      font-size: 1.812vw;
+    }
+
+    .color-heading {
+      color: #5a4fcf;
+      font-weight: 600;
+    }
+
+    .offer-list * {
+      padding: 0;
+    }
+
+    .two-columns {
+      text-align: center;
+      font-size: 0;
+    }
+
+    .two-columns .column {
+      width: 100%;
+      display: inline-block;
+      vertical-align: top;
+      text-align: center;
+    }
+
+    td {
+      padding: 10px 0;
+      font-size: 1.125vw;
+    }
+
+    #social-links {
+      padding: 0px 70px;
+    }
+
+    #toolplate-logo {
+      width: 100%;
+      padding: 0 30px 10px;
+    }
+
+    #logo-img {
+      width: 180px;
+    }
+
+    #social-img {
+      width: 30px;
+      margin: 0 5px;
+    }
+
+    .image-column {
+      padding: 10px;
+      text-align: center;
+    }
+
+    .image-column img {
+      max-height: 50px;
+      width: 100%;
+
+      object-position: center;
+      object-fit: contain;
+    }
+
+    .image-separate {
+      border: 0.5px solid #94a3b8;
+      padding: 0;
+      width: 0px;
+    }
+
+    .header-column {
+      padding: 0px 80px;
+    }
+
+    .image-column img {
+      height: 40px;
+      width: auto;
+    }
+
+    .small-description {
+      font-size: 1.042vw;
+    }
+
+    .bottom-text {
+      font-size: 1.094vw;
+    }
+
+    @media only screen and (max-width: 2800px) {
+      .container {
+        max-width: 1084px;
+        padding: 50px 0;
       }
 
+      .main-wrapper {
+        padding: 50px;
+      }
+
+      .heading {
+        font-size: 1.712vw;
+      }
+
+      .two-columns .column {
+        max-width: 491px;
+      }
+
+      td {
+        font-size: 0.9vw;
+      }
+
+      #toolplate-logo {
+        padding: 0 0 0 30px;
+      }
+
+      #social-links {
+        padding: 10px 0 0 300px;
+      }
+
+      #logo-img {
+        width: 370px;
+      }
+
+      #social-img {
+        width: 25px;
+      }
+
+      .bottom-text {
+        font-size: 0.786vw;
+      }
+    }
+
+    @media only screen and (max-width: 1600px) {
+      .container {
+        max-width: 1084px;
+        padding: 50px 0;
+      }
+
+      .main-wrapper {
+        padding: 50px;
+      }
+
+      .heading {
+        font-size: 1.812vw;
+      }
+
+      .two-columns .column {
+        max-width: 490px;
+      }
+
+      td {
+        font-size: 1.125vw;
+      }
+
+      #toolplate-logo {
+        padding: 0 0 0 30px;
+      }
+
+      #social-links {
+        padding: 10px 0 0 300px;
+      }
+
+      #logo-img {
+        width: 370px;
+      }
+
+      #social-img {
+        width: 25px;
+      }
+
+      .small-description {
+        font-size: 0.875vw;
+      }
+
+      .bottom-text {
+        font-size: 0.938vw;
+      }
+    }
+
+    @media only screen and (max-width: 1350px) {
       .wrapper {
-        width: 100%;
-        background-color: #f7f7f9;
-        padding: 55px 125px;
+        padding: 50px 30px;
+      }
+
+      .heading {
+        font-size: 2.123vw;
+      }
+
+      .two-columns .column {
+        max-width: 490px;
+      }
+
+      td {
+        font-size: 1.318vw;
       }
 
       .container {
         max-width: 1084px;
-        background-color: white;
-        margin: 0 auto;
-        padding: 25px 0;
+        padding: 15px 0;
       }
 
       .main-wrapper {
-        padding: 25px;
-      }
-
-      table,
-      tr,
-      td {
-        font-weight: 400;
-        color: #384860;
-        word-break: normal;
-        border-collapse: collapse;
-        text-align: justify;
-        /* line-height: 1; */
-      }
-
-      .heading {
-        font-weight: bold;
-        font-size: 1.812vw;
-      }
-
-      .color-heading {
-        color: #5a4fcf;
-        font-weight: 600;
-      }
-
-      .offer-list * {
-        padding: 0;
-      }
-
-      .two-columns {
-        text-align: center;
-        font-size: 0;
-      }
-
-      .two-columns .column {
-        width: 100%;
-        display: inline-block;
-        vertical-align: top;
-        text-align: center;
-      }
-
-      td {
-        padding: 10px 0;
-        font-size: 1.125vw;
-      }
-
-      #social-links {
-        padding: 0px 70px;
+        padding: 15px;
       }
 
       #toolplate-logo {
-        width: 100%;
-        padding: 0 30px 10px;
+        padding: 0 0 0 30px;
+        display: inline-block;
+      }
+
+      #social-links {
+        padding: 10px 0 0 300px;
+        display: inline-block;
       }
 
       #logo-img {
-        width: 180px;
+        width: 370px;
       }
 
       #social-img {
-        width: 30px;
-        margin: 0 5px;
+        width: 25px;
       }
 
-      .image-column {
-        padding: 10px;
-        text-align: center;
+      .small-description {
+        font-size: 1.025vw;
+      }
+
+      .bottom-text {
+        font-size: 1.098vw;
+      }
+    }
+
+    @media only screen and (max-width: 1080px) {
+      .wrapper {
+        padding: 50px 30px;
+      }
+
+      .heading {
+        font-size: 2.266vw;
+      }
+
+      .two-columns .column {
+        max-width: 395px;
+      }
+
+      td {
+        font-size: 1.758vw;
+      }
+
+      .container {
+        padding: 15px 0;
+      }
+
+      .main-wrapper {
+        padding: 15px;
+      }
+
+      #toolplate-logo {
+        padding: 0 0 0 30px;
+      }
+
+      #social-links {
+        padding: 10px 0 0 250px;
+      }
+
+      #logo-img {
+        width: 370px;
+      }
+
+      #social-img {
+        width: 25px;
+      }
+
+      .small-description {
+        font-size: 1.367vw;
+      }
+
+      .bottom-text {
+        font-size: 1.465vw;
+      }
+    }
+
+    @media only screen and (max-width: 885px) {
+      .wrapper {
+        padding: 50px 30px;
+      }
+
+      .heading {
+        font-size: 3.021vw;
+      }
+
+      .two-columns .column {
+        max-width: 350px;
+      }
+
+      td {
+        font-size: 1.875vw;
+      }
+
+      .container {
+        padding: 15px 0;
+      }
+
+      .main-wrapper {
+        padding: 15px;
+      }
+
+      #social-links {
+        padding: 10px 0 0 180px;
+      }
+
+      #toolplate-logo {
+        padding: 0 0 10px 30px;
       }
 
       .image-column img {
-        max-height: 50px;
-        width: 100%;
-
-        object-position: center;
-        object-fit: contain;
-      }
-
-      .image-separate {
-        border: 0.5px solid #94a3b8;
-        padding: 0;
-        width: 0px;
-      }
-
-      .header-column {
-        padding: 0px 80px;
-      }
-
-      .image-column img {
-        height: 40px;
+        height: 30px;
         width: auto;
       }
 
       .small-description {
-        font-size: 1.042vw;
+        font-size: 1.458vw;
       }
 
       .bottom-text {
-        font-size: 1.094vw;
+        font-size: 1.563vw;
+      }
+    }
+
+    @media only screen and (max-width: 793px) {
+      .wrapper {
+        padding: 50px 30px;
       }
 
-      @media only screen and (max-width: 2800px) {
-        .container {
-          max-width: 1084px;
-          padding: 50px 0;
-        }
-
-        .main-wrapper {
-          padding: 50px;
-        }
-
-        .heading {
-          font-size: 1.712vw;
-        }
-
-        .two-columns .column {
-          max-width: 491px;
-        }
-
-        td {
-          font-size: 0.9vw;
-        }
-
-        #toolplate-logo {
-          padding: 0 0 0 30px;
-        }
-
-        #social-links {
-          padding: 10px 0 0 300px;
-        }
-
-        #logo-img {
-          width: 370px;
-        }
-
-        #social-img {
-          width: 25px;
-        }
-
-        .bottom-text {
-          font-size: 0.786vw;
-        }
+      .heading {
+        font-size: 3.776vw;
       }
 
-      @media only screen and (max-width: 1600px) {
-        .container {
-          max-width: 1084px;
-          padding: 50px 0;
-        }
-
-        .main-wrapper {
-          padding: 50px;
-        }
-
-        .heading {
-          font-size: 1.812vw;
-        }
-
-        .two-columns .column {
-          max-width: 490px;
-        }
-
-        td {
-          font-size: 1.125vw;
-        }
-
-        #toolplate-logo {
-          padding: 0 0 0 30px;
-        }
-
-        #social-links {
-          padding: 10px 0 0 300px;
-        }
-
-        #logo-img {
-          width: 370px;
-        }
-
-        #social-img {
-          width: 25px;
-        }
-
-        .small-description {
-          font-size: 0.875vw;
-        }
-
-        .bottom-text {
-          font-size: 0.938vw;
-        }
+      .two-columns .column {
+        max-width: 300px;
       }
 
-      @media only screen and (max-width: 1350px) {
-        .wrapper {
-          padding: 50px 30px;
-        }
-
-        .heading {
-          font-size: 2.123vw;
-        }
-
-        .two-columns .column {
-          max-width: 490px;
-        }
-
-        td {
-          font-size: 1.318vw;
-        }
-
-        .container {
-          max-width: 1084px;
-          padding: 15px 0;
-        }
-
-        .main-wrapper {
-          padding: 15px;
-        }
-
-        #toolplate-logo {
-          padding: 0 0 0 30px;
-          display: inline-block;
-        }
-
-        #social-links {
-          padding: 10px 0 0 300px;
-          display: inline-block;
-        }
-
-        #logo-img {
-          width: 370px;
-        }
-
-        #social-img {
-          width: 25px;
-        }
-
-        .small-description {
-          font-size: 1.025vw;
-        }
-
-        .bottom-text {
-          font-size: 1.098vw;
-        }
+      td {
+        font-size: 2.344vw;
       }
 
-      @media only screen and (max-width: 1080px) {
-        .wrapper {
-          padding: 50px 30px;
-        }
-
-        .heading {
-          font-size: 2.266vw;
-        }
-
-        .two-columns .column {
-          max-width: 395px;
-        }
-
-        td {
-          font-size: 1.758vw;
-        }
-
-        .container {
-          padding: 15px 0;
-        }
-
-        .main-wrapper {
-          padding: 15px;
-        }
-
-        #toolplate-logo {
-          padding: 0 0 0 30px;
-        }
-
-        #social-links {
-          padding: 10px 0 0 250px;
-        }
-
-        #logo-img {
-          width: 370px;
-        }
-
-        #social-img {
-          width: 25px;
-        }
-
-        .small-description {
-          font-size: 1.367vw;
-        }
-
-        .bottom-text {
-          font-size: 1.465vw;
-        }
+      .container {
+        padding: 15px 0;
       }
 
-      @media only screen and (max-width: 885px) {
-        .wrapper {
-          padding: 50px 30px;
-        }
-
-        .heading {
-          font-size: 3.021vw;
-        }
-
-        .two-columns .column {
-          max-width: 350px;
-        }
-
-        td {
-          font-size: 1.875vw;
-        }
-
-        .container {
-          padding: 15px 0;
-        }
-
-        .main-wrapper {
-          padding: 15px;
-        }
-
-        #social-links {
-          padding: 10px 0 0 180px;
-        }
-
-        #toolplate-logo {
-          padding: 0 0 10px 30px;
-        }
-
-        .image-column img {
-          height: 30px;
-          width: auto;
-        }
-
-        .small-description {
-          font-size: 1.458vw;
-        }
-
-        .bottom-text {
-          font-size: 1.563vw;
-        }
+      .main-wrapper {
+        padding: 15px;
       }
 
-      @media only screen and (max-width: 793px) {
-        .wrapper {
-          padding: 50px 30px;
-        }
-
-        .heading {
-          font-size: 3.776vw;
-        }
-
-        .two-columns .column {
-          max-width: 300px;
-        }
-
-        td {
-          font-size: 2.344vw;
-        }
-
-        .container {
-          padding: 15px 0;
-        }
-
-        .main-wrapper {
-          padding: 15px;
-        }
-
-        #toolplate-logo {
-          padding: 0 35px 10px;
-        }
-
-        #social-links {
-          padding: 10px 0 0 150px;
-        }
-
-        .header-column {
-          padding: 0px 50px;
-        }
-
-        .small-description {
-          font-size: 1.823vw;
-        }
-
-        .bottom-text {
-          font-size: 1.953vw;
-        }
+      #toolplate-logo {
+        padding: 0 35px 10px;
       }
 
-      @media only screen and (max-width: 690px) {
-        .wrapper {
-          padding: 50px 30px;
-        }
-
-        .two-columns .column {
-          max-width: 300px;
-        }
-
-        .heading {
-          font-size: 4.143vw;
-        }
-
-        td {
-          font-size: 2.571vw;
-        }
-
-        .container {
-          padding: 15px 0;
-        }
-
-        .main-wrapper {
-          padding: 15px;
-        }
-
-        #toolplate-logo {
-          padding: 0 25px 10px;
-        }
-
-        #social-links {
-          padding: 10px 88px 0;
-        }
-
-        #social-img {
-          width: 20px;
-        }
-
-        .header-column {
-          padding: 0px 30px;
-        }
-
-        .image-column img {
-          height: 25px;
-          width: auto;
-        }
-
-        .small-description {
-          font-size: 2vw;
-        }
-
-        .bottom-text {
-          font-size: 2.143vw;
-        }
+      #social-links {
+        padding: 10px 0 0 150px;
       }
 
-      @media only screen and (max-width: 430px) {
-        .wrapper {
-          padding: 50px 0px;
-        }
-
-        .two-columns {
-          max-width: 300px;
-        }
-
-        .heading {
-          font-size: 6.042vw;
-        }
-
-        td {
-          font-size: 3.75vw;
-          padding: 8px 0;
-          text-align: left;
-        }
-
-        .container {
-          padding: 15px 0;
-        }
-
-        .main-wrapper {
-          padding: 15px;
-        }
-
-        #toolplate-logo {
-          padding: 0 24px 10px;
-        }
-
-        #social-links {
-          padding: 0px 90px;
-        }
-
-        #social-img {
-          width: 15px;
-        }
-
-        .header-column {
-          padding: 0 20px;
-        }
-
-        .image-column {
-          padding: 4px;
-        }
-
-        .image-column img {
-          height: 20px;
-          width: auto;
-        }
-
-        .small-description {
-          font-size: 2.94vw;
-        }
-
-        .paragraph {
-          line-height: 1.2;
-        }
-
-        .bottom-text {
-          font-size: 3.529vw;
-        }
+      .header-column {
+        padding: 0px 50px;
       }
 
-      @media only screen and (max-width: 391px) {
-        .wrapper {
-          padding: 30px 0px;
-        }
-
-        .heading {
-          font-size: 7.25vw;
-        }
-
-        td {
-          font-size: 4.235vw;
-          padding: 5px 0;
-          text-align: left;
-        }
-
-        .container {
-          padding: 15px 0;
-        }
-
-        .main-wrapper {
-          padding: 15px;
-        }
-
-        #toolplate-logo {
-          padding: 0 25px 10px;
-        }
-
-        #social-links {
-          padding: 0px 80px;
-        }
-
-        #logo-img {
-          width: 230px;
-        }
-
-        .image-column {
-          padding: 2px;
-        }
-
-        .image-column img {
-          height: 15px;
-          width: auto;
-        }
-
-        .small-description {
-          font-size: 3.5vw;
-        }
-
-        .bottom-text {
-          font-size: 3.75vw;
-        }
+      .small-description {
+        font-size: 1.823vw;
       }
 
-      @media only screen and (max-width: 320px) {
-        .container {
-          padding: 10px 0;
-        }
+      .bottom-text {
+        font-size: 1.953vw;
+      }
+    }
 
-        .main-wrapper {
-          padding: 10px;
-        }
-
-        .heading {
-          font-size: 7.733vw;
-        }
-
-        td {
-          font-size: 4.8vw;
-          padding: 3px;
-          text-align: left;
-        }
-
-        .two-columns .column {
-          max-width: 200px;
-        }
-
-        .image-column {
-          padding: 0 5px;
-        }
-
-        #toolplate-logo {
-          padding: 0 0 10px 8px;
-        }
-
-        #social-links {
-          text-align: center;
-          padding: 0 0 0 60px;
-        }
-
-        #logo-img {
-          width: 100%;
-        }
-
-        #social-img {
-          width: 10px;
-        }
-
-        .image-column {
-          padding: 1px;
-        }
-
-        .image-column img {
-          height: 12px;
-          width: auto;
-        }
-
-        .small-description {
-          font-size: 3.733vw;
-        }
-
-        .bottom-text {
-          font-size: 4vw;
-        }
+    @media only screen and (max-width: 690px) {
+      .wrapper {
+        padding: 50px 30px;
       }
 
-      @media only screen and (max-width: 250px) {
-        .container {
-          padding: 10px 0;
-        }
-
-        .main-wrapper {
-          padding: 10px;
-        }
-
-        .heading {
-          font-size: 7.733vw;
-        }
-
-        td {
-          font-size: 5.375vw;
-          padding: 1px;
-          text-align: left;
-        }
-
-        .two-columns .column {
-          max-width: 200px;
-        }
-
-        .image-column {
-          padding: 0 5px;
-        }
-
-        #toolplate-logo {
-          padding: 0 0 10px 8px;
-        }
-
-        #social-links {
-          padding: 0 37px;
-        }
-
-        #logo-img {
-          width: 100%;
-        }
-
-        #social-img {
-          width: 7px;
-          margin: 0 1px;
-        }
-
-        .image-column img {
-          max-width: 100%;
-        }
-
-        .small-description {
-          font-size: 5.333vw;
-          padding: 5px 0;
-        }
-
-        .bottom-text {
-          font-size: 4.688vw;
-        }
+      .two-columns .column {
+        max-width: 300px;
       }
 
-      @media only screen and (max-width: 165px) {
-        * {
-          padding: 0;
-          margin: 0;
-          box-sizing: border-box;
-        }
-
-        .wrapper {
-          padding: 10px 0;
-        }
-
-        .container {
-          padding: 0;
-        }
-
-        .heading {
-          font-size: 10vw;
-        }
-
-        td {
-          font-size: 5.375vw;
-        }
-
-        .two-columns .column {
-          max-width: 130px;
-        }
-
-        .image-column {
-          padding: 0 5px;
-        }
-
-        #toolplate-logo {
-          padding: 0 0 3px 0;
-        }
-
-        #logo-img {
-          width: 100%;
-        }
-
-        #social-links {
-          font-size: 10px;
-          padding: 0 20px;
-        }
-
-        #social-img {
-          width: 7px;
-          margin: 0 1px;
-        }
-
-        .small-description {
-          font-size: 6.25vw;
-        }
-
-        .bottom-text {
-          font-size: 4.688vw;
-        }
+      .heading {
+        font-size: 4.143vw;
       }
-    </style>
-  </head>
 
-  <body>
-    <div class="wrapper">
-      <div class="container">
-        <table width="100%">
+      td {
+        font-size: 2.571vw;
+      }
+
+      .container {
+        padding: 15px 0;
+      }
+
+      .main-wrapper {
+        padding: 15px;
+      }
+
+      #toolplate-logo {
+        padding: 0 25px 10px;
+      }
+
+      #social-links {
+        padding: 10px 88px 0;
+      }
+
+      #social-img {
+        width: 20px;
+      }
+
+      .header-column {
+        padding: 0px 30px;
+      }
+
+      .image-column img {
+        height: 25px;
+        width: auto;
+      }
+
+      .small-description {
+        font-size: 2vw;
+      }
+
+      .bottom-text {
+        font-size: 2.143vw;
+      }
+    }
+
+    @media only screen and (max-width: 430px) {
+      .wrapper {
+        padding: 50px 0px;
+      }
+
+      .two-columns {
+        max-width: 300px;
+      }
+
+      .heading {
+        font-size: 6.042vw;
+      }
+
+      td {
+        font-size: 3.75vw;
+        padding: 8px 0;
+        text-align: left;
+      }
+
+      .container {
+        padding: 15px 0;
+      }
+
+      .main-wrapper {
+        padding: 15px;
+      }
+
+      #toolplate-logo {
+        padding: 0 24px 10px;
+      }
+
+      #social-links {
+        padding: 0px 90px;
+      }
+
+      #social-img {
+        width: 15px;
+      }
+
+      .header-column {
+        padding: 0 20px;
+      }
+
+      .image-column {
+        padding: 4px;
+      }
+
+      .image-column img {
+        height: 20px;
+        width: auto;
+      }
+
+      .small-description {
+        font-size: 2.94vw;
+      }
+
+      .paragraph {
+        line-height: 1.2;
+      }
+
+      .bottom-text {
+        font-size: 3.529vw;
+      }
+    }
+
+    @media only screen and (max-width: 391px) {
+      .wrapper {
+        padding: 30px 0px;
+      }
+
+      .heading {
+        font-size: 7.25vw;
+      }
+
+      td {
+        font-size: 4.235vw;
+        padding: 5px 0;
+        text-align: left;
+      }
+
+      .container {
+        padding: 15px 0;
+      }
+
+      .main-wrapper {
+        padding: 15px;
+      }
+
+      #toolplate-logo {
+        padding: 0 25px 10px;
+      }
+
+      #social-links {
+        padding: 0px 80px;
+      }
+
+      #logo-img {
+        width: 230px;
+      }
+
+      .image-column {
+        padding: 2px;
+      }
+
+      .image-column img {
+        height: 15px;
+        width: auto;
+      }
+
+      .small-description {
+        font-size: 3.5vw;
+      }
+
+      .bottom-text {
+        font-size: 3.75vw;
+      }
+    }
+
+    @media only screen and (max-width: 320px) {
+      .container {
+        padding: 10px 0;
+      }
+
+      .main-wrapper {
+        padding: 10px;
+      }
+
+      .heading {
+        font-size: 7.733vw;
+      }
+
+      td {
+        font-size: 4.8vw;
+        padding: 3px;
+        text-align: left;
+      }
+
+      .two-columns .column {
+        max-width: 200px;
+      }
+
+      .image-column {
+        padding: 0 5px;
+      }
+
+      #toolplate-logo {
+        padding: 0 0 10px 8px;
+      }
+
+      #social-links {
+        text-align: center;
+        padding: 0 0 0 60px;
+      }
+
+      #logo-img {
+        width: 100%;
+      }
+
+      #social-img {
+        width: 10px;
+      }
+
+      .image-column {
+        padding: 1px;
+      }
+
+      .image-column img {
+        height: 12px;
+        width: auto;
+      }
+
+      .small-description {
+        font-size: 3.733vw;
+      }
+
+      .bottom-text {
+        font-size: 4vw;
+      }
+    }
+
+    @media only screen and (max-width: 250px) {
+      .container {
+        padding: 10px 0;
+      }
+
+      .main-wrapper {
+        padding: 10px;
+      }
+
+      .heading {
+        font-size: 7.733vw;
+      }
+
+      td {
+        font-size: 5.375vw;
+        padding: 1px;
+        text-align: left;
+      }
+
+      .two-columns .column {
+        max-width: 200px;
+      }
+
+      .image-column {
+        padding: 0 5px;
+      }
+
+      #toolplate-logo {
+        padding: 0 0 10px 8px;
+      }
+
+      #social-links {
+        padding: 0 37px;
+      }
+
+      #logo-img {
+        width: 100%;
+      }
+
+      #social-img {
+        width: 7px;
+        margin: 0 1px;
+      }
+
+      .image-column img {
+        max-width: 100%;
+      }
+
+      .small-description {
+        font-size: 5.333vw;
+        padding: 5px 0;
+      }
+
+      .bottom-text {
+        font-size: 4.688vw;
+      }
+    }
+
+    @media only screen and (max-width: 165px) {
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+
+      .wrapper {
+        padding: 10px 0;
+      }
+
+      .container {
+        padding: 0;
+      }
+
+      .heading {
+        font-size: 10vw;
+      }
+
+      td {
+        font-size: 5.375vw;
+      }
+
+      .two-columns .column {
+        max-width: 130px;
+      }
+
+      .image-column {
+        padding: 0 5px;
+      }
+
+      #toolplate-logo {
+        padding: 0 0 3px 0;
+      }
+
+      #logo-img {
+        width: 100%;
+      }
+
+      #social-links {
+        font-size: 10px;
+        padding: 0 20px;
+      }
+
+      #social-img {
+        width: 7px;
+        margin: 0 1px;
+      }
+
+      .small-description {
+        font-size: 6.25vw;
+      }
+
+      .bottom-text {
+        font-size: 4.688vw;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <table width="100%">
+        <tbody>
+          <tr>
+            <td class="header-column">
+              <table width="100%">
+                <tr>
+                  <td style="width: 100%">
+                    <a style="vertical-align: middle" href="https://toolplate.ai/"><img
+                        src="https://cdn.toolplate.ai/v2/Toolplate-logo.png" style="max-width: 250px; width: 100%"
+                        title="ToolPlate Logo" alt="ToolPlate Logo" /></a>
+                  </td>
+                  <td style="padding: 10px"></td>
+                  <td style="vertical-align: middle">
+                    <a href="https://www.linkedin.com/company/toolplate/" target="_blank"><img id="social-img"
+                        src="https://cdn.toolplate.ai/v2/linkedin.png" /></a>
+                  </td>
+                  <td style="vertical-align: middle">
+                    <a href="https://twitter.com/toolplate_ai?t=uYvioduaUo9qyti_kk1bCw&s=09" target="_blank"><img
+                        id="social-img" src="https://cdn.toolplate.ai/v2/x.png" /></a>
+                  </td>
+                  <td style="vertical-align: middle">
+                    <a href="https://www.instagram.com/toolplate.ai/?igshid=MmU2YjMzNjRlOQ%3D%3D" target="_blank"><img
+                        id="social-img" src="https://cdn.toolplate.ai/v2/insta.png" /></a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <img src="https://cdn.toolplate.ai/v2/main-image.png" width="100%" />
+      <div class="main-wrapper">
+        <table class="main">
           <tbody>
             <tr>
-              <td class="header-column">
-                <table width="100%">
-                  <tr>
-                    <td style="width: 100%">
-                      <a
-                        style="vertical-align: middle"
-                        href="https://toolplate.ai/"
-                        ><img
-                          src="https://cdn.toolplate.ai/v2/Toolplate-logo.png"
-                          style="max-width: 250px; width: 100%"
-                          title="ToolPlate Logo"
-                          alt="ToolPlate Logo"
-                      /></a>
-                    </td>
-                    <td style="padding: 10px"></td>
-                    <td style="vertical-align: middle">
-                      <a
-                        href="https://www.linkedin.com/company/toolplate/"
-                        target="_blank"
-                        ><img
-                          id="social-img"
-                          src="https://cdn.toolplate.ai/v2/linkedin.png"
-                      /></a>
-                    </td>
-                    <td style="vertical-align: middle">
-                      <a
-                        href="https://twitter.com/toolplate_ai?t=uYvioduaUo9qyti_kk1bCw&s=09"
-                        target="_blank"
-                        ><img
-                          id="social-img"
-                          src="https://cdn.toolplate.ai/v2/x.png"
-                      /></a>
-                    </td>
-                    <td style="vertical-align: middle">
-                      <a
-                        href="https://www.instagram.com/toolplate.ai/?igshid=MmU2YjMzNjRlOQ%3D%3D"
-                        target="_blank"
-                        ><img
-                          id="social-img"
-                          src="https://cdn.toolplate.ai/v2/insta.png"
-                      /></a>
-                    </td>
-                  </tr>
-                </table>
+              <td colspan="2" class="heading">Hi {{name}},</td>
+            </tr>
+
+            <tr>
+              <td colspan="2">Hope you're doing well.</td>
+            </tr>
+
+            <tr>
+              <td colspan="2">
+                I get that you're busy, but we're genuinely excited about
+                having {{tool}} on Toolplate.ai. Your tool's cool features
+                match perfectly with our goal to highlight awesome Al tools.
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2"></td>
+            </tr>
+
+            <tr>
+              <td colspan="2" class="color-heading">
+                Here's what Toolplate.ai offers:
+              </td>
+            </tr>
+
+            <tr class="offer-list">
+              <td>👉🏻</td>
+              <td style="width: 100%; font-weight: 500; padding-left: 5px">
+                <span style="color: #5a4fcf"> 7K+</span> users/month
+              </td>
+            </tr>
+            <tr class="offer-list">
+              <td>👉🏻</td>
+              <td style="width: 100%; font-weight: 500; padding-left: 5px">
+                <span style="color: #5a4fcf"> 50K+</span> traffic/month
+              </td>
+            </tr>
+            <tr class="offer-list">
+              <td>👉🏻</td>
+              <td style="width: 100%; font-weight: 500; padding-left: 5px">
+                <span style="color: #5a4fcf"> 10+</span> top audience
+                countries
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2"></td>
+            </tr>
+            <tr>
+              <td colspan="2"></td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                Submitting {{tool}} is quick and easy:
+                <a href="https://toolplate.ai/submit-tool" style="color: #5a4fcf">Let's Do it</a>.
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="2">
+                Any questions? Need help? We've got your back.
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="2"></td>
+            </tr>
+
+            <tr>
+              <td colspan="2" style="font-weight: 500">
+                Just schedule a meeting per your convenience right here and
+                <a href="https://calendly.com/toolplate/30min" style="color: #5a4fcf">let's talk!</a>
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="2">
+                Eager to collaborate and showcase {{tool}} to our awesome
+                community. For any queries, we'll be happy to answer them via
+                email at
+                <a href="mailto:contact@toolplate.ai" style="color: #5a4fcf">contact@toolplate.ai</a>!
+              </td>
+            </tr>
+            <tr class="cheers-space">
+              <td colspan="2"></td>
+            </tr>
+            <tr>
+              <td colspan="2" style="font-weight: 700; padding: 0">
+                Cheers!
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="2" style="padding: 0; font-weight: 700">
+                Team Toolplate
               </td>
             </tr>
           </tbody>
         </table>
-        <img src="https://cdn.toolplate.ai/v2/main-image.png" width="100%" />
-        <div class="main-wrapper">
-          <table class="main">
-            <tbody>
-              <tr>
-                <td colspan="2" class="heading">Hi {{name}},</td>
-              </tr>
+      </div>
+      <br />
 
-              <tr>
-                <td colspan="2">Hope you're doing well.</td>
-              </tr>
-
-              <tr>
-                <td colspan="2">
-                  I get that you're busy, but we're genuinely excited about
-                  having {{tool}} on Toolplate.ai. Your tool's cool features
-                  match perfectly with our goal to highlight awesome Al tools.
-                </td>
-              </tr>
-              <tr>
-                <td colspan="2"></td>
-              </tr>
-
-              <tr>
-                <td colspan="2" class="color-heading">
-                  Here's what Toolplate.ai offers:
-                </td>
-              </tr>
-
-              <tr class="offer-list">
-                <td>👉🏻</td>
-                <td style="width: 100%; font-weight: 500; padding-left: 5px">
-                  <span style="color: #5a4fcf"> 7K+</span> users/month
-                </td>
-              </tr>
-              <tr class="offer-list">
-                <td>👉🏻</td>
-                <td style="width: 100%; font-weight: 500; padding-left: 5px">
-                  <span style="color: #5a4fcf"> 50K+</span> traffic/month
-                </td>
-              </tr>
-              <tr class="offer-list">
-                <td>👉🏻</td>
-                <td style="width: 100%; font-weight: 500; padding-left: 5px">
-                  <span style="color: #5a4fcf"> 10+</span> top audience
-                  countries
-                </td>
-              </tr>
-              <tr>
-                <td colspan="2"></td>
-              </tr>
-              <tr>
-                <td colspan="2"></td>
-              </tr>
-              <tr>
-                <td colspan="2">
-                  Submitting {{tool}} is quick and easy:
-                  <a
-                    href="https://toolplate.ai/submit-tool"
-                    style="color: #5a4fcf"
-                    >Let's Do it</a
-                  >.
-                </td>
-              </tr>
-
-              <tr>
-                <td colspan="2">
-                  Any questions? Need help? We've got your back.
-                </td>
-              </tr>
-
-              <tr>
-                <td colspan="2"></td>
-              </tr>
-
-              <tr>
-                <td colspan="2" style="font-weight: 500">
-                  Just schedule a meeting per your convenience right here and
-                  <a
-                    href="https://calendly.com/toolplate/30min"
-                    style="color: #5a4fcf"
-                    >let's talk!</a
-                  >
-                </td>
-              </tr>
-
-              <tr>
-                <td colspan="2">
-                  Eager to collaborate and showcase {{tool}} to our awesome
-                  community. For any queries, we'll be happy to answer them via
-                  email at
-                  <a href="mailto:contact@toolplate.ai" style="color: #5a4fcf"
-                    >contact@toolplate.ai</a
-                  >!
-                </td>
-              </tr>
-              <tr class="cheers-space">
-                <td colspan="2"></td>
-              </tr>
-              <tr>
-                <td colspan="2" style="font-weight: 700; padding: 0">
-                  Cheers!
-                </td>
-              </tr>
-
-              <tr>
-                <td colspan="2" style="padding: 0; font-weight: 700">
-                  Team Toolplate
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <br />
-
-        <table style="width: 100%; max-width: 700px; margin: 0 auto">
-          <tr>
-            <td colspan="7">
-              <p
-                class="bottom-text"
-                style="
+      <table style="width: 100%; max-width: 700px; margin: 0 auto">
+        <tr>
+          <td colspan="7">
+            <p class="bottom-text" style="
                   padding: 0 20px;
                   margin: 0 auto;
                   text-align: center;
                   max-width: 400px;
                   color: #5a4fcf;
-                "
-              >
-                Toolplate Recognized By Leading<br />
-                Technology Business Giants
-              </p>
-            </td>
-          </tr>
-          <tr>
-            <td class="image-column">
-              <a href="https://aws.amazon.com/startups" target="_blank">
-                <img src="https://cdn.toolplate.ai/v2/aws-logo.png" alt="AWS" />
-              </a>
-            </td>
-            <td class="image-separate"></td>
-            <td class="image-column">
-              <a href="https://startup.google.com/" target="_blank">
-                <img
-                  src="https://cdn.toolplate.ai/v2/google-logo.png"
-                  alt="Google"
-                />
-              </a>
-            </td>
-            <td class="image-separate"></td>
-            <td class="image-column">
-              <a href="https://www.nvidia.com/en-in/startups/" target="_blank">
-                <img
-                  src="https://cdn.toolplate.ai/v2/nvidia-logo.png"
-                  alt="NVIDIA"
-                />
-              </a>
-            </td>
-            <td class="image-separate"></td>
-            <td class="image-column">
-              <a href="https://www.xartup.com/" target="_blank">
-                <img
-                  src="https://cdn.toolplate.ai/v2/xartup-logo.png"
-                  alt="Xartup"
-              /></a>
-            </td>
-          </tr>
-        </table>
-      </div>
+                ">
+              Toolplate Recognized By Leading<br />
+              Technology Business Giants
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td class="image-column">
+            <a href="https://aws.amazon.com/startups" target="_blank">
+              <img src="https://cdn.toolplate.ai/v2/aws-logo.png" alt="AWS" />
+            </a>
+          </td>
+          <td class="image-separate"></td>
+          <td class="image-column">
+            <a href="https://startup.google.com/" target="_blank">
+              <img src="https://cdn.toolplate.ai/v2/google-logo.png" alt="Google" />
+            </a>
+          </td>
+          <td class="image-separate"></td>
+          <td class="image-column">
+            <a href="https://www.nvidia.com/en-in/startups/" target="_blank">
+              <img src="https://cdn.toolplate.ai/v2/nvidia-logo.png" alt="NVIDIA" />
+            </a>
+          </td>
+          <td class="image-separate"></td>
+          <td class="image-column">
+            <a href="https://www.xartup.com/" target="_blank">
+              <img src="https://cdn.toolplate.ai/v2/xartup-logo.png" alt="Xartup" /></a>
+          </td>
+        </tr>
+      </table>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

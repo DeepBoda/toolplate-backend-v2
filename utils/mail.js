@@ -63,7 +63,7 @@ exports.replySubmittedTool = async (options) => {
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: "Tool Submission on Toolplate!",
+      subject: `Thanks for submitting ${options.tool} on Toolplate!`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 
@@ -83,13 +83,17 @@ exports.initialPitch = async (options) => {
 
     // Replace the placeholder {{tool}} with the actual Tool name
     const emailContent = Template.replace(/{{name}}|{{tool}}/g, (match) => {
-      return match === "{{tool}}" ? options.tool : options.username;
+      return match === "{{tool}}"
+        ? options.tool
+        : (options.isCompany = true
+            ? `${options.username} Team`
+            : options.username);
     });
 
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: "Hurry! Get listed on Toolplate!",
+      subject: `${options.tool} is getting attention- wanna grow it?`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 
@@ -118,7 +122,7 @@ exports.firstFollowUp = async (options) => {
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: "[FollowUp1] Hurry! Get listed on Toolplate!",
+      subject: `Let's Showcase ${options.tool} on Toolplate.ai!?`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 
@@ -147,7 +151,7 @@ exports.secondFollowUp = async (options) => {
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: "[FollowUp2] Hurry! Get listed on Toolplate!",
+      subject: `Quick Follow-Up: Exciting Opportunity for ${options.tool} on Toolplate.ai!`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 
@@ -176,7 +180,7 @@ exports.thirdFollowUp = async (options) => {
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: "[FollowUp3] Hurry! Get listed on Toolplate!",
+      subject: `Knock-knock! It’s Toolplate calling ${options.tool}!`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 
@@ -209,7 +213,7 @@ exports.featured = async (options) => {
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: "[Featured] Woohoo! Listed on Toolplate!",
+      subject: ` ${options.tool} is live on Toolplate!`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 
@@ -242,7 +246,7 @@ exports.rejected = async (options) => {
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: "[Rejected] Oops! We noticed an issue!",
+      subject: `Regarding Your ${options.tool} Submission on Toolplate`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 

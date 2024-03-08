@@ -3,6 +3,7 @@ const Joi = require("joi");
 module.exports = {
   create: Joi.object().keys({
     company: Joi.string().required(),
+    isCompany: Joi.boolean(),
     toolName: Joi.string().required(),
     email: Joi.string().email().required(),
     status: Joi.string().valid(

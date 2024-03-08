@@ -16,8 +16,9 @@ const {
 exports.add = async (req, res, next) => {
   try {
     req.body.userId = req.requestor ? req.requestor.id : null;
-    const { company, toolName, email } = req.body;
-
+    const { company, toolName, email, isCompany } = req.body;
+    console.log("------------>", req.body);
+    // return;
     const data = await service.create(req.body);
 
     // Combine firstName and lastName with a space in between
@@ -25,7 +26,7 @@ exports.add = async (req, res, next) => {
     const username = capitalize(company.trim());
 
     // Send reply  email for pitch
-    initialPitch({ email, username, tool: toolName });
+    initialPitch({ email, username, tool: toolName, isCompany });
 
     res.status(200).json({
       status: "success",

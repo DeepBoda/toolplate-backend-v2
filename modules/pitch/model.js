@@ -31,6 +31,10 @@ const Pitch = sequelize.define(
     reason: {
       type: DataTypes.STRING,
     },
+    isCompany: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   {
     paranoid: true,
@@ -46,5 +50,4 @@ Tool.hasMany(Pitch, {
   },
 });
 Pitch.belongsTo(Tool);
-
 module.exports = Pitch;

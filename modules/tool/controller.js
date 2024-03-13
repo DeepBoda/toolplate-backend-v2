@@ -1251,20 +1251,16 @@ exports.update = async (req, res, next) => {
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });
 
+    // Handle the file deletion
+    const filesToDelete = [
+      ...(req.files?.image ? [oldToolData.image] : []),
+      ...(req.files?.file ? oldToolData.videos : []),
+    ];
     // Clear Redis cache
     redisService.del(`tool?slug=${oldToolData.slug}`);
     redisService.del(`toolsForPrompt`);
     redisService.hDel(`prompt=*`);
-
-    // Handle the file deletion
-    if (req.files?.image && oldToolData.image) {
-      const filesToDelete = [
-        oldToolData.image,
-        ...(req.files.videos || []),
-        ...(oldToolData.videos || []),
-      ];
-      deleteFilesFromS3(filesToDelete);
-    }
+    deleteFilesFromS3(filesToDelete);
 
     // Update categories
     const categoryIds = categories.split(",").map(Number);
@@ -1328,22 +1324,21 @@ exports.delete = async (req, res, next) => {
       toolImageService.delete({ where: { toolId } }),
     ]);
 
-    const filesToDelete = [];
-    if (toolData.image) filesToDelete.push(toolData.image);
-    if (toolData.videos) filesToDelete.push(...toolData.videos);
-
     res.status(200).send({
       status: "success",
       data: { affectedRows },
     });
 
-    if (filesToDelete.length > 0) {
-      deleteFilesFromS3(filesToDelete);
-    }
+    // Handle the file deletion
+    const filesToDelete = [
+      ...(req.files?.image ? [toolData.image] : []),
+      ...(req.files?.file ? toolData.videos : []),
+    ];
 
     // Clear Redis cache
     redisService.del(`toolsForPrompt`);
     redisService.hDel(`prompt=*`);
+    deleteFilesFromS3(filesToDelete);
   } catch (error) {
     console.error(error);
     next(error);

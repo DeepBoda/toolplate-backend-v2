@@ -1,86 +1,76 @@
-const { Client } = require("@elastic/elasticsearch");
-const fs = require("fs");
-const path = require("path");
-const blog = require("../modules/blog/service");
-const tool = require("../modules/tool/service");
-const { Op } = require("sequelize");
+const client = require("../config/esClient");
+const toolService = require("../modules/tool/service");
+const categoryService = require("../modules/category/service");
 const redisClient = require("../utils/redis");
 
-const certificatePath = path.join(__dirname, "certificate.crt");
-
-// Create Elasticsearch client
-// const client = new Client({
-//   node: "http://localhost:9200",
-//   auth: {
-//     username: "elastic",
-//     password: "sdXBClIwLXjBHveJmqIh",
-//   },
-//   ssl: {
-//     ca: fs.readFileSync(certificatePath),
-//   },
-// });
-
-const client = new Client({
-  cloud: {
-    id: "7aa0b035a3bf481fb019cce870fc8f69:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvJDVkNWJmZGI3ZTU5YTQ4ODA4ZmRiOTQ4Njg5ODhjM2ExJDg3MjVmYjE0ODJlYjQyZGU5NWRkZTYxODg2MzQ2M2Mz",
-  },
-  auth: {
-    username: "elastic",
-    password: "ANwJX5v9yyEVLxcg4bJAJFkE",
-  },
-});
-const insertBulkData = async () => {
+const insertData = async () => {
   try {
-    const blogs = await blog.findAll({
-      attributes: ["slug", "id", "description", "title"],
-    });
-    const tools = await tool.findAll({
-      attributes: ["slug", "id", "description", "title"],
-    });
+    // Fetch data for tools and categories concurrently
+    const [tools, categories] = await Promise.all([
+      toolService.findAll({
+        attributes: ["slug", "id", "title", "description"],
+      }),
+      categoryService.findAll({
+        attributes: ["slug", "id", "name", "description", "image"],
+      }),
+    ]);
+
     // Create the index
     const index = "search";
-    // Generate and index random documents
-    const bulkData = [];
-    for (let i = 0; i < blogs.length; i++) {
-      let blog = blogs[i].toJSON();
-      const document = {
-        id: blog.id,
-        title: blog.title,
-        slug: blog.slug,
-        description: blog.description,
-        image: `${process.env.BUCKET_URL}/blog_${blog.id}_360_250.avif`,
-        type: "blog",
-      };
-      bulkData.push({ index: { _index: index } }, document);
-    }
-    for (let i = 0; i < tools.length; i++) {
-      let tool = tools[i].toJSON();
-      const document = {
+
+    // Generate bulk data for tools
+    const toolsBulkData = tools.map((tool) => ({
+      index: { _index: index },
+      body: {
         id: tool.id,
         title: tool.title,
         slug: tool.slug,
         description: tool.description,
-        image: `${process.env.BUCKET_URL}/tool_${tool.id}_120_120.avif`,
+        image: `${process.env.BUCKET_URL}/tool_${tool.id}_60_60.webp`,
         type: "tool",
-      };
-      bulkData.push({ index: { _index: index } }, document);
-    }
-    console.log(bulkData);
-    await client.indices.delete({ index });
-    console.log(`Index '${index}' deleted successfully.`);
-    await client.bulk({ body: bulkData });
+      },
+    }));
 
-    console.log(`Generated documents in the "${index}" index.`);
+    // Generate bulk data for categories
+    const categoriesBulkData = categories.map((category) => ({
+      index: { _index: index },
+      body: {
+        id: category.id,
+        title: category.name,
+        slug: category.slug,
+        description: category.description,
+        image: category.image,
+        type: "category",
+      },
+    }));
+
+    // Combine both bulk data arrays
+    const bulkData = [...toolsBulkData, ...categoriesBulkData];
+
+    // Bulk insert data
+    if (bulkData.length > 0) {
+      await client.bulk({ body: bulkData });
+      console.log(
+        `Generated documents for ${tools.length} tools and ${categories.length} categories in the "${index}" index.`
+      );
+    } else {
+      console.log("No data to insert.");
+    }
   } catch (error) {
     console.error("Error generating dataset:", error);
   }
 };
+
 const showIndices = async () => {
   try {
     const { body } = await client.indices.get({ index: "_all" });
-    const indices = Object.keys(body);
-    console.log("Indices:");
-    console.log(indices);
+    if (body) {
+      const indices = Object.keys(body);
+      console.log("Indices:");
+      console.log(indices);
+    } else {
+      console.log("No indices found.");
+    }
   } catch (error) {
     console.error("Error retrieving indices:", error);
   }
@@ -99,6 +89,12 @@ const getIndexDataCount = async () => {
   try {
     const { body: indices } = await client.cat.indices({ format: "json" });
 
+    // Check if indices is undefined or not iterable
+    if (!indices || !Array.isArray(indices)) {
+      console.log("No indices found.");
+      return;
+    }
+
     for (const index of indices) {
       // Skip the .geoip_databases index
       if (index.index === ".geoip_databases") {
@@ -112,66 +108,88 @@ const getIndexDataCount = async () => {
     console.error("Error retrieving index document count:", error);
   }
 };
+
 const createIndex = async (indexName) => {
-  await client.indices.create({ index: indexName });
-  console.log("Index created");
+  try {
+    // Check if the index already exists
+    const indexExists = await client.indices.exists({ index: indexName });
+    if (indexExists) {
+      console.log(`Index '${indexName}' already exists`);
+      return;
+    }
+
+    // Create the index
+    await client.indices.create({ index: indexName });
+
+    // Log success message after index creation
+    console.log(`Index '${indexName}' created successfully`);
+  } catch (error) {
+    // Handle error if index creation fails
+    console.error(`Error creating index '${indexName}':`, error);
+  }
 };
-exports.search = async (searchTerms, limit = 10) => {
+
+exports.es = async (search, limit = 6) => {
   try {
     const startTime = Date.now();
 
-    const body = await client.search({
-      index: "blog",
-      body: {
-        query: {
-          bool: {
-            should: [
-              {
-                match: {
-                  title: {
-                    query: searchTerms,
-                    fuzziness: "AUTO",
-                    operator: "and",
+    let data = await redisClient.get(`ES?search=${search}`);
+    if (!data) {
+      const body = await client.search({
+        index: "search",
+        body: {
+          query: {
+            bool: {
+              should: [
+                {
+                  match: {
+                    title: {
+                      query: search,
+                      fuzziness: "AUTO",
+                      operator: "and",
+                    },
                   },
                 },
-              },
-              {
-                wildcard: {
-                  title: {
-                    value: `${searchTerms}*`,
+                {
+                  wildcard: {
+                    title: {
+                      value: `${search}*`,
+                    },
                   },
                 },
-              },
-              {
-                match_phrase_prefix: {
-                  title: {
-                    query: searchTerms,
-                    slop: 3, // Allow up to 3 token position differences
-                    boost: 10, // Boost the relevance of the match_phrase_prefix query
+                {
+                  match_phrase_prefix: {
+                    title: {
+                      query: search,
+                      slop: 3, // Allow up to 3 token position differences
+                      boost: 10, // Boost the relevance of the match_phrase_prefix query
+                    },
                   },
                 },
-              },
-            ],
+              ],
+            },
           },
+          size: limit,
         },
-        size: limit,
-      },
-    });
+      });
 
-    const endTime = Date.now();
-    console.log("Query time:", endTime - startTime);
-    console.log(body.hits.hits.map((hit) => hit._source));
-    return body.hits.hits.map((hit) => hit._source);
+      const endTime = Date.now();
+      console.log("Query time:", endTime - startTime);
+      console.log(body.hits.hits.map((hit) => hit._source));
+      const data = body.hits.hits.map((hit) => hit._source);
+      redisClient.set(`ES?search=${search}`, data);
+    }
+    return data;
   } catch (error) {
     console.error("Error performing search:", error);
   }
 };
 
-exports.refillElasticData = async (req, res, next) => {
+exports.refillData = async (req, res, next) => {
   try {
-    await insertBulkData();
+    await insertData();
 
-    await redisClient.hDel(`searchAll?searchTerms=*`);
+    await redisClient.hDel(`ES?search=*`);
     res.status(200).json({
       status: "success",
     });
@@ -179,3 +197,13 @@ exports.refillElasticData = async (req, res, next) => {
     console.error(error);
   }
 };
+
+const main = async () => {
+  await deleteIndex("search");
+  await createIndex("search");
+  await insertData();
+  await showIndices(); // Move this line to after the data insertion
+  await getIndexDataCount();
+};
+
+// main(); // Call the main function

@@ -1,18 +1,18 @@
 "use strict";
 
 const router = require("express").Router();
-const view = require("./controller");
+const home = require("./controller");
 const joiSchema = require("./joiSchema");
 const { joiValidator } = require("../../middlewares/joiValidator");
 
 router
   .route("/")
-  .get(view.getAllForAdmin)
-  .post(joiValidator(joiSchema.create), view.add);
+  .get(home.getAllForAdmin)
+  .post(joiValidator(joiSchema.create), home.add);
 router
   .route("/:id")
-  .get(view.getById)
-  .patch(joiValidator(joiSchema.update), view.update)
-  .delete(view.delete);
+  .get(home.getById)
+  .patch(joiValidator(joiSchema.update), home.update)
+  .delete(home.delete);
 
 module.exports = router;

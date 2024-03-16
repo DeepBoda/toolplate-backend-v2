@@ -1,12 +1,13 @@
 "use strict";
 
 const router = require("express").Router();
-const view = require("./controller");
+const home = require("./controller");
 const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 
 router.use(authMiddleware,)
-router.route("/").get(view.getAll);
-router.route("/data").get(view.getAllDynamic);
+router.route("/").get(home.getAll);
+router.route("/data").get(home.getAllDynamic);
+router.route("/search/:search").get(home.elasticSearch);
 
 
 

@@ -54,6 +54,23 @@ exports.login = async (req, res, next) => {
   }
 };
 
+exports.getAll = async (req, res, next) => {
+  try {
+    const admin = await service.findAll({
+      attributes: {
+        exclude: ["password", "deletedAt", "updatedAt"],
+      },
+    });
+
+    admin.password = undefined;
+    res.status(200).send({
+      status: "success",
+      data: admin,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 exports.getMyProfile = async (req, res, next) => {
   try {
     const admin = await service.findOne({

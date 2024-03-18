@@ -14,7 +14,6 @@ const Admin = require("../admin/model");
 const ToolCategory = require("../toolCategory/model");
 const Category = require("../category/model");
 const sequelize = require("../../config/db");
-const { es } = require("../../utils/elastic");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -28,22 +27,6 @@ exports.add = async (req, res, next) => {
     });
   } catch (error) {
     console.error(error);
-    next(error);
-  }
-};
-
-exports.elasticSearch = async (req, res, next) => {
-  try {
-    const { search } = req.params;
-    const limit = req.query?.limit ? req.query?.limit : 6;
-    const data = await es(search, limit);
-
-    res.status(200).json({
-      status: "success",
-      data,
-    });
-  } catch (error) {
-    console.log(error);
     next(error);
   }
 };

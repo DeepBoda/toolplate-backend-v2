@@ -15,6 +15,7 @@ router.post("/login", admin.login);
 // <================ Authorized APIs ================>
 router.use(authMiddleware,protectRoute(["Admin"]));
 
+router.get("/",admin.getAll);
 router.get("/profile",admin.getMyProfile);
 router.post("/upload",upload.single('image') , admin.uploadImage);
 

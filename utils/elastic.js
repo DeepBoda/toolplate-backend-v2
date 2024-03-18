@@ -3,64 +3,73 @@ const toolService = require("../modules/tool/service");
 const categoryService = require("../modules/category/service");
 const redisClient = require("../utils/redis");
 
-const insertData = async () => {
+const insertBulkData = async () => {
   try {
-    // Fetch data for tools and categories concurrently
-    const [tools, categories] = await Promise.all([
-      toolService.findAll({
-        attributes: ["slug", "id", "title", "description"],
-      }),
-      categoryService.findAll({
-        attributes: ["slug", "id", "name", "description", "image"],
-      }),
-    ]);
-
-    // Create the index
+    // Define the index
     const index = "search";
 
-    // Generate bulk data for tools
-    const toolsBulkData = tools.map((tool) => ({
-      index: { _index: index },
-      body: {
-        id: tool.id,
-        title: tool.title,
-        slug: tool.slug,
-        description: tool.description,
-        image: `${process.env.BUCKET_URL}/tool_${tool.id}_60_60.webp`,
-        type: "tool",
-      },
-    }));
-
-    // Generate bulk data for categories
-    const categoriesBulkData = categories.map((category) => ({
-      index: { _index: index },
-      body: {
-        id: category.id,
-        title: category.name,
-        slug: category.slug,
-        description: category.description,
-        image: category.image,
-        type: "category",
-      },
-    }));
-
-    // Combine both bulk data arrays
-    const bulkData = [...toolsBulkData, ...categoriesBulkData];
-
-    // Bulk insert data
-    if (bulkData.length > 0) {
-      await client.bulk({ body: bulkData });
-      console.log(
-        `Generated documents for ${tools.length} tools and ${categories.length} categories in the "${index}" index.`
-      );
-    } else {
-      console.log("No data to insert.");
+    // Check if the index exists before trying to delete it
+    const indexExists = await client.indices.exists({ index });
+    if (indexExists) {
+      await client.indices.delete({ index });
+      console.log(`Index '${index}' deleted successfully.`);
     }
+
+    // Create the index
+    // await client.indices.create({ index });
+    // console.log(`Index '${index}' created successfully.`);
+
+    // Bulk data array
+    const bulkData = [];
+
+    // Insert categories
+    const categories = await categoryService.findAll({
+      attributes: ["slug", "id", "name", "description"],
+    });
+    categories.forEach((category) => {
+      const categoryData = category.toJSON();
+      bulkData.push(
+        { index: { _index: index } },
+        {
+          id: categoryData.id,
+          title: categoryData.name,
+          slug: categoryData.slug,
+          image: categoryData.image,
+          description: categoryData.description,
+          type: "category",
+        }
+      );
+    });
+
+    // Insert tools
+    const tools = await toolService.findAll({
+      attributes: ["title", "slug", "id", "description"],
+    });
+    tools.forEach((tool) => {
+      const toolData = tool.toJSON();
+      bulkData.push(
+        { index: { _index: index } },
+        {
+          id: toolData.id,
+          title: toolData.title,
+          slug: toolData.slug,
+          image: `${process.env.BUCKET_URL}/tool_${toolData.id}_60_60.webp`,
+          description: toolData.description,
+          type: "tool",
+        }
+      );
+    });
+
+    // Perform the bulk index operation
+    await client.bulk({ body: bulkData });
+
+    console.log(
+      `Bulk data inserted. ${categories.length} categories and ${tools.length} tools added to the "${index}" index.`
+    );
   } catch (error) {
-    console.error("Error generating dataset:", error);
+    console.error("Error during bulk data insertion:", error);
   }
 };
-
 const showIndices = async () => {
   try {
     const { body } = await client.indices.get({ index: "_all" });
@@ -75,7 +84,6 @@ const showIndices = async () => {
     console.error("Error retrieving indices:", error);
   }
 };
-
 const deleteIndex = async (indexName) => {
   try {
     const { body } = await client.indices.delete({ index: indexName });
@@ -84,7 +92,6 @@ const deleteIndex = async (indexName) => {
     console.error("Error deleting index:", error);
   }
 };
-
 const getIndexDataCount = async () => {
   try {
     const { body: indices } = await client.cat.indices({ format: "json" });
@@ -108,102 +115,107 @@ const getIndexDataCount = async () => {
     console.error("Error retrieving index document count:", error);
   }
 };
-
+const listAllIndexes = async () => {
+  try {
+    const body = await client.cat.indices({ format: "json" });
+    console.log(body);
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+};
 const createIndex = async (indexName) => {
   try {
-    // Check if the index already exists
+    // Original createIndex function enhanced with an example mapping
     const indexExists = await client.indices.exists({ index: indexName });
-    if (indexExists) {
+    if (indexExists.body) {
+      // Ensure to access the `.body` property
       console.log(`Index '${indexName}' already exists`);
       return;
     }
 
-    // Create the index
-    await client.indices.create({ index: indexName });
-
-    // Log success message after index creation
+    await client.indices.create({
+      index: indexName,
+      body: {
+        settings: {
+          /* Your index settings */
+        },
+        mappings: {
+          properties: {
+            id: { type: "integer" },
+            title: { type: "text" },
+            slug: { type: "keyword" },
+            description: { type: "text" },
+            image: { type: "text" },
+            type: { type: "keyword" },
+          },
+        },
+      },
+    });
     console.log(`Index '${indexName}' created successfully`);
   } catch (error) {
-    // Handle error if index creation fails
     console.error(`Error creating index '${indexName}':`, error);
   }
 };
-
-exports.es = async (search, limit = 6) => {
-  try {
-    const startTime = Date.now();
-
-    let data = await redisClient.get(`ES?search=${search}`);
-    if (!data) {
-      const body = await client.search({
-        index: "search",
-        body: {
-          query: {
-            bool: {
-              should: [
-                {
-                  match: {
-                    title: {
-                      query: search,
-                      fuzziness: "AUTO",
-                      operator: "and",
-                    },
-                  },
-                },
-                {
-                  wildcard: {
-                    title: {
-                      value: `${search}*`,
-                    },
-                  },
-                },
-                {
-                  match_phrase_prefix: {
-                    title: {
-                      query: search,
-                      slop: 3, // Allow up to 3 token position differences
-                      boost: 10, // Boost the relevance of the match_phrase_prefix query
-                    },
-                  },
-                },
-              ],
-            },
-          },
-          size: limit,
-        },
-      });
-
-      const endTime = Date.now();
-      console.log("Query time:", endTime - startTime);
-      console.log(body.hits.hits.map((hit) => hit._source));
-      const data = body.hits.hits.map((hit) => hit._source);
-      redisClient.set(`ES?search=${search}`, data);
-    }
-    return data;
-  } catch (error) {
-    console.error("Error performing search:", error);
-  }
-};
-
 exports.refillData = async (req, res, next) => {
   try {
-    await insertData();
+    await insertBulkData();
 
     await redisClient.hDel(`ES?search=*`);
     res.status(200).json({
       status: "success",
+      message: "Elastic Search data refilled successfully!",
     });
   } catch (error) {
     console.error(error);
   }
 };
+exports.searchTool = async (searchTerms, limit = 10) => {
+  try {
+    const startTime = Date.now();
 
-const main = async () => {
-  await deleteIndex("search");
-  await createIndex("search");
-  await insertData();
-  await showIndices(); // Move this line to after the data insertion
-  await getIndexDataCount();
+    const body = await client.search({
+      index: "search",
+      body: {
+        query: {
+          bool: {
+            should: [
+              {
+                match: {
+                  title: {
+                    query: searchTerms,
+                    fuzziness: "AUTO",
+                    operator: "and",
+                  },
+                },
+              },
+              {
+                wildcard: {
+                  title: {
+                    value: `${searchTerms}*`,
+                  },
+                },
+              },
+              {
+                match_phrase_prefix: {
+                  title: {
+                    query: searchTerms,
+                    slop: 3, // Allow up to 3 token position differences
+                    boost: 10, // Boost the relevance of the match_phrase_prefix query
+                  },
+                },
+              },
+            ],
+          },
+        },
+        size: limit,
+      },
+    });
+
+    const endTime = Date.now();
+    console.log("Query time:", endTime - startTime);
+    // console.log(body.hits.hits);
+    return body.hits.hits.map((hit) => hit._source);
+  } catch (error) {
+    console.error("Error performing search:", error);
+  }
 };
-
-// main(); // Call the main function

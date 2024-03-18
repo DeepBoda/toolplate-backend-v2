@@ -3,8 +3,8 @@
 const createError = require("http-errors");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const redisService = require("../../utils/redis");
 const service = require("./service");
-const { convertToAvifAndUpload } = require("../../utils/imageResize");
 
 exports.create = async (req, res, next) => {
   try {
@@ -56,31 +56,41 @@ exports.login = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const admin = await service.findAll({
-      attributes: {
-        exclude: ["password", "deletedAt", "updatedAt"],
-      },
-    });
+    let admin = await redisService.get(`Admins`);
+    if (!admin) {
+      const admin = await service.findAll({
+        attributes: {
+          exclude: ["password", "deletedAt", "updatedAt"],
+        },
+      });
 
-    admin.password = undefined;
-    res.status(200).send({
-      status: "success",
-      data: admin,
-    });
+      admin.password = undefined;
+      res.status(200).send({
+        status: "success",
+        data: admin,
+      });
+      redisService.set(`Admins`, admin);
+    }
   } catch (error) {
     next(error);
   }
 };
+
 exports.getMyProfile = async (req, res, next) => {
   try {
-    const admin = await service.findOne({
-      where: { id: req.requestor.id },
-      attributes: {
-        exclude: ["password", "deletedAt", "updatedAt"],
-      },
-    });
-
-    admin.password = undefined;
+    const { id } = req.requestor;
+    const cacheKey = `Admin=${id}`;
+    let admin = await redisService.get(cacheKey);
+    if (!admin) {
+      admin = await service.findOne({
+        where: { id },
+        attributes: {
+          exclude: ["password", "deletedAt", "updatedAt"],
+        },
+      });
+      admin.password = undefined;
+      redisService.set(cacheKey, admin);
+    }
     res.status(200).send({
       status: "success",
       data: {

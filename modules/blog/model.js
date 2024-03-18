@@ -1,6 +1,7 @@
 "use strict";
 const { DataTypes, Sequelize } = require("sequelize");
 const sequelize = require("../../config/db");
+const Admin = require("../admin/model");
 const Blog = sequelize.define(
   "blog",
   {
@@ -60,5 +61,8 @@ const Blog = sequelize.define(
     paranoid: true,
   }
 );
+
+Admin.hasMany(Blog);
+Blog.belongsTo(Admin);
 
 module.exports = Blog;

@@ -26,6 +26,7 @@ const {
   resizeAndUploadWebP,
 } = require("../../utils/imageResize");
 const createHttpError = require("http-errors");
+const Admin = require("../admin/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -364,6 +365,10 @@ exports.getBySlug = async (req, res, next) => {
               model: CategoryOfBlog,
               attributes: blogCategoryAttributes,
             },
+          },
+          {
+            model: Admin,
+            attributes: ["id", "name", "email"],
           },
         ],
       });

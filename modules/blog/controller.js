@@ -260,16 +260,22 @@ exports.getAllForAdmin = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: blogAllAdminAttributes,
-      include: {
-        model: BlogCategory,
-        attributes: ["categoryOfBlogId"],
-        ...query,
-        where,
-        include: {
-          model: CategoryOfBlog,
-          attributes: blogCategoryAttributes,
+      include: [
+        {
+          model: BlogCategory,
+          attributes: ["categoryOfBlogId"],
+          ...query,
+          where,
+          include: {
+            model: CategoryOfBlog,
+            attributes: blogCategoryAttributes,
+          },
         },
-      },
+        {
+          model: Admin,
+          attributes: ["id", "name", "email"],
+        },
+      ],
     });
 
     res.status(200).send({
@@ -368,7 +374,7 @@ exports.getBySlug = async (req, res, next) => {
           },
           {
             model: Admin,
-            attributes: ["id", "name", "email"],
+            attributes: ["id", "name"],
           },
         ],
       });

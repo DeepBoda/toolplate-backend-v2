@@ -92,6 +92,7 @@ exports.blogAttributes = [
   "comments",
   "wishlists",
   "release",
+  "AdminId",
 ];
 exports.listingAttributes = [
   "id",
@@ -198,6 +199,7 @@ exports.blogAllAdminAttributes = [
   "comments",
   "wishlists",
   "release",
+  "AdminId",
 ];
 exports.listingAllAdminAttributes = [
   "id",

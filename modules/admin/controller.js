@@ -58,7 +58,7 @@ exports.getAll = async (req, res, next) => {
   try {
     let admin = await redisService.get(`Admins`);
     if (!admin) {
-      const admin = await service.findAll({
+      admin = await service.findAll({
         attributes: {
           exclude: ["password", "deletedAt", "updatedAt"],
         },

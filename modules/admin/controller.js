@@ -63,14 +63,13 @@ exports.getAll = async (req, res, next) => {
           exclude: ["password", "deletedAt", "updatedAt"],
         },
       });
-
-      admin.password = undefined;
-      res.status(200).send({
-        status: "success",
-        data: admin,
-      });
       redisService.set(`Admins`, admin);
     }
+    admin.password = undefined;
+    res.status(200).send({
+      status: "success",
+      data: admin,
+    });
   } catch (error) {
     next(error);
   }

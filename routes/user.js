@@ -47,6 +47,6 @@ router.use(
   require("../modules/listingCommentReplyLike")
 );
 router.use("/submit-tool", require("../modules/submitTool"));
-router.use("/elasticsearch", require("../modules/elasticsearch"));
+// router.use("/elasticsearch", require("../modules/elasticsearch"));
 
 module.exports = router;

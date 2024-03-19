@@ -10,6 +10,7 @@ module.exports = {
     overview: Joi.string().required(),
     categories: Joi.string().required(),
     release: Joi.date(),
+    AdminId: Joi.number(),
   }),
   update: Joi.object().keys({
     title: Joi.string(),
@@ -21,5 +22,6 @@ module.exports = {
     overview: Joi.string(),
     categories: Joi.string(),
     release: Joi.date(),
+    AdminId: Joi.number(),
   }),
 };

@@ -36,13 +36,18 @@ exports.add = async (req, res, next) => {
       req.body.image = req.file.location;
     }
 
-    // Create slug URL based on title
-    req.body.slug = slugify(req.body.title, {
-      replacement: "-", // Replace spaces with hyphens
-      lower: true, // Convert to lowercase
-      remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
-    });
-
+    if (req.body.slug) {
+      const exist = await service.findOne({
+        where: {
+          slug: req.body.slug,
+        },
+      });
+      if (exist)
+        return res.status(403).send({
+          status: "error",
+          message: "Oops! slug is already associated with existing listicle.",
+        });
+    }
     const { categories, ...bodyData } = req.body;
 
     // Create the new blog entry in the `blog` table

@@ -2,6 +2,9 @@ const client = require("../config/esClient");
 const toolService = require("../modules/tool/service");
 const categoryService = require("../modules/category/service");
 const redisClient = require("../utils/redis");
+const MainCategory = require("../modules/mainCategory/model");
+const ToolCategory = require("../modules/toolCategory/model");
+const Category = require("../modules/category/model");
 
 const insertBulkData = async () => {
   try {
@@ -24,7 +27,11 @@ const insertBulkData = async () => {
 
     // Insert categories
     const categories = await categoryService.findAll({
-      attributes: ["slug", "id", "name", "description"],
+      attributes: ["slug", "id", "name", "image"],
+      include: {
+        model: MainCategory,
+        attributes: ["name"],
+      },
     });
     categories.forEach((category) => {
       const categoryData = category.toJSON();
@@ -35,7 +42,7 @@ const insertBulkData = async () => {
           title: categoryData.name,
           slug: categoryData.slug,
           image: categoryData.image,
-          description: categoryData.description,
+          category: categoryData.mainCategory.name,
           type: "category",
         }
       );
@@ -44,9 +51,22 @@ const insertBulkData = async () => {
     // Insert tools
     const tools = await toolService.findAll({
       attributes: ["title", "slug", "id", "description"],
+      include: {
+        model: ToolCategory,
+        attributes: ["categoryId"],
+        include: {
+          model: Category,
+          attributes: ["name"],
+        },
+      },
     });
+
     tools.forEach((tool) => {
       const toolData = tool.toJSON();
+      const categoryNames = toolData.toolCategories
+        .map((tc) => tc.category.name)
+        .join(", "); // Join category names with a comma if there are multiple
+
       bulkData.push(
         { index: { _index: index } },
         {
@@ -54,7 +74,7 @@ const insertBulkData = async () => {
           title: toolData.title,
           slug: toolData.slug,
           image: `${process.env.BUCKET_URL}/tool_${toolData.id}_60_60.webp`,
-          description: toolData.description,
+          category: categoryNames,
           type: "tool",
         }
       );
@@ -189,6 +209,9 @@ exports.searchTool = async (searchTerms, limit = 10) => {
   try {
     const startTime = Date.now();
     const processedSearchTerms = preprocessSearchTerms(searchTerms, [
+      "i",
+      "want",
+      "to",
       "ai",
       "tool",
       "tools",
@@ -203,12 +226,9 @@ exports.searchTool = async (searchTerms, limit = 10) => {
               {
                 multi_match: {
                   query: processedSearchTerms,
-                  fields: [
-                    "title^3", // Boost title matches higher than description
-                    "description", // Include description in the search
-                  ],
+                  fields: ["title^3", "category"],
                   fuzziness: "AUTO", // Consider adjusting fuzziness based on query length or context
-                  type: "best_fields", // Use best_fields to prefer the best match
+                  type: "best_fields", // Prefer the best match across fields
                 },
               },
               {
@@ -222,9 +242,10 @@ exports.searchTool = async (searchTerms, limit = 10) => {
               },
               {
                 match_phrase_prefix: {
-                  description: {
+                  category: {
                     query: processedSearchTerms,
-                    slop: 3, // Similar flexibility for description
+                    slop: 3, // Similar flexibility for category
+                    boost: 5, // Boosting less than title to maintain relevance
                   },
                 },
               },
@@ -233,7 +254,6 @@ exports.searchTool = async (searchTerms, limit = 10) => {
           },
         },
         size: limit,
-        // _source: ["id", "title", "description", "slug", "image"], // Limit fields returned for performance
       },
     });
 

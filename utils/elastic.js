@@ -212,10 +212,34 @@ exports.searchTool = async (searchTerms, limit = 10) => {
       "i",
       "want",
       "to",
+      "for",
+      "looking",
+      "how",
+      "do",
+      "find",
+      "can",
+      "this",
+      "that",
+      "help",
+      "you",
+      "please",
+      "a",
+      "an",
+      "the",
+      "best",
+      "top",
+      "free",
+      "paid",
+      "get",
+      "suggest",
+      "need",
       "ai",
       "tool",
       "tools",
     ]);
+
+    const firstTerm = processedSearchTerms.trim().split(" ")[0];
+    const restOfTerms = processedSearchTerms.split(" ").slice(1).join(" ");
 
     const body = await client.search({
       index: "search",
@@ -224,11 +248,25 @@ exports.searchTool = async (searchTerms, limit = 10) => {
           bool: {
             should: [
               {
-                multi_match: {
-                  query: processedSearchTerms,
-                  fields: ["title^3", "category"],
-                  fuzziness: "AUTO", // Consider adjusting fuzziness based on query length or context
-                  type: "best_fields", // Prefer the best match across fields
+                bool: {
+                  must: [
+                    {
+                      term: {
+                        title: {
+                          value: firstTerm.charAt(0), // Exact match for the first character of the first term
+                          boost: 10, // Boost exact match for the first character
+                        },
+                      },
+                    },
+                    {
+                      multi_match: {
+                        query: restOfTerms,
+                        fields: ["title^3", "category"],
+                        fuzziness: "AUTO", // Adjust fuzziness based on query length or context
+                        type: "best_fields", // Prefer the best match across fields
+                      },
+                    },
+                  ],
                 },
               },
               {
@@ -253,6 +291,7 @@ exports.searchTool = async (searchTerms, limit = 10) => {
             minimum_should_match: 1, // Ensure at least one condition must match
           },
         },
+
         // size: limit,
       },
     });

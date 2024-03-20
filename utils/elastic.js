@@ -169,9 +169,30 @@ exports.refillData = async (req, res, next) => {
     console.error(error);
   }
 };
+
+function preprocessSearchTerms(searchTerms, keywordsToDeemphasize) {
+  // Split the searchTerms into an array of words
+  let termsArray = searchTerms.split(" ");
+
+  // Filter out the keywords to deemphasize
+  termsArray = termsArray.filter(
+    (term) => !keywordsToDeemphasize.includes(term.toLowerCase())
+  );
+
+  // Join the remaining terms back into a string
+  const processedSearchTerms = termsArray.join(" ");
+
+  return processedSearchTerms;
+}
+
 exports.searchTool = async (searchTerms, limit = 10) => {
   try {
     const startTime = Date.now();
+    const processedSearchTerms = preprocessSearchTerms(searchTerms, [
+      "ai",
+      "tool",
+      "tools",
+    ]);
 
     const body = await client.search({
       index: "search",
@@ -180,42 +201,47 @@ exports.searchTool = async (searchTerms, limit = 10) => {
           bool: {
             should: [
               {
-                match: {
-                  title: {
-                    query: searchTerms,
-                    fuzziness: "AUTO",
-                    operator: "and",
-                  },
-                },
-              },
-              {
-                wildcard: {
-                  title: {
-                    value: `${searchTerms}*`,
-                  },
+                multi_match: {
+                  query: processedSearchTerms,
+                  fields: [
+                    "title^3", // Boost title matches higher than description
+                    "description", // Include description in the search
+                  ],
+                  fuzziness: "AUTO", // Consider adjusting fuzziness based on query length or context
+                  type: "best_fields", // Use best_fields to prefer the best match
                 },
               },
               {
                 match_phrase_prefix: {
                   title: {
-                    query: searchTerms,
-                    slop: 3, // Allow up to 3 token position differences
-                    boost: 10, // Boost the relevance of the match_phrase_prefix query
+                    query: processedSearchTerms,
+                    slop: 3, // Allow for some flexibility in phrase matching
+                    boost: 10,
+                  },
+                },
+              },
+              {
+                match_phrase_prefix: {
+                  description: {
+                    query: processedSearchTerms,
+                    slop: 3, // Similar flexibility for description
                   },
                 },
               },
             ],
+            minimum_should_match: 1, // Ensure at least one condition must match
           },
         },
         size: limit,
+        // _source: ["id", "title", "description", "slug", "image"], // Limit fields returned for performance
       },
     });
 
     const endTime = Date.now();
     console.log("Query time:", endTime - startTime);
-    // console.log(body.hits.hits);
     return body.hits.hits.map((hit) => hit._source);
   } catch (error) {
     console.error("Error performing search:", error);
+    return []; // Handle error appropriately
   }
 };

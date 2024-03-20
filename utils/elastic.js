@@ -253,7 +253,7 @@ exports.searchTool = async (searchTerms, limit = 10) => {
             minimum_should_match: 1, // Ensure at least one condition must match
           },
         },
-        size: limit,
+        // size: limit,
       },
     });
 

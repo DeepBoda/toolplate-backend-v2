@@ -73,7 +73,7 @@ const insertBulkData = async () => {
           id: toolData.id,
           title: toolData.title,
           slug: toolData.slug,
-          image: `${process.env.BUCKET_URL}/tool_${toolData.id}_60_60.webp`,
+          image: `${process.env.CDN_URL}/tool_${toolData.id}_60_60.webp`,
           category: categoryNames,
           type: "tool",
         }

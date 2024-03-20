@@ -245,11 +245,11 @@ exports.searchTool = async (searchTerms, limit = 10) => {
           bool: {
             should: [
               {
-                fuzzy: {
-                  title: {
-                    value: processedSearchTerms, // Use processed search terms
-                    fuzziness: "AUTO", // Set fuzziness to AUTO
-                  },
+                multi_match: {
+                  query: processedSearchTerms,
+                  fields: ["title^3", "category"],
+                  fuzziness: "AUTO", // Consider adjusting fuzziness based on query length or context
+                  type: "best_fields", // Prefer the best match across fields
                 },
               },
               {

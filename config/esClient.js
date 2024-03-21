@@ -7,6 +7,7 @@ const client = new Client({
   auth: {
     username: "elastic",
     password: "MfoNqDPASXMx*P8G4MKa",
+    // password: "l+h=IiRCetDCNiPN9cNO",
   },
   // ssl: {
   //   ca: fs.readFileSync(__dirname + "/cert.pem"),

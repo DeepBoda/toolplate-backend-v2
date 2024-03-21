@@ -2,6 +2,9 @@ const client = require("../config/esClient");
 const toolService = require("../modules/tool/service");
 const categoryService = require("../modules/category/service");
 const redisClient = require("../utils/redis");
+const MainCategory = require("../modules/mainCategory/model");
+const ToolCategory = require("../modules/toolCategory/model");
+const Category = require("../modules/category/model");
 
 const insertBulkData = async () => {
   try {
@@ -24,7 +27,11 @@ const insertBulkData = async () => {
 
     // Insert categories
     const categories = await categoryService.findAll({
-      attributes: ["slug", "id", "name", "description"],
+      attributes: ["slug", "id", "name", "image"],
+      include: {
+        model: MainCategory,
+        attributes: ["name"],
+      },
     });
     categories.forEach((category) => {
       const categoryData = category.toJSON();
@@ -35,7 +42,7 @@ const insertBulkData = async () => {
           title: categoryData.name,
           slug: categoryData.slug,
           image: categoryData.image,
-          description: categoryData.description,
+          category: categoryData.mainCategory.name,
           type: "category",
         }
       );
@@ -44,17 +51,30 @@ const insertBulkData = async () => {
     // Insert tools
     const tools = await toolService.findAll({
       attributes: ["title", "slug", "id", "description"],
+      include: {
+        model: ToolCategory,
+        attributes: ["categoryId"],
+        include: {
+          model: Category,
+          attributes: ["name"],
+        },
+      },
     });
+
     tools.forEach((tool) => {
       const toolData = tool.toJSON();
+      const categoryNames = toolData.toolCategories
+        .map((tc) => tc.category.name)
+        .join(", "); // Join category names with a comma if there are multiple
+
       bulkData.push(
         { index: { _index: index } },
         {
           id: toolData.id,
           title: toolData.title,
           slug: toolData.slug,
-          image: `${process.env.BUCKET_URL}/tool_${toolData.id}_60_60.webp`,
-          description: toolData.description,
+          image: `${process.env.CDN_URL}/tool_${toolData.id}_60_60.webp`,
+          category: categoryNames,
           type: "tool",
         }
       );
@@ -169,9 +189,54 @@ exports.refillData = async (req, res, next) => {
     console.error(error);
   }
 };
+
+function preprocessSearchTerms(searchTerms, keywordsToDeemphasize) {
+  // Split the searchTerms into an array of words
+  let termsArray = searchTerms.split(" ");
+
+  // Filter out the keywords to deemphasize
+  termsArray = termsArray.filter(
+    (term) => !keywordsToDeemphasize.includes(term.toLowerCase())
+  );
+
+  // Join the remaining terms back into a string
+  const processedSearchTerms = termsArray.join(" ");
+
+  return processedSearchTerms;
+}
+
 exports.searchTool = async (searchTerms, limit = 10) => {
   try {
     const startTime = Date.now();
+    const processedSearchTerms = preprocessSearchTerms(searchTerms, [
+      "i",
+      "want",
+      "to",
+      "for",
+      "looking",
+      "how",
+      "do",
+      "find",
+      "can",
+      "this",
+      "that",
+      "help",
+      "you",
+      "please",
+      "a",
+      "an",
+      "the",
+      "best",
+      "top",
+      "free",
+      "paid",
+      "get",
+      "suggest",
+      "need",
+      "ai",
+      "tool",
+      "tools",
+    ]);
 
     const body = await client.search({
       index: "search",
@@ -180,42 +245,44 @@ exports.searchTool = async (searchTerms, limit = 10) => {
           bool: {
             should: [
               {
-                match: {
-                  title: {
-                    query: searchTerms,
-                    fuzziness: "AUTO",
-                    operator: "and",
-                  },
-                },
-              },
-              {
-                wildcard: {
-                  title: {
-                    value: `${searchTerms}*`,
-                  },
+                multi_match: {
+                  query: processedSearchTerms,
+                  fields: ["title^3", "category"],
+                  fuzziness: "AUTO", // Consider adjusting fuzziness based on query length or context
+                  type: "best_fields", // Prefer the best match across fields
                 },
               },
               {
                 match_phrase_prefix: {
                   title: {
-                    query: searchTerms,
-                    slop: 3, // Allow up to 3 token position differences
-                    boost: 10, // Boost the relevance of the match_phrase_prefix query
+                    query: processedSearchTerms,
+                    slop: 3, // Allow for some flexibility in phrase matching
+                    boost: 10,
+                  },
+                },
+              },
+              {
+                match_phrase_prefix: {
+                  category: {
+                    query: processedSearchTerms,
+                    slop: 3, // Similar flexibility for category
+                    boost: 5, // Boosting less than title to maintain relevance
                   },
                 },
               },
             ],
+            minimum_should_match: 1, // Ensure at least one condition must match
           },
         },
-        size: limit,
+        // size: limit,
       },
     });
 
     const endTime = Date.now();
     console.log("Query time:", endTime - startTime);
-    // console.log(body.hits.hits);
     return body.hits.hits.map((hit) => hit._source);
   } catch (error) {
     console.error("Error performing search:", error);
+    return []; // Handle error appropriately
   }
 };

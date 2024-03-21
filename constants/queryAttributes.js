@@ -231,6 +231,7 @@ exports.mainCategoryAdminAttributes = [
   "image",
   "slug",
   "description",
+  "description",
   "createdAt",
 ];
 exports.listingCategoryAdminAttributes = ["id", "name", "slug", "createdAt"];

@@ -49,6 +49,6 @@ router.use(
   "/listing-comments/reply",
   require("../modules/listingCommentReply/admin")
 );
-// router.use("/elasticsearch", require("../modules/elasticsearch/admin"));
+router.use("/elasticsearch", require("../modules/elasticsearch/admin"));
 
 module.exports = router;

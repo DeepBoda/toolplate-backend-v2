@@ -50,4 +50,5 @@ Tool.hasMany(Pitch, {
   },
 });
 Pitch.belongsTo(Tool);
+
 module.exports = Pitch;

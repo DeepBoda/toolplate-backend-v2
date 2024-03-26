@@ -6,6 +6,7 @@ const { submitToolAttributes } = require("../../constants/queryAttributes");
 const Category = require("../category/model");
 const SubmitToolCategory = require("../submitToolCategory/model");
 const submitToolCategoryService = require("../submitToolCategory/service");
+const toolService = require("../tool/service");
 const {
   replySubmittedTool,
   reviewSubmittedTool,

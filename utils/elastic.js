@@ -205,7 +205,7 @@ function preprocessSearchTerms(searchTerms, keywordsToDeemphasize) {
   return processedSearchTerms;
 }
 
-exports.searchTool = async (searchTerms, limit = 10) => {
+exports.searchTool = async (searchTerms, limit) => {
   try {
     const startTime = Date.now();
     const processedSearchTerms = preprocessSearchTerms(searchTerms, [

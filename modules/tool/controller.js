@@ -124,6 +124,8 @@ exports.add = async (req, res, next) => {
       data: tool,
     });
 
+    redisService.hDel(`toolSchema`);
+
     // Resize and upload the tool icons
     resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
     resizeAndUploadWebP(toolSize, tool.image, `tool_${tool.id}`);
@@ -288,6 +290,28 @@ exports.getAllDynamic = async (req, res, next) => {
         },
       ],
     });
+
+    // redisService.set(`tools`, data);
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getAllForSchema = async (req, res, next) => {
+  try {
+    // Try to retrieve the tools from the Redis cache
+    let data = await redisService.get(`toolSchema`);
+
+    // If the tools are not found in the cache
+    if (!data) {
+      data = await service.findAll({
+        attributes: ["id", "title", "image", "slug", "createdAt"],
+      });
+      redisService.set(`toolSchema`, data);
+    }
 
     // redisService.set(`tools`, data);
     res.status(200).send({
@@ -1338,6 +1362,7 @@ exports.delete = async (req, res, next) => {
     // Clear Redis cache
     redisService.del(`toolsForPrompt`);
     redisService.hDel(`prompt=*`);
+    redisService.hDel(`toolSchema`);
     deleteFilesFromS3(filesToDelete);
   } catch (error) {
     console.error(error);

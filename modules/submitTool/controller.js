@@ -6,7 +6,13 @@ const { submitToolAttributes } = require("../../constants/queryAttributes");
 const Category = require("../category/model");
 const SubmitToolCategory = require("../submitToolCategory/model");
 const submitToolCategoryService = require("../submitToolCategory/service");
-const { replySubmittedTool, sampleMailTemplate } = require("../../utils/mail");
+const toolService = require("../tool/service");
+const {
+  replySubmittedTool,
+  reviewSubmittedTool,
+  featured,
+  rejected,
+} = require("../../utils/mail");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -100,12 +106,39 @@ exports.getById = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     // Update the blog data
+    const { status, toolId, reason } = req.body;
+
+    const { firstName, lastName, title, email } = await service.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
 
     const [affectedRows] = await service.update(req.body, {
       where: {
         id: req.params.id,
       },
     });
+
+    // Combine firstName and lastName with a space in between
+    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    const username = `${capitalize(firstName.trim())} ${capitalize(
+      lastName.trim()
+    )}`;
+
+    // Send email for submission
+    if (status == "OnGoing") {
+      reviewSubmittedTool({ email, username, title });
+    } else if (status == "Approved" && toolId) {
+      const { title, slug } = await toolService.findOne({
+        where: {
+          id: toolId,
+        },
+      });
+      featured({ email, username, tool: title, slug, isCompany: false });
+    } else if (status == "Denied" && reason) {
+      rejected({ email, username, tool: title, reason, isCompany: false });
+    }
 
     // Send the response
     res.status(200).json({

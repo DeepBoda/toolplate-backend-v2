@@ -74,6 +74,34 @@ exports.replySubmittedTool = async (options) => {
     throw error;
   }
 };
+exports.reviewSubmittedTool = async (options) => {
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "../public/emails/reviewing.html"
+    );
+
+    const Template = fs.readFileSync(templatePath, "utf-8");
+
+    // Replace the placeholder {{tool}} with the actual Tool name
+    const emailContent = Template.replace(/{{name}}|{{tool}}/g, (match) => {
+      return match === "{{tool}}" ? options.title : options.username;
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_FOR_CLIENT,
+      to: options.email,
+      subject: `Thanks for submitting ${options.tool} on Toolplate!`,
+      html: emailContent, // Use "html" instead of "text" for HTML content
+    };
+
+    await transport.sendMail(mailOptions);
+    console.log("Email for Submission reply sent successfully.");
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error;
+  }
+};
 
 exports.initialPitch = async (options) => {
   try {

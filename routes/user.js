@@ -4,6 +4,7 @@ const router = express.Router();
 router.use("/appConfig", require("../modules/appConfig"));
 router.use("/users", require("../modules/user"));
 router.use("/prompt", require("../modules/prompt"));
+router.use("/cron", require("../modules/cronjob"));
 router.use("/notification", require("../modules/notification"));
 router.use("/home/tool", require("../modules/toolHome"));
 router.use("/home/blog", require("../modules/blogHome"));

@@ -9,6 +9,9 @@ router
   .route("/")
   .get(Notification.getAll)
   .post(joiValidator(joiSchema.create), Notification.add);
+
+router.route("/scheduled").get(Notification.getScheduledForAdmin);
+
 router
   .route("/:id")
   .get(Notification.getById)

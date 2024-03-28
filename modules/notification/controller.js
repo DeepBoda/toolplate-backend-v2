@@ -1,5 +1,6 @@
 "use strict";
-
+const { Op } = require("sequelize");
+const moment = require("moment");
 const service = require("./service");
 const {
   AdminAttributes,
@@ -55,12 +56,14 @@ exports.add = async (req, res, next) => {
 
     const { title, body, click_action } = req.body;
 
+    // Save the notification data
+    const data = await service.create(req.body);
+
     // Send the notification to the specified topic
     // sendNotificationToTopic(topic, title, body, click_action);
-    await pushNotificationTopic(topic, title, body, click_action, adminId);
-
-    // Save the notification data
-    // service.create(req.body);
+    if (data.createdAt == data.schedule) {
+      pushNotificationTopic(topic, title, body, click_action, adminId);
+    }
 
     // Send a success response
     res.status(200).json({
@@ -76,7 +79,42 @@ exports.add = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     const data = await service.findAndCountAll({
-      ...sqquery(req.query, {}, ["title", "body"]),
+      ...sqquery(
+        req.query,
+        {
+          schedule: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title", "body"]
+      ),
+      attributes: notificationAdminAttributes,
+      include: {
+        model: Admin,
+        attributes: AdminAttributes,
+      },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getScheduledForAdmin = async (req, res, next) => {
+  try {
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        req.query,
+        {
+          schedule: {
+            [Op.gt]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title", "body"]
+      ),
       attributes: notificationAdminAttributes,
       include: {
         model: Admin,
@@ -149,5 +187,44 @@ exports.delete = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+exports.scheduledNotifications = async () => {
+  try {
+    // Corrected to use moment() for startOfMinute since it was previously undefined.
+    let startOfMinute = moment().startOf("minute");
+    let endOfMinute = moment(startOfMinute).add(1, "minutes");
+
+    let data = await service.findAll({
+      where: {
+        schedule: {
+          [Op.gte]: startOfMinute, // Greater than or equal to the start of the current minute
+          [Op.lt]: endOfMinute, // Less than the end of the current minute (start of next minute)
+        },
+      },
+      attributes: ["id", "title", "body", "topic", "click_action"], // Ensure attributes match those needed for pushNotificationTopic
+    });
+    console.log("data ", data);
+    // Check if there is data to process
+    if (data.length > 0) {
+      await Promise.all(
+        data.map((item) => {
+          // Assuming pushNotificationTopic function is correctly implemented to handle notification logic
+          return pushNotificationTopic(
+            item.topic,
+            item.title,
+            item.body,
+            item.click_action,
+            1
+          );
+        })
+      );
+      console.log(`Sent ${data.length} notifications.`);
+    } else {
+      console.log("No notifications to send at this time.");
+    }
+  } catch (error) {
+    console.error("Error in scheduledNotifications:", error);
   }
 };

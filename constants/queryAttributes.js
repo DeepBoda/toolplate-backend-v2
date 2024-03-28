@@ -244,4 +244,5 @@ exports.notificationAdminAttributes = [
   "topic",
   "click_action",
   "createdAt",
+  "schedule",
 ];

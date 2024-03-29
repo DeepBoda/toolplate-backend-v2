@@ -6,6 +6,7 @@ const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 
 router.use(authMiddleware);
 router.route("/data/:slug").get(tool.getDynamicByCategorySlug);
+router.route("/count/:slug").get(tool.getToolCountsByCategoryAndPrice);
 router.route("/:slug").get(tool.getByCategorySlug);
 
 module.exports = router;

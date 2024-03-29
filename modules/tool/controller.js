@@ -563,6 +563,63 @@ exports.getByCategorySlug = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getToolCountsByCategoryAndPrice = async (req, res, next) => {
+  try {
+    const category = await categoryService.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+    if (!category) {
+      return next(createHttpError(404, "Category not found!"));
+    }
+    const { price, ...query } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
+    const where = {};
+
+    where["$toolCategories.categoryId$"] = category.id;
+
+    const count = await service.count({
+      where: {
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
+        ...priceFilter,
+      },
+
+      distinct: true, // Add this option to ensure accurate counts
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
+        },
+      ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      counts: count,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getDynamicByCategorySlug = async (req, res, next) => {
   try {
     const category = await categoryService.findOne({

@@ -6,6 +6,7 @@ const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
+const notificationService = require("../notification/service");
 const redisService = require("../../utils/redis");
 const seoService = require("../blogSeo/service");
 const viewService = require("../blogView/service");
@@ -63,6 +64,13 @@ exports.add = async (req, res, next) => {
       const body = "Hot on Toolplate- check it now!";
       const click_action = `blog/${blog.slug}`;
       pushNotificationTopic(topic, title, body, click_action, 1);
+      notificationService.create({
+        topic,
+        title,
+        body,
+        click_action,
+        AdminId: 1,
+      });
     }
 
     // Get the comma-separated `categories`  IDs

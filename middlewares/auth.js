@@ -18,7 +18,6 @@ exports.validateAPIKey = async (req, res, next) => {
     if (!apiKey) {
       return next(createHttpError(401, "Invalid or missing key"));
     }
-    // console.log("x-api-key: ", apiKey);
 
     if (apiKey === validAPIKey) {
       next();

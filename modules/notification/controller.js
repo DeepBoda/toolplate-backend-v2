@@ -205,14 +205,11 @@ exports.scheduledNotifications = async () => {
       },
       attributes: ["id", "title", "body", "topic", "click_action"], // Ensure attributes match those needed for pushNotificationTopic
     });
-    console.log("data ", data);
     // Check if there is data to process
     if (data.length > 0) {
       await Promise.all(
         data.map((item) => {
           item = item?.toJSON();
-          console.log("item ", item);
-          // Assuming pushNotificationTopic function is correctly implemented to handle notification logic
           return pushNotificationTopic(
             item.topic,
             item.title,

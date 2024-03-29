@@ -63,7 +63,6 @@ exports.getAll = async (req, res, next) => {
 exports.getAllDynamic = async (req, res, next) => {
   try {
     const userId = req.requestor ? req.requestor.id : null;
-    console.log("listing:userId - ", userId);
 
     const data = await service.findAndCountAll({
       ...sqquery({ ...req.query, sort: "index", sortBy: "ASC" }),

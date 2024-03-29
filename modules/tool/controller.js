@@ -58,7 +58,7 @@ exports.add = async (req, res, next) => {
 
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(bodyData);
-    console.log("tool", tool);
+
     // // Send a push notification with the blog title and body
     // if (blog.createdAt == blog.release) {
     // const topic =

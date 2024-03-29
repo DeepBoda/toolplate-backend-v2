@@ -54,14 +54,20 @@ exports.add = async (req, res, next) => {
         ? process.env.TOPIC
         : process.env.DEV_TOPIC;
 
-    let { topic, title, body, click_action, AdminId } = req.body;
-
+    console.log("req.body ", req.body);
     // Save the notification data
-    const data = await service.create(req.body);
+    const { schedule, createdAt } = await service.create(req.body);
+    console.log("schedule ", schedule);
+    console.log("createdAt ", createdAt);
+    let { topic, title, body, click_action, AdminId } = req.body;
 
     // Send the notification to the specified topic
     // sendNotificationToTopic(topic, title, body, click_action);
-    if (data.createdAt == data.schedule) {
+    if (moment(createdAt).isSame(schedule, "second")) {
+      console.log(topic);
+      console.log(title);
+      console.log(body);
+      console.log(click_action);
       pushNotificationTopic(topic, title, body, click_action);
     }
 

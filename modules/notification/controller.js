@@ -48,13 +48,13 @@ exports.clicks = async (req, res, next) => {
 exports.add = async (req, res, next) => {
   try {
     // Set the topic property of the request body based on the environment
-    const adminId = req.requestor ? req.requestor.id : 1;
-    const topic =
+    let adminId = req.requestor ? req.requestor.id : 1;
+    let topic =
       process.env.NODE_ENV === "production"
         ? process.env.TOPIC
         : process.env.DEV_TOPIC;
 
-    const { title, body, click_action } = req.body;
+    let { title, body, click_action } = req.body;
 
     // Save the notification data
     const data = await service.create(req.body);

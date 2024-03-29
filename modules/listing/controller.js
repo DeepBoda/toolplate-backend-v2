@@ -6,6 +6,8 @@ const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
+const notificationService = require("../notification/service");
+
 const redisService = require("../../utils/redis");
 const viewService = require("../listingView/service");
 const { listingResizeImageSize } = require("../../constants");
@@ -77,7 +79,14 @@ exports.add = async (req, res, next) => {
     //   const title = listing.title;
     //   const body = "Hot on Toolplate- check it now!";
     //   const click_action = `listing/${listing.slug}`;
-    //   pushNotificationTopic(topic, title, body, click_action, 1);
+    //   pushNotificationTopic(topic, title, body, click_action);
+    // notificationService.create({
+    //   topic,
+    //   title,
+    //   body,
+    //   click_action,
+    //   AdminId: 1,
+    // });
     // }
 
     // Get the comma-separated `categories`  IDs

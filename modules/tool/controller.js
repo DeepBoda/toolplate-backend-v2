@@ -6,6 +6,7 @@ const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
+const notificationService = require("../notification/service");
 const redisService = require("../../utils/redis");
 const seoService = require("../toolSeo/service");
 const viewService = require("../toolView/service");
@@ -67,7 +68,7 @@ exports.add = async (req, res, next) => {
     // const title = tool.title;
     // const body = "Hot on Toolplate- check it now!";
     // const click_action = `tool/${tool.slug}`;
-    // pushNotificationTopic(topic, title, body, click_action, 1);
+    // pushNotificationTopic(topic, title, body, click_action);
     // }
 
     // Check if Previews uploaded and if got URLs

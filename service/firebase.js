@@ -55,13 +55,7 @@ exports.pushNotificationToBulk = async (to, title, body, click_action) => {
 };
 
 // Topic to send notifications to subscribers
-exports.pushNotificationTopic = async (
-  topic,
-  title,
-  body,
-  click_action,
-  adminId
-) => {
+exports.pushNotificationTopic = async (topic, title, body, click_action) => {
   const message = {
     data: {
       title,
@@ -76,13 +70,13 @@ exports.pushNotificationTopic = async (
   try {
     const response = await admin.messaging().send(message);
 
-    notificationService.create({
-      AdminId: adminId,
-      title,
-      body,
-      click_action,
-      topic,
-    });
+    // notificationService.create({
+    //   AdminId: adminId,
+    //   title,
+    //   body,
+    //   click_action,
+    //   topic,
+    // });
     console.log(`Successfully sent notification - ${topic} :`, response);
     return {
       status: "success",

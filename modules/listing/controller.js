@@ -79,7 +79,7 @@ exports.add = async (req, res, next) => {
     //   const title = listing.title;
     //   const body = "Hot on Toolplate- check it now!";
     //   const click_action = `listing/${listing.slug}`;
-    //   pushNotificationTopic(topic, title, body, click_action, 1);
+    //   pushNotificationTopic(topic, title, body, click_action);
     // notificationService.create({
     //   topic,
     //   title,

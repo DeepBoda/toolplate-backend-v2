@@ -48,13 +48,13 @@ exports.clicks = async (req, res, next) => {
 exports.add = async (req, res, next) => {
   try {
     // Set the topic property of the request body based on the environment
-    req.body.adminId = req.requestor ? req.requestor.id : 1;
+    req.body.AdminId = req.requestor ? req.requestor.id : 1;
     req.body.topic =
       process.env.NODE_ENV === "production"
         ? process.env.TOPIC
         : process.env.DEV_TOPIC;
 
-    let { topic, title, body, click_action, adminId } = req.body;
+    let { topic, title, body, click_action, AdminId } = req.body;
 
     // Save the notification data
     const data = await service.create(req.body);
@@ -62,7 +62,7 @@ exports.add = async (req, res, next) => {
     // Send the notification to the specified topic
     // sendNotificationToTopic(topic, title, body, click_action);
     if (data.createdAt == data.schedule) {
-      pushNotificationTopic(topic, title, body, click_action, adminId);
+      pushNotificationTopic(topic, title, body, click_action);
     }
 
     // Send a success response
@@ -214,8 +214,7 @@ exports.scheduledNotifications = async () => {
             item.topic,
             item.title,
             item.body,
-            item.click_action,
-            1
+            item.click_action
           );
         })
       );

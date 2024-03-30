@@ -306,7 +306,15 @@ exports.getBySlug = async (req, res, next) => {
         where: {
           slug: req.params.slug,
         },
-        attributes: ["id", "name", "slug", "overview", "createdAt", "image"],
+        attributes: [
+          "id",
+          "name",
+          "slug",
+          "overview",
+          "bottomOverview",
+          "createdAt",
+          "image",
+        ],
       });
       redisService.set(`category-${req.params.slug}`, data);
     }

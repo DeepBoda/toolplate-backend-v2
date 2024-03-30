@@ -23,6 +23,9 @@ const MainCategory = sequelize.define(
     overview: {
       type: DataTypes.TEXT("long"),
     },
+    bottomOverview: {
+      type: DataTypes.TEXT("long"),
+    },
     slug: {
       type: DataTypes.STRING,
     },

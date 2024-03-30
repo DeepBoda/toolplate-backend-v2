@@ -72,6 +72,7 @@ exports.getAll = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getAllEmpty = async (req, res, next) => {
   try {
     const categoriesWithTools = await toolCategoryService.findAll({
@@ -322,6 +323,33 @@ exports.getBySlug = async (req, res, next) => {
       });
       redisService.set(`category-${req.params.slug}`, data);
     }
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getRelatedCategories = async (req, res, next) => {
+  try {
+    // Try to retrieve the categories from the Redis cache
+    const { slug, mainCategoryId } = await service.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+    const data = await service.findAll({
+      where: {
+        slug: { [Op.ne]: slug },
+        mainCategoryId,
+      },
+      attributes: ["id", "name", "slug", "image"],
+      order: sequelize.random(),
+      limit: 4,
+    });
+
     res.status(200).send({
       status: "success",
       data,

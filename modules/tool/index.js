@@ -6,6 +6,7 @@ const {authMiddleware,protectRoute} = require("../../middlewares/auth");
 
 router.use( authMiddleware);
 router.route("/").get(authMiddleware, tool.getAll);
+router.route("/count").get(authMiddleware, tool.getAllCounts);
 router.route("/all").get(authMiddleware, tool.getAllDynamic);
 router.route("/schema").get(authMiddleware, tool.getAllForSchema);
 router.route("/search").get(tool.search);

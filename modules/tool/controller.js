@@ -219,6 +219,41 @@ exports.getAll = async (req, res, next) => {
     next(error);
   }
 };
+exports.getAllCounts = async (req, res, next) => {
+  try {
+    const { price } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
+    const count = await service.count({
+      where: {
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
+        ...priceFilter,
+      },
+
+      distinct: true, // Add this option to ensure accurate counts
+    });
+
+    res.status(200).send({
+      status: "success",
+      counts: count,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getAllDynamic = async (req, res, next) => {
   try {

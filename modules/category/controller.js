@@ -315,6 +315,10 @@ exports.getBySlug = async (req, res, next) => {
           "createdAt",
           "image",
         ],
+        include: {
+          model: MainCategory,
+          attributes: ["id", "name", "slug"],
+        },
       });
       redisService.set(`category-${req.params.slug}`, data);
     }

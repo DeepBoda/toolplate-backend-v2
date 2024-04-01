@@ -90,6 +90,63 @@ const Tool = sequelize.define(
         this.setDataValue("social", val);
       },
     },
+
+    isExtension: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    isApi: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    pros: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      get: function () {
+        const storedValue = this.getDataValue("pros");
+        return storedValue || [];
+      },
+      set: function (data) {
+        // If data is a string, attempt to parse it as JSON
+        if (typeof data === "string") {
+          try {
+            data = JSON.parse(data);
+          } catch (error) {
+            console.error("Error parsing pros field:", error);
+            data = [];
+          }
+        }
+        // Ensure data is an array
+        if (!Array.isArray(data)) {
+          data = [data];
+        }
+        return this.setDataValue("pros", data);
+      },
+    },
+    cons: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      get: function () {
+        const storedValue = this.getDataValue("cons");
+        return storedValue || [];
+      },
+      set: function (data) {
+        // If data is a string, attempt to parse it as JSON
+        if (typeof data === "string") {
+          try {
+            data = JSON.parse(data);
+          } catch (error) {
+            console.error("Error parsing cons field:", error);
+            data = [];
+          }
+        }
+        // Ensure data is an array
+        if (!Array.isArray(data)) {
+          data = [data];
+        }
+        return this.setDataValue("cons", data);
+      },
+    },
   },
   {
     paranoid: true,

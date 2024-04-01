@@ -13,6 +13,10 @@ module.exports = {
     categories: Joi.string().required(),
     release: Joi.date(),
     social: Joi.string(),
+    isExtension: Joi.boolean(),
+    isApi: Joi.boolean(),
+    pros: Joi.string(),
+    cons: Joi.string(),
   }),
   update: Joi.object().keys({
     title: Joi.string(),
@@ -26,5 +30,9 @@ module.exports = {
     categories: Joi.string(),
     release: Joi.date(),
     social: Joi.string(),
+    isExtension: Joi.boolean(),
+    isApi: Joi.boolean(),
+    pros: Joi.string(),
+    cons: Joi.string(),
   }),
 };

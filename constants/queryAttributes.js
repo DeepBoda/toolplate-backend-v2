@@ -28,6 +28,10 @@ exports.toolAttributes = [
   "totalRatings",
   "release",
   "social",
+  "isExtension",
+  "isApi",
+  "pros",
+  "cons",
 ];
 exports.toolAttributesAll = [
   "id",
@@ -185,6 +189,10 @@ exports.toolAllAdminAttributes = [
   "totalRatings",
   "release",
   "social",
+  "isExtension",
+  "isApi",
+  "pros",
+  "cons",
 ];
 exports.blogAllAdminAttributes = [
   "id",

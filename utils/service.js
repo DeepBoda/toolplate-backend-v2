@@ -91,3 +91,10 @@ exports.deleteFirebaseUser = async (uid) => {
     throw new Error("Error deleting Firebase user");
   }
 };
+
+exports.trimUrl = (url) => {
+  if (!url) return url;
+  const pathOnlyRegex = /^(?:https?:\/\/)?(?:www\.)?toolplate\.ai(\/.*)$/;
+  const matches = url.match(pathOnlyRegex);
+  return matches && matches[1] ? matches[1] : url;
+};

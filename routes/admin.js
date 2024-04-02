@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const { flushAll } = require("../utils/redis");
+const { refillData } = require("../utils/elastic");
 const { authMiddleware, protectRoute } = require("../middlewares/auth");
 
 router.use("/", require("../modules/admin"));
 router.use("/flush", flushAll);
+router.use("/refill", refillData);
 
 router.use(authMiddleware, protectRoute(["Admin"]));
 router.use("/users", require("../modules/user/admin"));

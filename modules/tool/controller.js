@@ -872,6 +872,57 @@ exports.getForAdmin = async (req, res, next) => {
   }
 };
 
+exports.getRelatedCategories = async (req, res, next) => {
+  try {
+    const cacheKey = `tool?category?related=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      // Attempt to find the tool by its slug with associated categories
+      const openedTool = await service.findOne({
+        where: { slug: req.params.slug },
+        attributes: ["id"],
+        include: [{ model: ToolCategory, attributes: ["categoryId"] }],
+      });
+
+      // If the tool is not found, throw a 404 error
+      if (!openedTool) throw createError(404, "Tool not found");
+
+      // Extract categoryIds from the found tool
+      const categoryIds = openedTool.toolCategories.map((tc) => tc.categoryId);
+
+      // Find all categories by the extracted categoryIds including their mainCategoryId
+      const categoriesWithMain = await categoryService.findAll({
+        where: { id: categoryIds },
+        attributes: ["id", "mainCategoryId"],
+      });
+
+      // Deduplicate mainCategoryIds using a Set for efficient uniqueness enforcement
+      const mainCategoryIdsSet = new Set(
+        categoriesWithMain.map((item) => item.mainCategoryId)
+      );
+
+      // Find all related categories that do not include the initial categoryIds but share the same mainCategoryId
+      data = await categoryService.findAll({
+        where: {
+          id: { [Op.notIn]: categoryIds },
+          mainCategoryId: { [Op.in]: Array.from(mainCategoryIdsSet) },
+        },
+        attributes: ["id", "name", "slug", "image"],
+        order: sequelize.random(),
+        limit: 4,
+      });
+      redisService.set(cacheKey, data);
+    }
+
+    // Return the related categories in the response
+    res.status(200).json({ status: "success", data: data });
+  } catch (error) {
+    // Pass any caught errors to the next middleware function
+    next(error);
+  }
+};
+
 exports.getRelatedTools = async (req, res, next) => {
   try {
     // Find the details of the opened tool

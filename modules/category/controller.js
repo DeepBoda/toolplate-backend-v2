@@ -334,21 +334,27 @@ exports.getBySlug = async (req, res, next) => {
 
 exports.getRelatedCategories = async (req, res, next) => {
   try {
-    // Try to retrieve the categories from the Redis cache
-    const { slug, mainCategoryId } = await service.findOne({
-      where: {
-        slug: req.params.slug,
-      },
-    });
-    const data = await service.findAll({
-      where: {
-        slug: { [Op.ne]: slug },
-        mainCategoryId,
-      },
-      attributes: ["id", "name", "slug", "image"],
-      order: sequelize.random(),
-      limit: 4,
-    });
+    const cacheKey = `category?related=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      // Try to retrieve the categories from the Redis cache
+      const { slug, mainCategoryId } = await service.findOne({
+        where: {
+          slug: req.params.slug,
+        },
+      });
+      data = await service.findAll({
+        where: {
+          slug: { [Op.ne]: slug },
+          mainCategoryId,
+        },
+        attributes: ["id", "name", "slug", "image"],
+        order: sequelize.random(),
+        limit: 4,
+      });
+      redisService.set(cacheKey, data);
+    }
 
     res.status(200).send({
       status: "success",

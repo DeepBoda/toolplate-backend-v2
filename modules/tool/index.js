@@ -13,6 +13,7 @@ router.route("/search").get(tool.search);
 router.route("/slugs").get(tool.getSlugsForSitemap);
 router.route("/data/:slug").get(tool.getDynamicBySlug);
 router.route("/view/:id").get(authMiddleware, tool.createView);
+router.route("/related/category/:slug").get(tool.getRelatedCategories);
 router.route("/related/:slug").get(tool.getRelatedTools);
 router.route("/related-data/:slug").get(tool.getRelatedToolsDynamic);
 router.route("/alt/:slug").get(tool.getAlternativeTools);

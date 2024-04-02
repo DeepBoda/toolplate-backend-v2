@@ -40,11 +40,6 @@ exports.add = async (req, res, next) => {
       if (req.files.image) {
         req.body.image = req.files.image[0].location;
       }
-
-      // Check if Videos uploaded and if got URLs
-      if (req.files.videos) {
-        req.body.videos = req.files.videos.map((el) => el.location);
-      }
     }
 
     req.body.title = req.body.title.trim();
@@ -1392,10 +1387,6 @@ exports.update = async (req, res, next) => {
       resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`);
     }
 
-    // Check if Videos uploaded and if got URLs
-    if (req.files?.videos) {
-      req.body.videos = req.files.videos.map((el) => el.location);
-    }
     req.body.title = req.body.title.trim();
 
     // if (req.body.slug) {

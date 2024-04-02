@@ -37,14 +37,27 @@ const Tool = sequelize.define(
     videos: {
       type: DataTypes.TEXT,
       get: function () {
-        return this.getDataValue("videos")
-          ? JSON.parse(this.getDataValue("videos"))
-          : [];
+        const storedValue = this.getDataValue("pros");
+        return storedValue || [];
       },
       set: function (data) {
-        return this.setDataValue("videos", JSON.stringify(data));
+        // If data is a string, attempt to parse it as JSON
+        if (typeof data === "string") {
+          try {
+            data = JSON.parse(data);
+          } catch (error) {
+            console.error("Error parsing pros field:", error);
+            data = [];
+          }
+        }
+        // Ensure data is an array
+        if (!Array.isArray(data)) {
+          data = [data];
+        }
+        return this.setDataValue("pros", data);
       },
     },
+
     slug: {
       type: DataTypes.STRING,
     },

@@ -35,7 +35,7 @@ const Tool = sequelize.define(
       allowNull: false,
     },
     videos: {
-      type: DataTypes.TEXT,
+      type: DataTypes.JSON,
       get: function () {
         const storedValue = this.getDataValue("videos");
         return storedValue || [];

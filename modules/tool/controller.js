@@ -42,6 +42,9 @@ exports.add = async (req, res, next) => {
       }
     }
 
+    req.body.isExtension = req.body.isExtension || false;
+    req.body.isApi = req.body.isApi || false;
+
     req.body.title = req.body.title.trim();
     // Create slug URL based on title
     req.body.slug = slugify(req.body.title, {
@@ -1386,6 +1389,9 @@ exports.update = async (req, res, next) => {
       resizeAndUploadImage(toolSize, req.body.image, `tool_${req.params.id}`);
       resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`);
     }
+
+    req.body.isExtension = req.body.isExtension || false;
+    req.body.isApi = req.body.isApi || false;
 
     req.body.title = req.body.title.trim();
 

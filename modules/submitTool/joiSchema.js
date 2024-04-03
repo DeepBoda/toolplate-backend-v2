@@ -14,15 +14,8 @@ module.exports = {
     categories: Joi.array().required(),
   }),
   update: Joi.object().keys({
-    firstName: Joi.string(),
-    lastName: Joi.string(),
-    email: Joi.string().email(),
-    phone: Joi.string(),
-    country: Joi.string(),
-    title: Joi.string(),
-    link: Joi.string(),
-    message: Joi.string(),
+    toolId: Joi.number(),
+    reason: Joi.string(),
     status: Joi.string().valid("Pending", "OnGoing", "Approved", "Denied"),
-    categories: Joi.array(),
   }),
 };

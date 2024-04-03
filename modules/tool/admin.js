@@ -13,7 +13,6 @@ router
     upload.fields([
       { name: "image", maxCount: 1 },
       { name: "previews", maxCount: 10 },
-      { name: "videos", maxCount: 10 },
     ]),
     joiValidator(joiSchema.create),
     tool.add
@@ -24,10 +23,7 @@ router
   .route("/:id")
   .get(tool.getForAdmin)
   .patch(
-    upload.fields([
-      { name: "image", maxCount: 1 },
-      { name: "videos", maxCount: 10 },
-    ]),
+    upload.fields([{ name: "image", maxCount: 1 }]),
     joiValidator(joiSchema.update),
     tool.update
   )

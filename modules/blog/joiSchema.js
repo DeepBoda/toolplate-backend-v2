@@ -3,6 +3,7 @@ const Joi = require("joi");
 module.exports = {
   create: Joi.object().keys({
     title: Joi.string().required(),
+    slug: Joi.string().required(),
     description: Joi.string().required().allow(null),
     image: Joi.string(),
     alt: Joi.string().allow(null),
@@ -10,6 +11,7 @@ module.exports = {
     overview: Joi.string().required(),
     categories: Joi.string().required(),
     release: Joi.date(),
+    AdminId: Joi.number(),
   }),
   update: Joi.object().keys({
     title: Joi.string(),
@@ -21,5 +23,6 @@ module.exports = {
     overview: Joi.string(),
     categories: Joi.string(),
     release: Joi.date(),
+    AdminId: Joi.number(),
   }),
 };

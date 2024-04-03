@@ -6,6 +6,8 @@ const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
+const notificationService = require("../notification/service");
+
 const redisService = require("../../utils/redis");
 const viewService = require("../listingView/service");
 const { listingResizeImageSize } = require("../../constants");
@@ -77,7 +79,14 @@ exports.add = async (req, res, next) => {
     //   const title = listing.title;
     //   const body = "Hot on Toolplate- check it now!";
     //   const click_action = `listing/${listing.slug}`;
-    //   pushNotificationTopic(topic, title, body, click_action, 1);
+    //   pushNotificationTopic(topic, title, body, click_action);
+    // notificationService.create({
+    //   topic,
+    //   title,
+    //   body,
+    //   click_action,
+    //   AdminId: 1,
+    // });
     // }
 
     // Get the comma-separated `categories`  IDs
@@ -145,6 +154,12 @@ exports.getAll = async (req, res, next) => {
           ),
           "isLiked",
         ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
       include: {
         model: ListingCategory,
@@ -199,12 +214,19 @@ exports.getAllDynamic = async (req, res, next) => {
         "createdAt",
         "likes",
         "views",
+        "wishlists",
         "comments",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM listingLikes WHERE listingLikes.listingId = listing.id AND listingLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
         ],
       ],
       include: {
@@ -255,6 +277,23 @@ exports.getAllForAdmin = async (req, res, next) => {
           attributes: listingCategoryAdminAttributes,
         },
       },
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllForDropDown = async (req, res, next) => {
+  try {
+    const data = await service.findAll({
+      ...usersqquery({ ...req.query, sort: "title", sortBy: "ASC" }),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: ["id", "title"],
     });
 
     res.status(200).send({
@@ -346,6 +385,12 @@ exports.getByCategorySlug = async (req, res, next) => {
             `(SELECT COUNT(*) FROM listingLikes WHERE listingLikes.listingId = listing.id AND listingLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
         ],
       ],
       include: [
@@ -518,6 +563,12 @@ exports.getRelatedListings = async (req, res, next) => {
             `(SELECT COUNT(*) FROM listingLikes WHERE listingLikes.listingId = listing.id AND listingLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM listingWishlists WHERE listingWishlists.listingId = listing.id AND listingWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
         ],
       ],
 

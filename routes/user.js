@@ -4,7 +4,11 @@ const router = express.Router();
 router.use("/appConfig", require("../modules/appConfig"));
 router.use("/users", require("../modules/user"));
 router.use("/prompt", require("../modules/prompt"));
+router.use("/cron", require("../modules/cronjob"));
 router.use("/notification", require("../modules/notification"));
+router.use("/home/tool", require("../modules/toolHome"));
+router.use("/home/blog", require("../modules/blogHome"));
+router.use("/home/listing", require("../modules/listingHome"));
 router.use("/main-category", require("../modules/mainCategory"));
 router.use("/category", require("../modules/category"));
 router.use("/category-blog", require("../modules/categoryOfBlog"));
@@ -32,6 +36,7 @@ router.use("/toolNews", require("../modules/toolNews"));
 router.use("/listing", require("../modules/listing"));
 router.use("/listings", require("../modules/listing/seoRoutes"));
 router.use("/listingLike", require("../modules/listingLike"));
+router.use("/listingWishlist", require("../modules/listingWishlist"));
 router.use("/listing-comment", require("../modules/listingComment"));
 router.use("/listing-commentLike", require("../modules/listingCommentLike"));
 router.use(
@@ -43,5 +48,6 @@ router.use(
   require("../modules/listingCommentReplyLike")
 );
 router.use("/submit-tool", require("../modules/submitTool"));
+router.use("/elasticsearch", require("../modules/elasticsearch"));
 
 module.exports = router;

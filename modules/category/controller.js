@@ -72,6 +72,7 @@ exports.getAll = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getAllEmpty = async (req, res, next) => {
   try {
     const categoriesWithTools = await toolCategoryService.findAll({
@@ -306,10 +307,55 @@ exports.getBySlug = async (req, res, next) => {
         where: {
           slug: req.params.slug,
         },
-        attributes: ["id", "name", "slug", "overview", "createdAt", "image"],
+        attributes: [
+          "id",
+          "name",
+          "slug",
+          "overview",
+          "bottomOverview",
+          "createdAt",
+          "image",
+        ],
+        include: {
+          model: MainCategory,
+          attributes: ["id", "name", "slug"],
+        },
       });
       redisService.set(`category-${req.params.slug}`, data);
     }
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getRelatedCategories = async (req, res, next) => {
+  try {
+    const cacheKey = `category?related=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      // Try to retrieve the categories from the Redis cache
+      const { slug, mainCategoryId } = await service.findOne({
+        where: {
+          slug: req.params.slug,
+        },
+      });
+      data = await service.findAll({
+        where: {
+          slug: { [Op.ne]: slug },
+          mainCategoryId,
+        },
+        attributes: ["id", "name", "slug", "image"],
+        order: sequelize.random(),
+        limit: 4,
+      });
+      redisService.set(cacheKey, data);
+    }
+
     res.status(200).send({
       status: "success",
       data,

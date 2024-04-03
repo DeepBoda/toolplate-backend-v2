@@ -1,13 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const { flushAll } = require("../utils/redis");
+const { refillData } = require("../utils/elastic");
 const { authMiddleware, protectRoute } = require("../middlewares/auth");
 
 router.use("/", require("../modules/admin"));
 router.use("/flush", flushAll);
+router.use("/refill", refillData);
 
 router.use(authMiddleware, protectRoute(["Admin"]));
 router.use("/users", require("../modules/user/admin"));
+router.use("/home/tool", require("../modules/toolHome/admin"));
+router.use("/home/blog", require("../modules/blogHome/admin"));
+router.use("/home/listing", require("../modules/listingHome/admin"));
 router.use("/dashboard", require("../modules/dashboard/admin"));
 router.use("/appConfig", require("../modules/appConfig/admin"));
 router.use("/notification", require("../modules/notification/admin"));
@@ -46,5 +51,6 @@ router.use(
   "/listing-comments/reply",
   require("../modules/listingCommentReply/admin")
 );
+router.use("/elasticsearch", require("../modules/elasticsearch/admin"));
 
 module.exports = router;

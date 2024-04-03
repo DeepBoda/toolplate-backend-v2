@@ -6,6 +6,7 @@ const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
+const notificationService = require("../notification/service");
 const redisService = require("../../utils/redis");
 const seoService = require("../blogSeo/service");
 const viewService = require("../blogView/service");
@@ -26,6 +27,7 @@ const {
   resizeAndUploadWebP,
 } = require("../../utils/imageResize");
 const createHttpError = require("http-errors");
+const Admin = require("../admin/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -35,13 +37,18 @@ exports.add = async (req, res, next) => {
       req.body.image = req.file.location;
     }
 
-    // Create slug URL based on title
-    req.body.slug = slugify(req.body.title, {
-      replacement: "-", // Replace spaces with hyphens
-      lower: true, // Convert to lowercase
-      remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
-    });
-
+    if (req.body.slug) {
+      const exist = await service.findOne({
+        where: {
+          slug: req.body.slug,
+        },
+      });
+      if (exist)
+        return res.status(403).send({
+          status: "error",
+          message: "Oops! slug is already associated with existing listicle.",
+        });
+    }
     const { categories, ...bodyData } = req.body;
 
     // Create the new blog entry in the `blog` table
@@ -56,7 +63,14 @@ exports.add = async (req, res, next) => {
       const title = blog.title;
       const body = "Hot on Toolplate- check it now!";
       const click_action = `blog/${blog.slug}`;
-      pushNotificationTopic(topic, title, body, click_action, 1);
+      pushNotificationTopic(topic, title, body, click_action);
+      notificationService.create({
+        topic,
+        title,
+        body,
+        click_action,
+        AdminId: 1,
+      });
     }
 
     // Get the comma-separated `categories`  IDs
@@ -259,16 +273,22 @@ exports.getAllForAdmin = async (req, res, next) => {
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: blogAllAdminAttributes,
-      include: {
-        model: BlogCategory,
-        attributes: ["categoryOfBlogId"],
-        ...query,
-        where,
-        include: {
-          model: CategoryOfBlog,
-          attributes: blogCategoryAttributes,
+      include: [
+        {
+          model: BlogCategory,
+          attributes: ["categoryOfBlogId"],
+          ...query,
+          where,
+          include: {
+            model: CategoryOfBlog,
+            attributes: blogCategoryAttributes,
+          },
         },
-      },
+        {
+          model: Admin,
+          attributes: ["id", "name", "email"],
+        },
+      ],
     });
 
     res.status(200).send({
@@ -329,6 +349,23 @@ exports.getScheduledForAdmin = async (req, res, next) => {
   }
 };
 
+exports.getAllForDropDown = async (req, res, next) => {
+  try {
+    const data = await service.findAll({
+      ...usersqquery({ ...req.query, sort: "title", sortBy: "ASC" }),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: ["id", "title"],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getBySlug = async (req, res, next) => {
   try {
     const cacheKey = `blog?slug=${req.params.slug}`;
@@ -347,6 +384,10 @@ exports.getBySlug = async (req, res, next) => {
               model: CategoryOfBlog,
               attributes: blogCategoryAttributes,
             },
+          },
+          {
+            model: Admin,
+            attributes: ["id", "name"],
           },
         ],
       });

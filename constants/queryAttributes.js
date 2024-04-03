@@ -28,6 +28,10 @@ exports.toolAttributes = [
   "totalRatings",
   "release",
   "social",
+  "isExtension",
+  "isApi",
+  "pros",
+  "cons",
 ];
 exports.toolAttributesAll = [
   "id",
@@ -53,17 +57,29 @@ exports.toolCardAttributes = [
   "price",
   "slug",
   "ratingsAverage",
+  "updatedAt",
   "release",
 ];
-exports.toolCardAttributes = [
+exports.blogCardAttributes = [
   "id",
   "title",
   "description",
   "image",
-  "price",
+  "alt",
+  "readTime",
   "slug",
-  "ratingsAverage",
+  "updatedAt",
   "release",
+];
+
+exports.listingCardAttributes = [
+  "id",
+  "title",
+  "description",
+  "image",
+  "alt",
+  "slug",
+  "updatedAt",
 ];
 exports.blogAttributes = [
   "id",
@@ -80,6 +96,7 @@ exports.blogAttributes = [
   "comments",
   "wishlists",
   "release",
+  "AdminId",
 ];
 exports.listingAttributes = [
   "id",
@@ -94,6 +111,7 @@ exports.listingAttributes = [
   "deletedAt",
   "likes",
   "views",
+  "wishlists",
   "comments",
 ];
 exports.newsAttributes = [
@@ -117,6 +135,7 @@ exports.submitToolAttributes = [
   "country",
   "status",
   "createdAt",
+  "toolId",
 ];
 
 exports.categoryAttributes = [
@@ -170,6 +189,10 @@ exports.toolAllAdminAttributes = [
   "totalRatings",
   "release",
   "social",
+  "isExtension",
+  "isApi",
+  "pros",
+  "cons",
 ];
 exports.blogAllAdminAttributes = [
   "id",
@@ -185,6 +208,7 @@ exports.blogAllAdminAttributes = [
   "comments",
   "wishlists",
   "release",
+  "AdminId",
 ];
 exports.listingAllAdminAttributes = [
   "id",
@@ -197,6 +221,7 @@ exports.listingAllAdminAttributes = [
   "updatedAt",
   "likes",
   "views",
+  "wishlists",
   "comments",
 ];
 
@@ -215,6 +240,7 @@ exports.mainCategoryAdminAttributes = [
   "image",
   "slug",
   "description",
+  "description",
   "createdAt",
 ];
 exports.listingCategoryAdminAttributes = ["id", "name", "slug", "createdAt"];
@@ -226,4 +252,5 @@ exports.notificationAdminAttributes = [
   "topic",
   "click_action",
   "createdAt",
+  "schedule",
 ];

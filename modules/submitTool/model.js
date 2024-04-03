@@ -2,6 +2,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 const User = require("../user/model");
+const Tool = require("../tool/model");
 const SubmitTool = sequelize.define(
   "submitTool",
   {
@@ -47,6 +48,9 @@ const SubmitTool = sequelize.define(
       type: DataTypes.STRING,
       defaultValue: "Pending",
     },
+    reason: {
+      type: DataTypes.STRING,
+    },
   },
   {
     paranoid: true,
@@ -55,5 +59,12 @@ const SubmitTool = sequelize.define(
 
 User.hasMany(SubmitTool);
 SubmitTool.belongsTo(User);
+
+Tool.hasMany(SubmitTool, {
+  foreignKey: {
+    allowNull: true,
+  },
+});
+SubmitTool.belongsTo(Tool);
 
 module.exports = SubmitTool;

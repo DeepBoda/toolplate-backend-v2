@@ -1,91 +1,109 @@
-const { Client } = require("@elastic/elasticsearch");
-const fs = require("fs");
-const path = require("path");
-const blog = require("../modules/blog/service");
-const tool = require("../modules/tool/service");
-const { Op } = require("sequelize");
+const client = require("../config/esClient");
+const toolService = require("../modules/tool/service");
+const categoryService = require("../modules/category/service");
 const redisClient = require("../utils/redis");
+const MainCategory = require("../modules/mainCategory/model");
+const ToolCategory = require("../modules/toolCategory/model");
+const Category = require("../modules/category/model");
 
-const certificatePath = path.join(__dirname, "certificate.crt");
-
-// Create Elasticsearch client
-// const client = new Client({
-//   node: "http://localhost:9200",
-//   auth: {
-//     username: "elastic",
-//     password: "sdXBClIwLXjBHveJmqIh",
-//   },
-//   ssl: {
-//     ca: fs.readFileSync(certificatePath),
-//   },
-// });
-
-const client = new Client({
-  cloud: {
-    id: "7aa0b035a3bf481fb019cce870fc8f69:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvJDVkNWJmZGI3ZTU5YTQ4ODA4ZmRiOTQ4Njg5ODhjM2ExJDg3MjVmYjE0ODJlYjQyZGU5NWRkZTYxODg2MzQ2M2Mz",
-  },
-  auth: {
-    username: "elastic",
-    password: "ANwJX5v9yyEVLxcg4bJAJFkE",
-  },
-});
 const insertBulkData = async () => {
   try {
-    const blogs = await blog.findAll({
-      attributes: ["slug", "id", "description", "title"],
-    });
-    const tools = await tool.findAll({
-      attributes: ["slug", "id", "description", "title"],
-    });
-    // Create the index
+    // Define the index
     const index = "search";
-    // Generate and index random documents
+
+    // Check if the index exists before trying to delete it
+    const indexExists = await client.indices.exists({ index });
+    if (indexExists) {
+      await client.indices.delete({ index });
+      console.log(`Index '${index}' deleted successfully.`);
+    }
+
+    // Create the index
+    // await client.indices.create({ index });
+    // console.log(`Index '${index}' created successfully.`);
+
+    // Bulk data array
     const bulkData = [];
-    for (let i = 0; i < blogs.length; i++) {
-      let blog = blogs[i].toJSON();
-      const document = {
-        id: blog.id,
-        title: blog.title,
-        slug: blog.slug,
-        description: blog.description,
-        image: `${process.env.BUCKET_URL}/blog_${blog.id}_360_250.avif`,
-        type: "blog",
-      };
-      bulkData.push({ index: { _index: index } }, document);
-    }
-    for (let i = 0; i < tools.length; i++) {
-      let tool = tools[i].toJSON();
-      const document = {
-        id: tool.id,
-        title: tool.title,
-        slug: tool.slug,
-        description: tool.description,
-        image: `${process.env.BUCKET_URL}/tool_${tool.id}_120_120.avif`,
-        type: "tool",
-      };
-      bulkData.push({ index: { _index: index } }, document);
-    }
-    console.log(bulkData);
-    await client.indices.delete({ index });
-    console.log(`Index '${index}' deleted successfully.`);
+
+    // Insert categories
+    const categories = await categoryService.findAll({
+      attributes: ["slug", "id", "name", "image"],
+      include: {
+        model: MainCategory,
+        attributes: ["name"],
+      },
+    });
+    categories.forEach((category) => {
+      const categoryData = category.toJSON();
+      bulkData.push(
+        { index: { _index: index } },
+        {
+          id: categoryData.id,
+          title: categoryData.name,
+          slug: categoryData.slug,
+          image: categoryData.image,
+          category: categoryData.mainCategory.name,
+          type: "category",
+        }
+      );
+    });
+
+    // Insert tools
+    const tools = await toolService.findAll({
+      attributes: ["title", "slug", "id", "description"],
+      include: {
+        model: ToolCategory,
+        attributes: ["categoryId"],
+        include: {
+          model: Category,
+          attributes: ["name"],
+        },
+      },
+    });
+
+    tools.forEach((tool) => {
+      const toolData = tool.toJSON();
+      const categoryNames = toolData.toolCategories
+        .map((tc) => tc.category.name)
+        .join(", "); // Join category names with a comma if there are multiple
+
+      bulkData.push(
+        { index: { _index: index } },
+        {
+          id: toolData.id,
+          title: toolData.title,
+          slug: toolData.slug,
+          image: `${process.env.CDN_URL}/tool_${toolData.id}_60_60.webp`,
+          category: categoryNames,
+          type: "tool",
+        }
+      );
+    });
+
+    // Perform the bulk index operation
     await client.bulk({ body: bulkData });
 
-    console.log(`Generated documents in the "${index}" index.`);
+    console.log(
+      `Bulk data inserted. ${categories.length} categories and ${tools.length} tools added to the "${index}" index.`
+    );
   } catch (error) {
-    console.error("Error generating dataset:", error);
+    console.error("Error during bulk data insertion:", error);
   }
 };
 const showIndices = async () => {
   try {
     const { body } = await client.indices.get({ index: "_all" });
-    const indices = Object.keys(body);
-    console.log("Indices:");
-    console.log(indices);
+    if (body) {
+      const indices = Object.keys(body);
+      console.log("Indices:");
+      console.log(indices);
+    } else {
+      console.log("No indices found.");
+    }
   } catch (error) {
     console.error("Error retrieving indices:", error);
   }
 };
-
 const deleteIndex = async (indexName) => {
   try {
     const { body } = await client.indices.delete({ index: indexName });
@@ -94,10 +112,15 @@ const deleteIndex = async (indexName) => {
     console.error("Error deleting index:", error);
   }
 };
-
 const getIndexDataCount = async () => {
   try {
     const { body: indices } = await client.cat.indices({ format: "json" });
+
+    // Check if indices is undefined or not iterable
+    if (!indices || !Array.isArray(indices)) {
+      console.log("No indices found.");
+      return;
+    }
 
     for (const index of indices) {
       // Skip the .geoip_databases index
@@ -112,70 +135,154 @@ const getIndexDataCount = async () => {
     console.error("Error retrieving index document count:", error);
   }
 };
-const createIndex = async (indexName) => {
-  await client.indices.create({ index: indexName });
-  console.log("Index created");
+const listAllIndexes = async () => {
+  try {
+    const body = await client.cat.indices({ format: "json" });
+    console.log(body);
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
 };
-exports.search = async (searchTerms, limit = 10) => {
+const createIndex = async (indexName) => {
+  try {
+    // Original createIndex function enhanced with an example mapping
+    const indexExists = await client.indices.exists({ index: indexName });
+    if (indexExists.body) {
+      // Ensure to access the `.body` property
+      console.log(`Index '${indexName}' already exists`);
+      return;
+    }
+
+    await client.indices.create({
+      index: indexName,
+      body: {
+        settings: {
+          /* Your index settings */
+        },
+        mappings: {
+          properties: {
+            id: { type: "integer" },
+            title: { type: "text" },
+            slug: { type: "keyword" },
+            description: { type: "text" },
+            image: { type: "text" },
+            type: { type: "keyword" },
+          },
+        },
+      },
+    });
+    console.log(`Index '${indexName}' created successfully`);
+  } catch (error) {
+    console.error(`Error creating index '${indexName}':`, error);
+  }
+};
+exports.refillData = async (req, res, next) => {
+  try {
+    await insertBulkData();
+
+    await redisClient.hDel(`ES?search=*`);
+    res.status(200).json({
+      status: "success",
+      message: "Elastic Search data refilled successfully!",
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+function preprocessSearchTerms(searchTerms, keywordsToDeemphasize) {
+  // Split the searchTerms into an array of words
+  let termsArray = searchTerms.split(" ");
+
+  // Filter out the keywords to deemphasize
+  termsArray = termsArray.filter(
+    (term) => !keywordsToDeemphasize.includes(term.toLowerCase())
+  );
+
+  // Join the remaining terms back into a string
+  const processedSearchTerms = termsArray.join(" ");
+
+  return processedSearchTerms;
+}
+
+exports.searchTool = async (searchTerms, limit) => {
   try {
     const startTime = Date.now();
+    const processedSearchTerms = preprocessSearchTerms(searchTerms, [
+      "i",
+      "want",
+      "to",
+      "for",
+      "looking",
+      "how",
+      "do",
+      "find",
+      "can",
+      "this",
+      "that",
+      "help",
+      "you",
+      "please",
+      "a",
+      "an",
+      "the",
+      "best",
+      "top",
+      "free",
+      "paid",
+      "get",
+      "suggest",
+      "need",
+      "ai",
+      "tool",
+      "tools",
+    ]);
 
     const body = await client.search({
-      index: "blog",
+      index: "search",
       body: {
         query: {
           bool: {
             should: [
               {
-                match: {
-                  title: {
-                    query: searchTerms,
-                    fuzziness: "AUTO",
-                    operator: "and",
-                  },
-                },
-              },
-              {
-                wildcard: {
-                  title: {
-                    value: `${searchTerms}*`,
-                  },
+                multi_match: {
+                  query: processedSearchTerms,
+                  fields: ["title^3", "category"],
+                  fuzziness: "AUTO", // Consider adjusting fuzziness based on query length or context
+                  type: "best_fields", // Prefer the best match across fields
                 },
               },
               {
                 match_phrase_prefix: {
                   title: {
-                    query: searchTerms,
-                    slop: 3, // Allow up to 3 token position differences
-                    boost: 10, // Boost the relevance of the match_phrase_prefix query
+                    query: processedSearchTerms,
+                    slop: 3, // Allow for some flexibility in phrase matching
+                    boost: 10,
+                  },
+                },
+              },
+              {
+                match_phrase_prefix: {
+                  category: {
+                    query: processedSearchTerms,
+                    slop: 3, // Similar flexibility for category
+                    boost: 5, // Boosting less than title to maintain relevance
                   },
                 },
               },
             ],
+            minimum_should_match: 1, // Ensure at least one condition must match
           },
         },
-        size: limit,
+        // size: limit,
       },
     });
 
     const endTime = Date.now();
     console.log("Query time:", endTime - startTime);
-    console.log(body.hits.hits.map((hit) => hit._source));
     return body.hits.hits.map((hit) => hit._source);
   } catch (error) {
     console.error("Error performing search:", error);
-  }
-};
-
-exports.refillElasticData = async (req, res, next) => {
-  try {
-    await insertBulkData();
-
-    await redisClient.hDel(`searchAll?searchTerms=*`);
-    res.status(200).json({
-      status: "success",
-    });
-  } catch (error) {
-    console.error(error);
+    return []; // Handle error appropriately
   }
 };

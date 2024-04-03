@@ -1,5 +1,5 @@
 "use strict";
-const { DataTypes } = require("sequelize");
+const { DataTypes, Sequelize } = require("sequelize");
 const sequelize = require("../../config/db");
 const Admin = require("../admin/model");
 
@@ -29,6 +29,10 @@ const Notification = sequelize.define("notification", {
   clicks: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
+  },
+  schedule: {
+    type: DataTypes.DATE,
+    defaultValue: Sequelize.NOW,
   },
 });
 

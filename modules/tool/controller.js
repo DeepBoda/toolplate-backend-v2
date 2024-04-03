@@ -6,6 +6,7 @@ const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
+const notificationService = require("../notification/service");
 const redisService = require("../../utils/redis");
 const seoService = require("../toolSeo/service");
 const viewService = require("../toolView/service");
@@ -39,12 +40,10 @@ exports.add = async (req, res, next) => {
       if (req.files.image) {
         req.body.image = req.files.image[0].location;
       }
-
-      // Check if Videos uploaded and if got URLs
-      if (req.files.videos) {
-        req.body.videos = req.files.videos.map((el) => el.location);
-      }
     }
+
+    req.body.isExtension = req.body.isExtension || false;
+    req.body.isApi = req.body.isApi || false;
 
     req.body.title = req.body.title.trim();
     // Create slug URL based on title
@@ -57,7 +56,7 @@ exports.add = async (req, res, next) => {
 
     // Step 1: Create the new tool entry in the `tool` table
     const tool = await service.create(bodyData);
-    console.log("tool", tool);
+
     // // Send a push notification with the blog title and body
     // if (blog.createdAt == blog.release) {
     // const topic =
@@ -67,7 +66,7 @@ exports.add = async (req, res, next) => {
     // const title = tool.title;
     // const body = "Hot on Toolplate- check it now!";
     // const click_action = `tool/${tool.slug}`;
-    // pushNotificationTopic(topic, title, body, click_action, 1);
+    // pushNotificationTopic(topic, title, body, click_action);
     // }
 
     // Check if Previews uploaded and if got URLs
@@ -123,6 +122,8 @@ exports.add = async (req, res, next) => {
       status: "success",
       data: tool,
     });
+
+    redisService.hDel(`toolSchema`);
 
     // Resize and upload the tool icons
     resizeAndUploadImage(toolSize, tool.image, `tool_${tool.id}`);
@@ -216,6 +217,41 @@ exports.getAll = async (req, res, next) => {
     next(error);
   }
 };
+exports.getAllCounts = async (req, res, next) => {
+  try {
+    const { price } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
+    const count = await service.count({
+      where: {
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
+        ...priceFilter,
+      },
+
+      distinct: true, // Add this option to ensure accurate counts
+    });
+
+    res.status(200).send({
+      status: "success",
+      counts: count,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getAllDynamic = async (req, res, next) => {
   try {
@@ -288,6 +324,28 @@ exports.getAllDynamic = async (req, res, next) => {
         },
       ],
     });
+
+    // redisService.set(`tools`, data);
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getAllForSchema = async (req, res, next) => {
+  try {
+    // Try to retrieve the tools from the Redis cache
+    let data = await redisService.get(`toolSchema`);
+
+    // If the tools are not found in the cache
+    if (!data) {
+      data = await service.findAll({
+        attributes: ["id", "title", "image", "slug", "createdAt"],
+      });
+      redisService.set(`toolSchema`, data);
+    }
 
     // redisService.set(`tools`, data);
     res.status(200).send({
@@ -538,6 +596,63 @@ exports.getByCategorySlug = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getToolCountsByCategoryAndPrice = async (req, res, next) => {
+  try {
+    const category = await categoryService.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+    if (!category) {
+      return next(createHttpError(404, "Category not found!"));
+    }
+    const { price, ...query } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
+    const where = {};
+
+    where["$toolCategories.categoryId$"] = category.id;
+
+    const count = await service.count({
+      where: {
+        release: {
+          [Op.lte]: moment(), // Less than or equal to the current date
+        },
+        ...priceFilter,
+      },
+
+      distinct: true, // Add this option to ensure accurate counts
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
+        },
+      ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      counts: count,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getDynamicByCategorySlug = async (req, res, next) => {
   try {
     const category = await categoryService.findOne({
@@ -751,6 +866,57 @@ exports.getForAdmin = async (req, res, next) => {
       data,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+exports.getRelatedCategories = async (req, res, next) => {
+  try {
+    const cacheKey = `tool?category?related=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      // Attempt to find the tool by its slug with associated categories
+      const openedTool = await service.findOne({
+        where: { slug: req.params.slug },
+        attributes: ["id"],
+        include: [{ model: ToolCategory, attributes: ["categoryId"] }],
+      });
+
+      // If the tool is not found, throw a 404 error
+      if (!openedTool) throw createError(404, "Tool not found");
+
+      // Extract categoryIds from the found tool
+      const categoryIds = openedTool.toolCategories.map((tc) => tc.categoryId);
+
+      // Find all categories by the extracted categoryIds including their mainCategoryId
+      const categoriesWithMain = await categoryService.findAll({
+        where: { id: categoryIds },
+        attributes: ["id", "mainCategoryId"],
+      });
+
+      // Deduplicate mainCategoryIds using a Set for efficient uniqueness enforcement
+      const mainCategoryIdsSet = new Set(
+        categoriesWithMain.map((item) => item.mainCategoryId)
+      );
+
+      // Find all related categories that do not include the initial categoryIds but share the same mainCategoryId
+      data = await categoryService.findAll({
+        where: {
+          id: { [Op.notIn]: categoryIds },
+          mainCategoryId: { [Op.in]: Array.from(mainCategoryIdsSet) },
+        },
+        attributes: ["id", "name", "slug", "image"],
+        order: sequelize.random(),
+        limit: 4,
+      });
+      redisService.set(cacheKey, data);
+    }
+
+    // Return the related categories in the response
+    res.status(200).json({ status: "success", data: data });
+  } catch (error) {
+    // Pass any caught errors to the next middleware function
     next(error);
   }
 };
@@ -1224,10 +1390,9 @@ exports.update = async (req, res, next) => {
       resizeAndUploadWebP(toolSize, req.body.image, `tool_${req.params.id}`);
     }
 
-    // Check if Videos uploaded and if got URLs
-    if (req.files?.videos) {
-      req.body.videos = req.files.videos.map((el) => el.location);
-    }
+    req.body.isExtension = req.body.isExtension || false;
+    req.body.isApi = req.body.isApi || false;
+
     req.body.title = req.body.title.trim();
 
     // if (req.body.slug) {
@@ -1251,20 +1416,16 @@ exports.update = async (req, res, next) => {
     // Send the response
     res.status(200).json({ status: "success", data: { affectedRows } });
 
+    // Handle the file deletion
+    const filesToDelete = [
+      ...(req.files?.image ? [oldToolData.image] : []),
+      ...(req.files?.file ? oldToolData.videos : []),
+    ];
     // Clear Redis cache
     redisService.del(`tool?slug=${oldToolData.slug}`);
     redisService.del(`toolsForPrompt`);
     redisService.hDel(`prompt=*`);
-
-    // Handle the file deletion
-    if (req.files?.image && oldToolData.image) {
-      const filesToDelete = [
-        oldToolData.image,
-        ...(req.files.videos || []),
-        ...(oldToolData.videos || []),
-      ];
-      deleteFilesFromS3(filesToDelete);
-    }
+    deleteFilesFromS3(filesToDelete);
 
     // Update categories
     const categoryIds = categories.split(",").map(Number);
@@ -1328,22 +1489,22 @@ exports.delete = async (req, res, next) => {
       toolImageService.delete({ where: { toolId } }),
     ]);
 
-    const filesToDelete = [];
-    if (toolData.image) filesToDelete.push(toolData.image);
-    if (toolData.videos) filesToDelete.push(...toolData.videos);
-
     res.status(200).send({
       status: "success",
       data: { affectedRows },
     });
 
-    if (filesToDelete.length > 0) {
-      deleteFilesFromS3(filesToDelete);
-    }
+    // Handle the file deletion
+    const filesToDelete = [
+      ...(req.files?.image ? [toolData.image] : []),
+      ...(req.files?.file ? toolData.videos : []),
+    ];
 
     // Clear Redis cache
     redisService.del(`toolsForPrompt`);
     redisService.hDel(`prompt=*`);
+    redisService.hDel(`toolSchema`);
+    deleteFilesFromS3(filesToDelete);
   } catch (error) {
     console.error(error);
     next(error);

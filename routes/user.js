@@ -15,6 +15,7 @@ router.use("/category-blog", require("../modules/categoryOfBlog"));
 router.use("/category-listing", require("../modules/categoryOfListing"));
 router.use("/tool", require("../modules/tool"));
 router.use("/toolSeo", require("../modules/toolSeo"));
+router.use("/toolAlt", require("../modules/toolAlternative"));
 router.use("/tools/rating", require("../modules/toolRating"));
 router.use("/tools", require("../modules/tool/seoRoutes"));
 router.use("/toolLike", require("../modules/toolLike"));

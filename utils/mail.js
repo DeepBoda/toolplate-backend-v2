@@ -63,7 +63,7 @@ exports.replySubmittedTool = async (options) => {
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: `Thanks for submitting ${options.tool} on Toolplate!`,
+      subject: `Thanks for submitting ${options.title} on Toolplate!`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 
@@ -91,7 +91,7 @@ exports.reviewSubmittedTool = async (options) => {
     const mailOptions = {
       from: process.env.EMAIL_FOR_CLIENT,
       to: options.email,
-      subject: `Thanks for submitting ${options.tool} on Toolplate!`,
+      subject: `Thanks for submitting ${options.title} on Toolplate!`,
       html: emailContent, // Use "html" instead of "text" for HTML content
     };
 

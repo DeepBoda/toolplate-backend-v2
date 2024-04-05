@@ -2,6 +2,7 @@
 
 const service = require("./service");
 const redisService = require("../../utils/redis");
+const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 // ------------- Only Admin can Create --------------
@@ -68,6 +69,35 @@ exports.getById = async (req, res, next) => {
       data = await service.findOne({
         where: {
           toolId: req.params.toolId,
+        },
+      });
+      redisService.set(cacheKey, data);
+    }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.getBySlug = async (req, res, next) => {
+  try {
+    const { id } = await toolService.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+
+    const cacheKey = `tool?seo=${id}`;
+
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          toolId: id,
         },
       });
       redisService.set(cacheKey, data);

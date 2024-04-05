@@ -1158,6 +1158,8 @@ exports.getAlternativeTools = async (req, res, next) => {
         "createdAt",
         "ratingsAverage",
         "totalRatings",
+        "views",
+        "likes",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
@@ -1240,8 +1242,12 @@ exports.getAlternativeDynamicTools = async (req, res, next) => {
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         "id",
+        "title",
         "createdAt",
         "ratingsAverage",
+        "totalRatings",
+        "views",
+        "likes",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`

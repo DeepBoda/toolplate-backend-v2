@@ -4,6 +4,10 @@ const service = require("./service");
 const redisService = require("../../utils/redis");
 const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
+const Tool = require("../tool/model");
+const ToolCategory = require("../toolCategory/model");
+const Category = require("../category/model");
+const { categoryAttributes } = require("../../constants/queryAttributes");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -98,6 +102,18 @@ exports.getBySlug = async (req, res, next) => {
       data = await service.findOne({
         where: {
           toolId: id,
+        },
+        include: {
+          model: Tool,
+          attributes: ["title", "price"],
+          include: {
+            model: ToolCategory,
+            attributes: ["categoryId"],
+            include: {
+              model: Category,
+              attributes: ["name"],
+            },
+          },
         },
       });
       redisService.set(cacheKey, data);

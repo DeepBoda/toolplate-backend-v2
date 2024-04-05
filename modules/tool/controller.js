@@ -1156,6 +1156,8 @@ exports.getAlternativeTools = async (req, res, next) => {
         "price",
         "slug",
         "createdAt",
+        "ratingsAverage",
+        "totalRatings",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`

@@ -10,6 +10,7 @@ router.use("/refill", refillData);
 
 router.use(authMiddleware, protectRoute(["Admin"]));
 router.use("/users", require("../modules/user/admin"));
+router.use("/redirects", require("../modules/redirection/admin"));
 router.use("/home/tool", require("../modules/toolHome/admin"));
 router.use("/home/blog", require("../modules/blogHome/admin"));
 router.use("/home/listing", require("../modules/listingHome/admin"));

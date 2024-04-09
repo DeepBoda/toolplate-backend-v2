@@ -93,8 +93,10 @@ exports.deleteFirebaseUser = async (uid) => {
 };
 
 exports.trimUrl = (url) => {
-  if (!url) return url;
-  const pathOnlyRegex = /^(?:https?:\/\/)?(?:www\.)?toolplate\.ai(\/.*)$/;
-  const matches = url.match(pathOnlyRegex);
-  return matches && matches[1] ? matches[1] : url;
+  try {
+    return new URL(url).pathname.replace(/^\/$/, "") || url;
+  } catch (error) {
+    console.error("Error parsing URL:", error);
+    return url;
+  }
 };

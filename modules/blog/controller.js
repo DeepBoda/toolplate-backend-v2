@@ -601,6 +601,12 @@ exports.getRelatedBlogs = async (req, res, next) => {
           ),
           "isLiked",
         ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
 
       include: [
@@ -701,6 +707,12 @@ exports.getRelatedBlogsDynamic = async (req, res, next) => {
             `(SELECT COUNT(*) FROM blogLikes WHERE blogLikes.blogId = blog.id AND blogLikes.UserId = ${userId}) > 0`
           ),
           "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
         ],
       ],
 

@@ -2,6 +2,7 @@
 
 const service = require("./service");
 const redisService = require("../../utils/redis");
+const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 // ------------- Only Admin can Create --------------
@@ -80,7 +81,7 @@ exports.getById = async (req, res, next) => {
 };
 exports.getBySlug = async (req, res, next) => {
   try {
-    let { id } = await service.findOne({
+    let { id } = await blogService.findOne({
       where: {
         slug: req.params.slug,
       },

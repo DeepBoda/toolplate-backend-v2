@@ -78,6 +78,34 @@ exports.getById = async (req, res, next) => {
     next(error);
   }
 };
+exports.getBySlug = async (req, res, next) => {
+  try {
+    let { id } = await service.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+
+    const cacheKey = `blog?seo=${id}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          blogId: id,
+        },
+      });
+      redisService.set(cacheKey, data);
+    }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {

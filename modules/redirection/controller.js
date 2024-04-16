@@ -60,8 +60,8 @@ exports.getAllForAdmin = async (req, res, next) => {
 
 exports.getOneByUrl = async (req, res, next) => {
   try {
-    const { url } = req.body;
-    const old = trimUrl(url);
+    let old = trimUrl(req.body.url);
+
     // Try to retrieve the redirection from the Redis cache
     let data = await redisService.get(`redirect-${old}`);
     if (!data) {
@@ -107,7 +107,7 @@ exports.update = async (req, res, next) => {
     });
 
     redisService.del(`redirection`);
-    redisService.set(`redirect-*`);
+    redisService.del(`redirect-*`);
 
     // Send the response
     res.status(200).json({

@@ -7,6 +7,7 @@ const {authMiddleware,protectRoute} = require("../../middlewares/auth");
 router.use( authMiddleware);
 router.route("/").get( listing.getAll);
 router.route("/all").get( listing.getAllDynamic);
+router.route("/schema").get( listing.getAllForSchema);
 router.route("/slugs").get( listing.getSlugsForSitemap);
 router.route("/data/:slug").get(listing.getDynamicBySlug);
 router.route("/view/:id").get(listing.createView);

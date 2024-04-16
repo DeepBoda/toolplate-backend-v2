@@ -105,6 +105,7 @@ exports.add = async (req, res, next) => {
       status: "success",
       data: listing,
     });
+    redisService.hDel(`listingSchema`);
 
     // Resize and upload the listing image
     resizeAndUploadImage(
@@ -707,6 +708,29 @@ exports.getSlugsForSitemap = async (req, res, next) => {
   }
 };
 
+exports.getAllForSchema = async (req, res, next) => {
+  try {
+    // Try to retrieve the blogs from the Redis cache
+    let data = await redisService.get(`listingSchema`);
+
+    // If the blogs are not found in the cache
+    if (!data) {
+      data = await service.findAll({
+        attributes: ["id", "title", "image", "slug", "createdAt"],
+      });
+      redisService.set(`listingSchema`, data);
+    }
+
+    // redisService.set(`blogs`, data);
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
@@ -844,6 +868,8 @@ exports.delete = async (req, res, next) => {
         listingId: req.params.id,
       },
     });
+
+    redisService.del(`listingSchema`);
 
     // Send the response
     res.status(200).send({

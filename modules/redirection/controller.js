@@ -106,6 +106,9 @@ exports.update = async (req, res, next) => {
       },
     });
 
+    redisService.del(`redirection`);
+    redisService.set(`redirect-*`);
+
     // Send the response
     res.status(200).json({
       status: "success",
@@ -125,6 +128,8 @@ exports.delete = async (req, res, next) => {
 
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
+
+    redisService.del(`redirection`);
 
     // Send response with the number of affected rows
     res.status(200).send({

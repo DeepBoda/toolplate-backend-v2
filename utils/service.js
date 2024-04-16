@@ -94,7 +94,8 @@ exports.deleteFirebaseUser = async (uid) => {
 
 exports.trimUrl = (url) => {
   try {
-    return new URL(url).pathname.replace(/^\//, "") || url;
+    const { pathname, search } = new URL(url);
+    return `${pathname}${search}`;
   } catch (error) {
     console.error("Error parsing URL:", error);
     return url;

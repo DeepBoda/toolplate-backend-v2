@@ -58,6 +58,29 @@ exports.getAllForAdmin = async (req, res, next) => {
   }
 };
 
+exports.getOneByUrl = async (req, res, next) => {
+  try {
+    const { url } = req.body;
+    const old = trimUrl(url);
+    // Try to retrieve the redirection from the Redis cache
+    let data = await redisService.get(`redirect-${old}`);
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          old: old,
+        },
+      });
+      redisService.set(`redirect-${old}`, data);
+    }
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getById = async (req, res, next) => {
   try {
     const data = await service.findOne({

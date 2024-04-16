@@ -66,9 +66,7 @@ exports.getOneByUrl = async (req, res, next) => {
     let data = await redisService.get(`redirect-${old}`);
     if (!data) {
       data = await service.findOne({
-        where: {
-          old: old,
-        },
+        where: { old },
       });
       redisService.set(`redirect-${old}`, data);
     }

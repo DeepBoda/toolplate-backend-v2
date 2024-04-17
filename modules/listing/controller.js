@@ -316,7 +316,14 @@ exports.getMetaData = async (req, res, next) => {
         where: {
           slug: req.params.slug,
         },
-        attributes: ["id", "metaTitle", "metaDescription", "slug"],
+        attributes: [
+          "id",
+          "title",
+          "description",
+          "metaTitle",
+          "metaDescription",
+          "slug",
+        ],
       });
 
       redisService.set(cacheKey, data);

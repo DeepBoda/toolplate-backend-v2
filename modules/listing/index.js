@@ -12,6 +12,7 @@ router.route("/slugs").get( listing.getSlugsForSitemap);
 router.route("/data/:slug").get(listing.getDynamicBySlug);
 router.route("/view/:id").get(listing.createView);
 router.route("/related/:slug").get(listing.getRelatedListings);
+router.route("/meta/:slug").get(listing.getMetaData);
 router.route("/:slug").get(listing.getBySlug);
 
 

@@ -306,6 +306,30 @@ exports.getAllForDropDown = async (req, res, next) => {
   }
 };
 
+exports.getMetaData = async (req, res, next) => {
+  try {
+    const cacheKey = `listing-meta?slug=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          slug: req.params.slug,
+        },
+        attributes: ["id", "metaTitle", "metaDescription", "slug"],
+      });
+
+      redisService.set(cacheKey, data);
+    }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 exports.getBySlug = async (req, res, next) => {
   try {
     const cacheKey = `listing?slug=${req.params.slug}`;
@@ -832,6 +856,7 @@ exports.updateMeta = async (req, res, next) => {
 
     // Clear Redis cache
     redisService.del(`listing?slug=${listing.slug}`);
+    redisService.del(`listing-meta?slug=${listing.slug}`);
   } catch (error) {
     console.error(error);
     next(error);

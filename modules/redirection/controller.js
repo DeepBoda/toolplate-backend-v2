@@ -2,25 +2,14 @@
 
 const service = require("./service");
 const redisService = require("../../utils/redis");
-const slugify = require("slugify");
-const toolCategoryService = require("../toolCategory/service");
-const mainCategoryService = require("../mainCategory/service");
 const { usersqquery, sqquery } = require("../../utils/query");
-const {
-  toolCardAttributes,
-  categoryAttributes,
-} = require("../../constants/queryAttributes");
 const MainCategory = require("../mainCategory/model");
-const { deleteFilesFromS3 } = require("../../middlewares/multer");
-const ToolCategory = require("../toolCategory/model");
-const Tool = require("../tool/model");
-const sequelize = require("../../config/db");
-const Category = require("./model");
-const { Op } = require("sequelize");
+const { trimUrl } = require("../../utils/service");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    req.body.AdminId = req.requestor ? req.requestor.id : 1;
     const data = await service.create(req.body);
 
     res.status(200).json({
@@ -40,9 +29,7 @@ exports.getAll = async (req, res, next) => {
 
     // If the redirection are not found in the cache
     if (!data) {
-      data = await service.findAndCountAll(
-        usersqquery({ ...req.query, sort: "name", sortBy: "ASC" })
-      );
+      data = await service.findAndCountAll(usersqquery(req.query));
       redisService.set(`redirection`, data);
     }
 
@@ -60,13 +47,29 @@ exports.getAllForAdmin = async (req, res, next) => {
     // If the redirection is not found in the cache
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["name"]),
-      // attributes: categoryAdminAttributes,
-      include: {
-        model: MainCategory,
-        attributes: ["id", "name"],
-      },
     });
 
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getOneByUrl = async (req, res, next) => {
+  try {
+    let old = trimUrl(req.body.url);
+
+    // Try to retrieve the redirection from the Redis cache
+    let data = await redisService.get(`redirect-${old}`);
+    if (!data) {
+      data = await service.findOne({
+        where: { old },
+      });
+      redisService.set(`redirect-${old}`, data);
+    }
     res.status(200).send({
       status: "success",
       data,
@@ -103,6 +106,9 @@ exports.update = async (req, res, next) => {
       },
     });
 
+    redisService.del(`redirection`);
+    redisService.del(`redirect-*`);
+
     // Send the response
     res.status(200).json({
       status: "success",
@@ -122,6 +128,8 @@ exports.delete = async (req, res, next) => {
 
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
+
+    redisService.del(`redirection`);
 
     // Send response with the number of affected rows
     res.status(200).send({

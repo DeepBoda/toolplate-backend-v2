@@ -2,29 +2,32 @@
 
 const service = require("./service");
 const redisService = require("../../utils/redis");
-const blogService = require("../blog/service");
+const toolService = require("../tool/service");
 const { usersqquery, sqquery } = require("../../utils/query");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
     let [data, created] = await service.findOrCreate({
-      where: { blogId: req.params.blogId },
+      where: { toolId: req.params.toolId },
       defaults: req.body,
     });
 
     if (!created) {
       await service.update(req.body, {
         where: {
-          blogId: req.params.blogId,
+          toolId: req.params.toolId,
         },
       });
       data = await service.findOne({
-        where: { blogId: req.params.blogId },
+        where: { toolId: req.params.toolId },
       });
     }
-    redisService.del(`blogs-seo`);
-    redisService.del(`blog?seo=${req.params.blogId}`);
+
+    await Promise.all([
+      redisService.del(`tools-alternative`),
+      redisService.del(`tool?alternative=${req.params.toolId}`),
+    ]);
 
     res.status(200).json({
       status: "success",
@@ -39,13 +42,13 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // Try to retrieve the blogs seo from the Redis cache
-    let data = await redisService.get(`blogs-seo`);
+    // Try to retrieve the tools alternative from the Redis cache
+    let data = await redisService.get(`tools-alternative`);
 
-    // If the blogs seo are not found in the cache
+    // If the tools alternative are not found in the cache
     if (!data) {
       data = await service.findAndCountAll(sqquery(req.query));
-      redisService.set(`blogs-seo`, data);
+      redisService.set(`tools-alternative`, data);
     }
 
     res.status(200).send({
@@ -57,15 +60,21 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
-exports.getById = async (req, res, next) => {
+exports.getBySlug = async (req, res, next) => {
   try {
-    const cacheKey = `blog?seo=${req.params.blogId}`;
+    const { id } = await toolService.findOne({
+      where: {
+        slug: req.params.slug,
+      },
+    });
+    const cacheKey = `tool?alternative=${id}`;
+
     let data = await redisService.get(cacheKey);
 
     if (!data) {
       data = await service.findOne({
         where: {
-          blogId: req.params.blogId,
+          toolId: id,
         },
       });
       redisService.set(cacheKey, data);
@@ -79,21 +88,15 @@ exports.getById = async (req, res, next) => {
     next(error);
   }
 };
-exports.getBySlug = async (req, res, next) => {
+exports.getById = async (req, res, next) => {
   try {
-    let { id } = await blogService.findOne({
-      where: {
-        slug: req.params.slug,
-      },
-    });
-
-    const cacheKey = `blog?seo=${id}`;
+    const cacheKey = `tool?alternative=${req.params.toolId}`;
     let data = await redisService.get(cacheKey);
 
     if (!data) {
       data = await service.findOne({
         where: {
-          blogId: id,
+          toolId: req.params.toolId,
         },
       });
       redisService.set(cacheKey, data);
@@ -111,10 +114,10 @@ exports.getBySlug = async (req, res, next) => {
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
-    // Update the blog data
+    // Update the tool data
     const [affectedRows] = await service.update(req.body, {
       where: {
-        blogId: req.params.blogId,
+        toolId: req.params.toolId,
       },
     });
 
@@ -135,7 +138,7 @@ exports.delete = async (req, res, next) => {
   try {
     const affectedRows = await service.delete({
       where: {
-        blogId: req.params.blogId,
+        toolId: req.params.toolId,
       },
     });
 

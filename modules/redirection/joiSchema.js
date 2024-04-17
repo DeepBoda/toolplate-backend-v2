@@ -5,7 +5,7 @@ module.exports = {
     old: Joi.string().required(),
     new: Joi.string().required(),
     isPermanent: Joi.boolean(),
-    AdminId: Joi.number().required(),
+    AdminId: Joi.number(),
   }),
   update: Joi.object().keys({
     old: Joi.string(),

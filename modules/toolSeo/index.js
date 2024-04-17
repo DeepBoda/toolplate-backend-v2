@@ -6,7 +6,7 @@ const {authMiddleware,protectRoute} = require("../../middlewares/auth");
 
 router.use( authMiddleware);
 router.route("/").get(Seo.getAll);
-router.route("/:toolId").get(Seo.getById);
+router.route("/:slug").get(Seo.getBySlug);
 
 
 

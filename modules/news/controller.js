@@ -111,6 +111,45 @@ exports.getAll = async (req, res, next) => {
     next(error);
   }
 };
+exports.getAllDynamic = async (req, res, next) => {
+  try {
+    const userId = req.requestor ? req.requestor.id : null;
+
+    const data = await service.findAndCountAll({
+      ...sqquery(
+        req.query,
+        {
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+        },
+        ["title", "description"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+      attributes: [
+        "id",
+        "title",
+        "views",
+        "createdAt",
+        "newsCategoryId",
+
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM newsWishlists WHERE newsWishlists.newsId = news.id AND newsWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
+      ],
+    });
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getAllForAdmin = async (req, res, next) => {
   try {

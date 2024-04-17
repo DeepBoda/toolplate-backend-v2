@@ -10,6 +10,7 @@ router.use("/refill", refillData);
 
 router.use(authMiddleware, protectRoute(["Admin"]));
 router.use("/users", require("../modules/user/admin"));
+router.use("/redirects", require("../modules/redirection/admin"));
 router.use("/home/tool", require("../modules/toolHome/admin"));
 router.use("/home/blog", require("../modules/blogHome/admin"));
 router.use("/home/listing", require("../modules/listingHome/admin"));
@@ -19,6 +20,7 @@ router.use("/notification", require("../modules/notification/admin"));
 router.use("/prompt", require("../modules/prompt/admin"));
 router.use("/tool", require("../modules/tool/admin"));
 router.use("/toolSeo", require("../modules/toolSeo/admin"));
+router.use("/toolAlt", require("../modules/toolAlternative/admin"));
 router.use("/tools/preview", require("../modules/toolImages/admin"));
 router.use("/tools/rating", require("../modules/toolRating/admin"));
 router.use("/toolLike", require("../modules/toolLike/admin"));

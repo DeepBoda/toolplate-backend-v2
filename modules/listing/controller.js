@@ -105,6 +105,7 @@ exports.add = async (req, res, next) => {
       status: "success",
       data: listing,
     });
+    redisService.hDel(`listingSchema`);
 
     // Resize and upload the listing image
     resizeAndUploadImage(
@@ -305,6 +306,37 @@ exports.getAllForDropDown = async (req, res, next) => {
   }
 };
 
+exports.getMetaData = async (req, res, next) => {
+  try {
+    const cacheKey = `listing-meta?slug=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          slug: req.params.slug,
+        },
+        attributes: [
+          "id",
+          "title",
+          "description",
+          "metaTitle",
+          "metaDescription",
+          "slug",
+        ],
+      });
+
+      redisService.set(cacheKey, data);
+    }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 exports.getBySlug = async (req, res, next) => {
   try {
     const cacheKey = `listing?slug=${req.params.slug}`;
@@ -707,6 +739,29 @@ exports.getSlugsForSitemap = async (req, res, next) => {
   }
 };
 
+exports.getAllForSchema = async (req, res, next) => {
+  try {
+    // Try to retrieve the blogs from the Redis cache
+    let data = await redisService.get(`listingSchema`);
+
+    // If the blogs are not found in the cache
+    if (!data) {
+      data = await service.findAll({
+        attributes: ["id", "title", "image", "slug", "createdAt"],
+      });
+      redisService.set(`listingSchema`, data);
+    }
+
+    // redisService.set(`blogs`, data);
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ---------- Only Admin can Update/Delete ----------
 exports.update = async (req, res, next) => {
   try {
@@ -808,6 +863,7 @@ exports.updateMeta = async (req, res, next) => {
 
     // Clear Redis cache
     redisService.del(`listing?slug=${listing.slug}`);
+    redisService.del(`listing-meta?slug=${listing.slug}`);
   } catch (error) {
     console.error(error);
     next(error);
@@ -844,6 +900,8 @@ exports.delete = async (req, res, next) => {
         listingId: req.params.id,
       },
     });
+
+    redisService.del(`listingSchema`);
 
     // Send the response
     res.status(200).send({

@@ -97,6 +97,7 @@ exports.add = async (req, res, next) => {
       status: "success",
       data: blog,
     });
+    redisService.hDel(`blogSchema`);
 
     // Resize and upload the blog image
     resizeAndUploadImage(blogResizeImageSize, blog.image, `blog_${blog.id}`);
@@ -601,6 +602,12 @@ exports.getRelatedBlogs = async (req, res, next) => {
           ),
           "isLiked",
         ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
 
       include: [
@@ -702,6 +709,12 @@ exports.getRelatedBlogsDynamic = async (req, res, next) => {
           ),
           "isLiked",
         ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM blogWishlists WHERE blogWishlists.blogId = blog.id AND blogWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
 
       include: [
@@ -774,6 +787,29 @@ exports.getSlugsForSitemap = async (req, res, next) => {
     res.status(200).json({
       status: "success",
       data: blogSlugs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllForSchema = async (req, res, next) => {
+  try {
+    // Try to retrieve the blogs from the Redis cache
+    let data = await redisService.get(`blogSchema`);
+
+    // If the blogs are not found in the cache
+    if (!data) {
+      data = await service.findAll({
+        attributes: ["id", "title", "image", "slug", "createdAt"],
+      });
+      redisService.set(`blogSchema`, data);
+    }
+
+    // redisService.set(`blogs`, data);
+    res.status(200).send({
+      status: "success",
+      data,
     });
   } catch (error) {
     next(error);
@@ -872,6 +908,7 @@ exports.delete = async (req, res, next) => {
         blogId: req.params.id,
       },
     });
+    redisService.hDel(`blogSchema`);
 
     // Send the response
     res.status(200).send({

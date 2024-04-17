@@ -1129,6 +1129,21 @@ exports.getAlternativeTools = async (req, res, next) => {
     const categoryIds = openedTool.toolCategories.map(
       (toolCategory) => toolCategory.categoryId
     );
+
+    const { price, ...query } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
     const where = {};
 
     where["$toolCategories.categoryId$"] = { [Op.in]: categoryIds };
@@ -1138,12 +1153,13 @@ exports.getAlternativeTools = async (req, res, next) => {
     // Find tools with the same category  IDs
     const data = await service.findAndCountAll({
       ...sqquery(
-        req.query,
+        query,
         {
           slug: { [Op.ne]: req.params.slug },
           release: {
             [Op.lte]: moment(), // Less than or equal to the current date
           },
+          ...priceFilter,
         },
         ["title"]
       ),
@@ -1156,12 +1172,29 @@ exports.getAlternativeTools = async (req, res, next) => {
         "price",
         "slug",
         "createdAt",
+        "ratingsAverage",
+        "totalRatings",
+        "views",
+        "likes",
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
+          ),
+          "isLiked",
+        ],
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
+          ),
+          "isWishlisted",
+        ],
       ],
 
       include: [
         {
           model: ToolCategory,
           attributes: ["categoryId"],
+          ...query,
           where,
           include: {
             model: Category,
@@ -1205,6 +1238,21 @@ exports.getAlternativeDynamicTools = async (req, res, next) => {
     const categoryIds = openedTool.toolCategories.map(
       (toolCategory) => toolCategory.categoryId
     );
+
+    const { price, ...query } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
     const where = {};
 
     where["$toolCategories.categoryId$"] = { [Op.in]: categoryIds };
@@ -1214,20 +1262,25 @@ exports.getAlternativeDynamicTools = async (req, res, next) => {
     // Find tools with the same category  IDs
     const data = await service.findAndCountAll({
       ...sqquery(
-        req.query,
+        query,
         {
           slug: { [Op.ne]: req.params.slug },
           release: {
             [Op.lte]: moment(), // Less than or equal to the current date
           },
+          ...priceFilter,
         },
         ["title"]
       ),
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         "id",
+        "title",
         "createdAt",
         "ratingsAverage",
+        "totalRatings",
+        "views",
+        "likes",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
@@ -1245,6 +1298,7 @@ exports.getAlternativeDynamicTools = async (req, res, next) => {
         {
           model: ToolCategory,
           attributes: ["categoryId"],
+          ...query,
           where,
         },
       ],

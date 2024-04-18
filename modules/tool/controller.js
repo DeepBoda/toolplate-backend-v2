@@ -182,12 +182,6 @@ exports.getAll = async (req, res, next) => {
         ...toolAttributes,
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
@@ -293,13 +287,6 @@ exports.getAllDynamic = async (req, res, next) => {
       attributes: [
         "id",
         "title",
-
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
@@ -307,9 +294,7 @@ exports.getAllDynamic = async (req, res, next) => {
           "isWishlisted",
         ],
         "views",
-        "likes",
         "wishlists",
-
         "ratingsAverage",
         "release",
         "totalRatings",
@@ -563,12 +548,6 @@ exports.getByCategorySlug = async (req, res, next) => {
         ...toolAttributes,
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
@@ -706,12 +685,6 @@ exports.getDynamicByCategorySlug = async (req, res, next) => {
         "totalRatings",
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
@@ -748,12 +721,6 @@ exports.getDynamicBySlug = async (req, res, next) => {
       },
       attributes: [
         ...toolAttributes,
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
@@ -1050,12 +1017,6 @@ exports.getRelatedToolsDynamic = async (req, res, next) => {
         "createdAt",
         [
           sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
-        [
-          sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
           ),
           "isWishlisted",
@@ -1176,12 +1137,7 @@ exports.getAlternativeTools = async (req, res, next) => {
         "totalRatings",
         "views",
         "likes",
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
+
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
@@ -1280,13 +1236,6 @@ exports.getAlternativeDynamicTools = async (req, res, next) => {
         "ratingsAverage",
         "totalRatings",
         "views",
-        "likes",
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
@@ -1363,12 +1312,6 @@ exports.getAlternativeSchema = async (req, res, next) => {
       distinct: true, // Add this option to ensure accurate counts
       attributes: [
         ...toolAttributes,
-        [
-          sequelize.literal(
-            `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-          ),
-          "isLiked",
-        ],
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`

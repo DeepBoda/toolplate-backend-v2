@@ -72,12 +72,7 @@ exports.getAll = async (req, res, next) => {
         as: "tool",
         attributes: [
           ...toolAttributes,
-          [
-            sequelize.literal(
-              `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-            ),
-            "isLiked",
-          ],
+
           [
             sequelize.literal(
               `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`

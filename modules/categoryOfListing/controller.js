@@ -96,7 +96,7 @@ exports.getSlugsForSitemap = async (req, res, next) => {
     const categories = await service.findAll();
 
     const categorySlugs = categories.map((c) => ({
-      slug: `${url}/blogs/${c.slug}`,
+      slug: `${url}/listings/${c.slug}`,
       updatedAt: c.updatedAt,
     }));
 

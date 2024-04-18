@@ -128,15 +128,15 @@ exports.getSitemap = async (req, res, next) => {
           },
           {
             title: "Free " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/free`,
+            url: `${url}/tools/${category.slug}?pricing=free`,
           },
           {
             title: "Paid " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/premium`,
+            url: `${url}/tools/${category.slug}?pricing=paid`,
           },
           {
             title: "Freemium " + category.name + " Tools",
-            url: `${url}/tools/${category.slug}/freemium`,
+            url: `${url}/tools/${category.slug}?pricing=freemium`,
           },
         ]);
       });
@@ -162,10 +162,12 @@ exports.getSlugsForSitemap = async (req, res, next) => {
     const categories = await service.findAll();
 
     const categorySlugs = categories.flatMap((category) =>
-      ["", "/free", "/premium", "/freemium"].map((suffix) => ({
-        slug: `${url}/tools/${category.slug}${suffix}`,
-        updatedAt: category.updatedAt,
-      }))
+      ["", "?pricing=free", "?pricing=paid", "?pricing=freemium"].map(
+        (suffix) => ({
+          slug: `${url}/tools/${category.slug}${suffix}`,
+          updatedAt: category.updatedAt,
+        })
+      )
     );
 
     res.status(200).send({ status: "success", data: categorySlugs });

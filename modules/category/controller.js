@@ -426,12 +426,6 @@ exports.getByMainDynamic = async (req, res, next) => {
             "ratingsAverage",
             [
               sequelize.literal(
-                `(SELECT COUNT(*) FROM toolLikes WHERE toolLikes.toolId = tool.id AND toolLikes.UserId = ${userId}) > 0`
-              ),
-              "isLiked",
-            ],
-            [
-              sequelize.literal(
                 `(SELECT COUNT(*) FROM toolWishlists WHERE toolWishlists.toolId = tool.id AND toolWishlists.UserId = ${userId}) > 0`
               ),
               "isWishlisted",

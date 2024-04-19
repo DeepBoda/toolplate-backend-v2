@@ -1168,6 +1168,80 @@ exports.getAlternativeTools = async (req, res, next) => {
     next(error);
   }
 };
+exports.getAlternativeToolsCount = async (req, res, next) => {
+  try {
+    // Find the details of the opened tool
+    const openedTool = await service.findOne({
+      where: { slug: req.params.slug },
+      // attributes: ["id", "title", "description", "image", "price", "slug"],
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+        },
+      ],
+    });
+
+    if (!openedTool) {
+      throw createError(404, "Tool not found");
+    }
+
+    // Find tools that have the same category as the opened tool
+    const categoryIds = openedTool.toolCategories.map(
+      (toolCategory) => toolCategory.categoryId
+    );
+
+    const { price, ...query } = req.query;
+
+    if (price && !["Free", "Freemium", "Premium"].includes(price)) {
+      return next(createHttpError(404, "Invalid value , route not found!"));
+    }
+
+    // Dynamically create conditions based on the selected price
+    const priceConditions = {
+      Free: { [Op.in]: ["Free", "Freemium"] },
+      Freemium: { [Op.in]: ["Freemium"] },
+      Premium: { [Op.in]: ["Freemium", "Premium"] },
+    };
+    const priceFilter = price ? { price: priceConditions[price] } : undefined;
+
+    const where = {};
+
+    where["$toolCategories.categoryId$"] = { [Op.in]: categoryIds };
+
+    // Find tools with the same category  IDs
+    const data = await service.count({
+      ...sqquery(
+        query,
+        {
+          slug: { [Op.ne]: req.params.slug },
+          release: {
+            [Op.lte]: moment(), // Less than or equal to the current date
+          },
+          ...priceFilter,
+        },
+        ["title"]
+      ),
+      distinct: true, // Add this option to ensure accurate counts
+
+      include: [
+        {
+          model: ToolCategory,
+          attributes: ["categoryId"],
+          ...query,
+          where,
+        },
+      ],
+    });
+
+    res.status(200).json({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getAlternativeDynamicTools = async (req, res, next) => {
   try {

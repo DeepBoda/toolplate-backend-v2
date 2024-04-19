@@ -97,7 +97,7 @@ exports.trimUrl = (url) => {
     const { pathname, search } = new URL(url);
     return `${pathname}${search}`;
   } catch (error) {
-    console.error("Error parsing URL:", error);
+    // console.log("Error parsing URL:", error);
     return url;
   }
 };

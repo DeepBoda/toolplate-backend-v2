@@ -1,8 +1,12 @@
 "use strict";
-const service = require("./service");
+
+const sequelize = require("../../config/db");
 const toolService = require("../tool/service");
+const service = require("./service");
 const ToolCategory = require("../toolCategory/model");
 const Category = require("../category/model");
+const { Op } = require("sequelize");
+const moment = require("moment");
 
 const DataEntrySeo = async () => {
   try {
@@ -15,38 +19,52 @@ const DataEntrySeo = async () => {
       },
     });
 
-    for (let i in Tools) {
-      // const title = `${Tools[i].title} AI - Key Features, Reviews, Pricing, & Alternative Tools`;
-      const categoryNames = Tools[i].toolCategories
-        .map((c) => c.category.name)
-        .join(" and ");
-      const description = `Explore ${Tools[i].title} on Toolplate: a ${(Tools[
-        i
-      ].price = "Premium"
-        ? "Paid"
-        : Tools[i]
-            .price)} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
-        Tools[i].title
-      }. Your one-stop resource for ${Tools[i].title} insights`;
+    for (let tool of Tools) {
+      const categoryIds = tool.toolCategories.map(
+        (toolCategory) => toolCategory.categoryId
+      );
+      const where = {};
+
+      where["$toolCategories.categoryId$"] = { [Op.in]: categoryIds };
+      // Find tools with the same category  IDs
+      const alternativesCount = await toolService.count({
+        where: {
+          id: { [Op.ne]: tool.id },
+          release: {
+            [Op.lte]: moment(),
+          },
+        },
+        distinct: true, // Add this option to ensure accurate counts
+        include: [
+          {
+            model: ToolCategory,
+            attributes: ["categoryId"],
+            where,
+          },
+        ],
+      });
+
+      const title = `Top ${alternativesCount} Alternatives to ${tool.title} | Toolplate`;
+      const description = `Discover "${alternativesCount}" AI-powered alternatives to ${tool.title}. Explore different options to enhance productivity and efficiency on Toolplate.ai.`;
 
       const payload = {
-        // title: title,
+        title: title,
         description: description,
       };
-
+      // console.log("------", payload);
       // Find the existing record
       const existingData = await service.findOne({
-        where: { toolId: Tools[i].id },
+        where: { toolId: tool.id },
       });
 
       if (existingData) {
         // If the record exists, update it with new data
-        await service.update(payload, { where: { toolId: Tools[i].id } });
-        console.log("SEO entry updated for tool ", Tools[i].id);
+        await service.update(payload, { where: { toolId: tool.id } });
+        console.log("SEO entry updated for tool ", tool.id);
       } else {
         // If the record doesn't exist, create a new one
-        await service.create({ toolId: Tools[i].id, ...payload });
-        console.log("New SEO entry created for tool ", Tools[i].id);
+        await service.create({ toolId: tool.id, ...payload });
+        console.log("New SEO entry created for tool ", tool.id);
       }
     }
   } catch (error) {
@@ -54,33 +72,5 @@ const DataEntrySeo = async () => {
   }
 };
 
-// DataEntrySeo();
-
-const updateTitles = async () => {
-  try {
-    const tools = await service.findAll({
-      attributes: ["id", "title", "description"],
-    });
-
-    for (const tool of tools) {
-      const TIT = tool.title.replace(/\s{2,}/g, " ");
-      const DESC = tool.description.replace(/\s{2,}/g, " ");
-
-      // Update the tool title
-      await service.update(
-        {
-          title: TIT,
-          description: DESC,
-        },
-        { where: { id: tool.id } }
-      );
-      console.log(`Title updated for tool ${tool.id}`);
-    }
-
-    console.log("All titles updated successfully!");
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-updateTitles();
+// To run the function
+DataEntrySeo();

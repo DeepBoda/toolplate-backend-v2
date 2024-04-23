@@ -16,6 +16,7 @@ router.route("/view/:id").get(authMiddleware, tool.createView);
 router.route("/related/category/:slug").get(tool.getRelatedCategories);
 router.route("/related/:slug").get(tool.getRelatedTools);
 router.route("/related-data/:slug").get(tool.getRelatedToolsDynamic);
+router.route("/alt/slugs").get(tool.getSlugsForAlterativeSitemap);
 router.route("/alt/count/:slug").get(tool.getAlternativeToolsCount);
 router.route("/alt/:slug").get(tool.getAlternativeTools);
 router.route("/alt-data/:slug").get(tool.getAlternativeDynamicTools);

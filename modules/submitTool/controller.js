@@ -17,13 +17,23 @@ const {
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
+    if (req.files) {
+      // Check if  (logo) uploaded and if got URL
+      if (req.files.logo) {
+        req.body.logo = req.files.logo[0].location;
+      }
+      if (req.files.previews) {
+        req.body.previews = req.files.previews.map((el) => el.location);
+      }
+    }
+
     req.body.userId = req.requestor ? req.requestor.id : null;
     const { categories, ...bodyData } = req.body;
 
     const data = await service.create(bodyData);
 
     // Step 1: Add entries in the `toolCategory` table using bulk insert
-    const categoryBulkInsertData = categories.map((categoryId) => ({
+    const categoryBulkInsertData = JSON.parse(categories).map((categoryId) => ({
       submitToolId: data.id,
       categoryId,
     }));
@@ -57,7 +67,7 @@ exports.getAll = async (req, res, next) => {
     // If the categories is not found in the cache
     const data = await service.findAndCountAll({
       ...sqquery(req.query, {}, ["title"]),
-      attributes: submitToolAttributes,
+      // attributes: submitToolAttributes,
       include: {
         model: SubmitToolCategory,
         attributes: ["categoryId"],

@@ -75,7 +75,6 @@ const SubmitTool = sequelize.define(
     },
     message: {
       type: DataTypes.TEXT,
-      allowNull: false,
     },
     status: {
       type: DataTypes.STRING,

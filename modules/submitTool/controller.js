@@ -30,13 +30,9 @@ exports.add = async (req, res, next) => {
     req.body.userId = req.requestor ? req.requestor.id : null;
     const { categories, ...bodyData } = req.body;
 
-    console.log("categories : ", categories);
-    console.log("categories type : ", typeof categories);
-
-    const categoryIds = categories.split(",").map(Number);
-    console.log("categoryIds : ", categoryIds);
     const data = await service.create(bodyData);
 
+    const categoryIds = categories.split(",").map(Number);
     // Step 1: Add entries in the `toolCategory` table using bulk insert
     const categoryBulkInsertData = categoryIds.map((categoryId) => ({
       submitToolId: data.id,

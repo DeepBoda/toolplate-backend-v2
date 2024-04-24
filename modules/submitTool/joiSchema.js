@@ -13,7 +13,7 @@ module.exports = {
     video: Joi.string(),
     previews: Joi.string(),
     overview: Joi.string(),
-    message: Joi.string().required(),
+    message: Joi.string(),
     status: Joi.string().valid("Pending", "OnGoing", "Approved", "Denied"),
     categories: Joi.string().required(),
   }),

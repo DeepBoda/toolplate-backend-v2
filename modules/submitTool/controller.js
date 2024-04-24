@@ -30,6 +30,9 @@ exports.add = async (req, res, next) => {
     req.body.userId = req.requestor ? req.requestor.id : null;
     const { categories, ...bodyData } = req.body;
 
+    console.log("categories : ", categories);
+    console.log("categories type : ", typeof categories);
+
     const data = await service.create(bodyData);
 
     // Step 1: Add entries in the `toolCategory` table using bulk insert

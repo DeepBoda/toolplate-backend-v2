@@ -72,22 +72,7 @@ app.use(compression({ threshold: 1024 }));
 // Use helmet middleware to set various security headers
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["*"],
-        scriptSrc: ["*"],
-        styleSrc: ["*"],
-        imgSrc: ["*"],
-        connectSrc: ["*"],
-        fontSrc: ["*"],
-        objectSrc: ["*"],
-        mediaSrc: ["*"],
-        frameSrc: ["*"],
-      },
-    },
-    crossOriginEmbedderPolicy: false, // Disables the COEP header
-    crossOriginOpenerPolicy: { policy: "unsafe-none" }, // Disables the COOP header
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // Sets CORP header to allow cross-origin resources
+    contentSecurityPolicy: false, // Disable CSP entirely for testing purposes
   })
 );
 

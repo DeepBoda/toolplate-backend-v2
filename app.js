@@ -75,6 +75,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "*"],
       },
     },
     hsts: {

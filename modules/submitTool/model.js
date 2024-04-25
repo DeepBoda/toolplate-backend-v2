@@ -32,6 +32,10 @@ const SubmitTool = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+
+    logo: {
+      type: DataTypes.STRING,
+    },
     title: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -40,9 +44,37 @@ const SubmitTool = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    video: {
+      type: DataTypes.STRING,
+    },
+    previews: {
+      type: DataTypes.JSON,
+      get: function () {
+        const storedValue = this.getDataValue("previews");
+        return storedValue || [];
+      },
+      set: function (data) {
+        // If data is a string, attempt to parse it as JSON
+        if (typeof data === "string") {
+          try {
+            data = JSON.parse(data);
+          } catch (error) {
+            console.error("Error parsing previews field:", error);
+            data = [];
+          }
+        }
+        // Ensure data is an array
+        if (!Array.isArray(data)) {
+          data = [data];
+        }
+        return this.setDataValue("previews", data);
+      },
+    },
+    overview: {
+      type: DataTypes.TEXT("long"),
+    },
     message: {
       type: DataTypes.TEXT,
-      allowNull: false,
     },
     status: {
       type: DataTypes.STRING,

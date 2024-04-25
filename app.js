@@ -74,24 +74,20 @@ app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'"],
-        imgSrc: ["'self'", "*"],
+        defaultSrc: ["*"],
+        scriptSrc: ["*"],
+        styleSrc: ["*"],
+        imgSrc: ["*"],
+        connectSrc: ["*"],
+        fontSrc: ["*"],
+        objectSrc: ["*"],
+        mediaSrc: ["*"],
+        frameSrc: ["*"],
       },
     },
-    hsts: {
-      maxAge: 31536000, // 1 year in seconds
-      includeSubDomains: true,
-      preload: true,
-    },
-    frameguard: { action: "deny" },
-    referrerPolicy: { policy: "same-origin" },
-    expectCt: { maxAge: 0, enforce: false },
-    hidePoweredBy: false,
-    ieNoOpen: false,
-    noSniff: true,
-    permittedCrossDomainPolicies: false,
-    crossOriginOpenerPolicy: "unsafe-none",
-    crossOriginEmbedderPolicy: "unsafe-none",
+    crossOriginEmbedderPolicy: false, // Disables the COEP header
+    crossOriginOpenerPolicy: { policy: "unsafe-none" }, // Disables the COOP header
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // Sets CORP header to allow cross-origin resources
   })
 );
 

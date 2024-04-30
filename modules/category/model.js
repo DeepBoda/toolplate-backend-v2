@@ -30,6 +30,12 @@ const Category = sequelize.define(
     image: {
       type: DataTypes.STRING,
     },
+    metaTitle: {
+      type: DataTypes.STRING,
+    },
+    metaDescription: {
+      type: DataTypes.TEXT,
+    },
   },
   {
     paranoid: true,

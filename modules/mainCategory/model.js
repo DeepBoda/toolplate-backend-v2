@@ -33,7 +33,7 @@ const MainCategory = sequelize.define(
       type: DataTypes.STRING,
     },
     metaDescription: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT("long"),
     },
   },
   {

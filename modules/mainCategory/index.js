@@ -8,6 +8,7 @@ router.use(authMiddleware,)
 router.route("/").get(MainCategory.getAll);
 router.route("/submit").get(MainCategory.getAllForSubmit);
 router.route("/slugs").get(MainCategory.getSlugsForSitemap);
+router.route("/meta/:slug").get(MainCategory.getMetadata);
 router.route("/:slug").get(MainCategory.getBySlug);
 
 

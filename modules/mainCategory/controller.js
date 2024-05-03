@@ -167,6 +167,29 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+exports.getMetadata = async (req, res, next) => {
+  try {
+    const cacheKey = `main-category?meta=${req.params.slug}`;
+    let data = await redisService.get(cacheKey);
+
+    if (!data) {
+      data = await service.findOne({
+        where: {
+          slug: req.params.slug,
+        },
+        attributes: ["id", "slug", "metaTitle", "metaDescription"],
+      });
+      redisService.set(cacheKey, data);
+    }
+
+    res.status(200).send({
+      status: "success",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 exports.getBySlug = async (req, res, next) => {
   try {
     const cacheKey = `main-category?slug=${req.params.slug}`;
@@ -218,6 +241,7 @@ exports.update = async (req, res, next) => {
     }
     // Clear Redis cache
     redisService.del(`main-category?slug=${oldData?.slug}`);
+    redisService.del(`main-category?meta=${oldData?.slug}`);
     redisService.del(`main-categories`);
     redisService.del(`main-submit`);
 
@@ -247,6 +271,7 @@ exports.delete = async (req, res, next) => {
     // Wait for the service deletion and start both background deletions
     await Promise.all([
       redisService.del(`main-category?slug=${data.slug}`),
+      redisService.del(`main-category?meta=${data.slug}`),
       redisService.del(`main-categories`),
       redisService.del(`main-submit`),
     ]);

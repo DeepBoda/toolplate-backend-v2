@@ -143,6 +143,8 @@ exports.categoryAttributes = [
   "image",
   "slug",
   "description",
+  "metaTitle",
+  "metaDescription",
   "mainCategoryId",
   "createdAt",
 ];
@@ -230,6 +232,8 @@ exports.categoryAdminAttributes = [
   "image",
   "slug",
   "description",
+  "metaTitle",
+  "metaDescription",
   "mainCategoryId",
   "createdAt",
 ];
@@ -239,7 +243,8 @@ exports.mainCategoryAdminAttributes = [
   "image",
   "slug",
   "description",
-  "description",
+  "metaTitle",
+  "metaDescription",
   "createdAt",
 ];
 exports.listingCategoryAdminAttributes = ["id", "name", "slug", "createdAt"];

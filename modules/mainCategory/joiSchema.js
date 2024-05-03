@@ -7,6 +7,8 @@ module.exports = {
     description: Joi.string().allow(null),
     overview: Joi.string().allow(null),
     bottomOverview: Joi.string().allow(null),
+    metaTitle: Joi.string().allow(null),
+    metaDescription: Joi.string().allow(null),
     categoryId: Joi.number(),
   }),
   update: Joi.object().keys({
@@ -15,6 +17,8 @@ module.exports = {
     description: Joi.string().allow(null),
     overview: Joi.string().allow(null),
     bottomOverview: Joi.string().allow(null),
+    metaTitle: Joi.string().allow(null),
+    metaDescription: Joi.string().allow(null),
     categoryId: Joi.number(),
   }),
 };

@@ -29,6 +29,12 @@ const MainCategory = sequelize.define(
     slug: {
       type: DataTypes.STRING,
     },
+    metaTitle: {
+      type: DataTypes.STRING,
+    },
+    metaDescription: {
+      type: DataTypes.TEXT("long"),
+    },
   },
   {
     paranoid: true,

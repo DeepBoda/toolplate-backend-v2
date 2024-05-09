@@ -22,7 +22,7 @@ exports.validateAPIKey = async (req, res, next) => {
     if (apiKey === validAPIKey) {
       next();
     } else {
-      res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ status: 401, error: "Unauthorized" });
     }
   } catch (error) {
     res.status(400).json({ error: error.message });

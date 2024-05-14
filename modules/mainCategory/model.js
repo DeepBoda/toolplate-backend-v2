@@ -35,6 +35,17 @@ const MainCategory = sequelize.define(
     metaDescription: {
       type: DataTypes.TEXT("long"),
     },
+    faqs: {
+      type: DataTypes.TEXT,
+      get: function () {
+        return this.getDataValue("faqs")
+          ? JSON.parse(this.getDataValue("faqs"))
+          : [];
+      },
+      set: function (val) {
+        return this.setDataValue("faqs", JSON.stringify(val));
+      },
+    },
   },
   {
     paranoid: true,

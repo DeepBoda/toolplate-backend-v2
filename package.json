@@ -32,8 +32,8 @@
     }
   ],
   "scripts": {
-    "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www",
+    "start": "node --max-old-space-size=4096 ./bin/www",
+    "dev": "nodemon --max-old-space-size=4096 ./bin/www",
     "migration:run": "npx sequelize-cli db:migrate",
     "migration:undo": "npx sequelize-cli db:migrate:undo",
     "migration:undo:all": "npx sequelize-cli db:migrate:undo:all",

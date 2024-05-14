@@ -10,6 +10,7 @@ module.exports = {
     metaTitle: Joi.string().allow(null),
     metaDescription: Joi.string().allow(null),
     categoryId: Joi.number(),
+    faqs: Joi.string(),
   }),
   update: Joi.object().keys({
     name: Joi.string(),
@@ -20,5 +21,6 @@ module.exports = {
     metaTitle: Joi.string().allow(null),
     metaDescription: Joi.string().allow(null),
     categoryId: Joi.number(),
+    faqs: Joi.string(),
   }),
 };

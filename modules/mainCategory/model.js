@@ -38,12 +38,21 @@ const MainCategory = sequelize.define(
     faqs: {
       type: DataTypes.TEXT,
       get: function () {
-        return this.getDataValue("faqs")
-          ? JSON.parse(this.getDataValue("faqs"))
-          : [];
+        const storedValue = this.getDataValue("faqs");
+        return storedValue || [];
       },
       set: function (val) {
-        return this.setDataValue("faqs", JSON.stringify(val));
+        // If data is a string, attempt to parse it as JSON
+        if (typeof data === "string") {
+          try {
+            data = JSON.parse(data);
+          } catch (error) {
+            console.error("Error parsing cons field:", error);
+            data = [];
+          }
+        }
+
+        this.setDataValue("faqs", data);
       },
     },
   },

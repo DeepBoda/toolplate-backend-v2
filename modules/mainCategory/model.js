@@ -35,6 +35,29 @@ const MainCategory = sequelize.define(
     metaDescription: {
       type: DataTypes.TEXT("long"),
     },
+    faqs: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      get: function () {
+        const storedValue = this.getDataValue("faqs");
+        return storedValue || [];
+      },
+      set: function (val) {
+        if (typeof val === "string") {
+          try {
+            val = JSON.parse(val);
+          } catch (error) {
+            console.error("Error parsing faqs field:", error);
+            val = [];
+          }
+        }
+        // Ensure data is an array
+        if (!Array.isArray(val)) {
+          val = [val];
+        }
+        return this.setDataValue("faqs", val);
+      },
+    },
   },
   {
     paranoid: true,

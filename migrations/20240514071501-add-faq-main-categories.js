@@ -3,7 +3,7 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.addColumn("mainCategories", "faqs", {
-      type: Sequelize.TEXT,
+      type: Sequelize.JSON,
     });
   },
 

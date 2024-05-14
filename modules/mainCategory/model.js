@@ -36,7 +36,7 @@ const MainCategory = sequelize.define(
       type: DataTypes.TEXT("long"),
     },
     faqs: {
-      type: DataTypes.TEXT,
+      type: DataTypes.JSON,
       get: function () {
         const storedValue = this.getDataValue("faqs");
         return storedValue || [];

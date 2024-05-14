@@ -37,6 +37,7 @@ const MainCategory = sequelize.define(
     },
     faqs: {
       type: DataTypes.JSON,
+      defaultValue: [],
       get: function () {
         const storedValue = this.getDataValue("faqs");
         return storedValue || [];
@@ -50,7 +51,11 @@ const MainCategory = sequelize.define(
             val = [];
           }
         }
-        this.setDataValue("faqs", val);
+        // Ensure data is an array
+        if (!Array.isArray(data)) {
+          data = [data];
+        }
+        return this.setDataValue("faqs", data);
       },
     },
   },

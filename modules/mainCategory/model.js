@@ -52,8 +52,8 @@ const MainCategory = sequelize.define(
           }
         }
         // Ensure data is an array
-        if (!Array.isArray(data)) {
-          data = [data];
+        if (!Array.isArray(val)) {
+          val = [val];
         }
         return this.setDataValue("faqs", data);
       },

@@ -6,6 +6,8 @@ const { usersqquery, sqquery } = require("../../utils/query");
 const MainCategory = require("../mainCategory/model");
 const { trimUrl } = require("../../utils/service");
 
+const CACHE_EXPIRATION = 3600; // Cache expiration time in seconds (1 hour)
+
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
   try {
@@ -30,7 +32,7 @@ exports.getAll = async (req, res, next) => {
     // If the redirection are not found in the cache
     if (!data) {
       data = await service.findAndCountAll(usersqquery(req.query));
-      redisService.set(`redirection`, data);
+      await redisService.set(`redirection`, data, CACHE_EXPIRATION);
     }
 
     res.status(200).send({
@@ -68,7 +70,7 @@ exports.getOneByUrl = async (req, res, next) => {
       data = await service.findOne({
         where: { old },
       });
-      redisService.set(`redirect-${old}`, data);
+      await redisService.set(`redirect-${old}`, data, CACHE_EXPIRATION);
     }
     res.status(200).send({
       status: "success",
@@ -106,8 +108,8 @@ exports.update = async (req, res, next) => {
       },
     });
 
-    redisService.del(`redirection`);
-    redisService.del(`redirect-*`);
+    await redisService.del(`redirection`);
+    await redisService.hDel(`redirect-*`);
 
     // Send the response
     res.status(200).json({
@@ -117,7 +119,6 @@ exports.update = async (req, res, next) => {
       },
     });
   } catch (error) {
-    // console.error(error);
     next(error);
   }
 };
@@ -129,7 +130,7 @@ exports.delete = async (req, res, next) => {
     // Delete record from the 'service' module and await the response
     const affectedRows = await service.delete({ where: { id } });
 
-    redisService.del(`redirection`);
+    await redisService.del(`redirection`);
 
     // Send response with the number of affected rows
     res.status(200).send({
@@ -139,7 +140,6 @@ exports.delete = async (req, res, next) => {
       },
     });
   } catch (error) {
-    // Pass error to the next middleware
     next(error);
   }
 };

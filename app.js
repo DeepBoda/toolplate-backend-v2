@@ -1,8 +1,8 @@
+/* eslint-disable no-undef */
 "use strict";
 
 const express = require("express");
 const path = require("path");
-const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const createError = require("http-errors");
 const cors = require("cors");
@@ -37,7 +37,6 @@ app.use(express.static(path.join(__dirname, "public")));
 const sequelize = require("./config/db");
 
 // IP Whitelist middleware (assuming it's implemented correctly)
-const ipWhitelist = require("./middlewares/ipWhitelist");
 
 // Configure CORS
 const frontendDomains = isProduction
@@ -92,7 +91,7 @@ if (force) {
       if (input.toLowerCase() === "yes" || input.toLowerCase() === "y") {
         sequelize
           .sync({ force: true })
-          .then((result) => {
+          .then(() => {
             console.log(`✔ Database connected successfully! 🎯`);
             readline.close(); // Close the readline interface after the user's response
           })
@@ -118,7 +117,7 @@ if (force) {
 }
 
 // Error handler for the entire app
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   // Handle specific error types
   if (err.name === "SequelizeUniqueConstraintError") {
     err.status = 409;

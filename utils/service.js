@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 "use strict";
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
@@ -19,7 +20,8 @@ exports.jwtDecoder = async (token) => {
   try {
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
-  } catch (error) {
+  } catch (err) {
+    console.log(err);
     throw new Error("Enter Valid Jwt Token", 400);
   }
 };
@@ -27,7 +29,8 @@ exports.jwtDecoderForBody = async (token) => {
   try {
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
-  } catch (error) {
+  } catch (err) {
+    console.log(err);
     throw new Error("Invalid token or missing data", 400);
   }
 };
@@ -68,7 +71,8 @@ exports.createFirebaseUser = async (decodedToken) => {
       displayName: decodedToken.username,
     });
     return firebaseUser;
-  } catch (error) {
+  } catch (err) {
+    console.log(err);
     throw new Error("Error creating Firebase user");
   }
 };
@@ -78,7 +82,8 @@ exports.verifyFirebaseUserToken = async (firebase_token) => {
     const firebaseUser = await admin.auth().verifyIdToken(firebase_token);
 
     return firebaseUser;
-  } catch (error) {
+  } catch (err) {
+    console.log(err);
     throw new Error("Error verifying Firebase user token");
   }
 };
@@ -87,7 +92,8 @@ exports.deleteFirebaseUser = async (uid) => {
   try {
     await admin.auth().deleteUser(uid);
     console.log("Firebase User deleted.");
-  } catch (error) {
+  } catch (err) {
+    console.log(err);
     throw new Error("Error deleting Firebase user");
   }
 };
@@ -96,8 +102,8 @@ exports.trimUrl = (url) => {
   try {
     const { pathname, search } = new URL(url);
     return `${pathname}${search}`;
-  } catch (error) {
-    // console.log("Error parsing URL:", error);
+  } catch (err) {
+    console.log("Error parsing URL:", err);
     return url;
   }
 };

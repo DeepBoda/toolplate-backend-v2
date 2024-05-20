@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 "use strict";
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
@@ -5,8 +6,8 @@ const moment = require("moment");
 const createError = require("http-errors");
 const slugify = require("slugify");
 const service = require("./service");
-const { pushNotificationTopic } = require("../../service/firebase");
-const notificationService = require("../notification/service");
+// const { pushNotificationTopic } = require("../../service/firebase");
+// const notificationService = require("../notification/service");
 const redisService = require("../../utils/redis");
 const seoService = require("../toolSeo/service");
 const viewService = require("../toolView/service");
@@ -109,10 +110,9 @@ exports.add = async (req, res, next) => {
     const seoData = {
       toolId: tool.id,
       title: `${tool.title} AI Reviews, Features, Pricing, & Alternative Tools`,
-      description: `Explore ${tool.title} on Toolplate: a ${(tool.price =
-        "Premium"
-          ? "Paid"
-          : tool.price)} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
+      description: `Explore ${tool.title} on Toolplate: a ${
+        tool.price == "Premium" ? "Paid" : tool.price
+      } ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
         tool.title
       }. Your one-stop resource for ${tool.title} insights`,
     };
@@ -914,7 +914,7 @@ exports.getRelatedTools = async (req, res, next) => {
       (toolCategory) => toolCategory.categoryId
     );
 
-    const userId = req.requestor ? req.requestor.id : null;
+    // const userId = req.requestor ? req.requestor.id : null;
 
     // Find tools with the same category  IDs
     const relatedTools = await service.findAll({
@@ -1547,12 +1547,9 @@ exports.update = async (req, res, next) => {
     const categoryNames = cats.map((category) => category.name).join(" and ");
     const seoData = {
       // title: `${req.body.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
-      description: `Explore ${
-        req.body.title
-      } on Toolplate: a ${(req.body.price = "Premium"
-        ? "Paid"
-        : req.body
-            .price)} ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
+      description: `Explore ${req.body.title} on Toolplate: a ${
+        req.body.price == "Premium" ? "Paid" : req.body.price
+      } ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
         req.body.title
       }. Your one-stop resource for ${req.body.title} insights`,
     };
@@ -1605,24 +1602,3 @@ exports.delete = async (req, res, next) => {
     next(error);
   }
 };
-
-const makeSLug = async (req, res, next) => {
-  try {
-    const allTool = await service.findAll({
-      attributes: ["id", "title"],
-    });
-
-    for (let i in allTool) {
-      let slug = slugify(allTool[i].title, {
-        replacement: "-", // replace spaces with hyphens
-        lower: true, // convert to lowercase
-        remove: /[*+~()'"!:@/?\\]/g, // Remove special characters
-      });
-      allTool[i].slug = slug;
-      allTool[i].save();
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-// makeSLug();

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 "use strict";
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 

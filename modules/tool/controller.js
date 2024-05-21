@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 "use strict";
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");

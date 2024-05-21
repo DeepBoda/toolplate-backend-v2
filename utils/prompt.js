@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 const OpenAI = require("openai");
 
 const openai = new OpenAI({

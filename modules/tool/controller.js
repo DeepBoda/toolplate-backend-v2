@@ -1,4 +1,3 @@
- 
 "use strict";
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
@@ -1456,11 +1455,13 @@ exports.getSlugsForAlterativeSitemap = async (req, res, next) => {
     // If the tools are not found in the cache
     const tools = await service.findAll();
 
-    // Generate slugs for each tool
-    const toolSlugs = tools.map((tool) => ({
-      slug: `${url}/tool/alternative/${tool.slug}`,
-      updatedAt: tool.updatedAt, // Assuming updatedAt is a field in your blog model
-    }));
+    const toolSlugs = tools.flatMap((tool) =>
+      ["", "/free", "/premium", "/freemium"].map((suffix) => ({
+        slug: `${url}/tool/alternative/${tool.slug}${suffix}`,
+        updatedAt: tool.updatedAt,
+      }))
+    );
+
     // Send the response
     res.status(200).json({
       status: "success",

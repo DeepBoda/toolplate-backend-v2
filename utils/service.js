@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 "use strict";
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");

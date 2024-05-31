@@ -1,10 +1,9 @@
 "use strict";
 
 const admin = require("../config/firebaseConfig");
-const notificationService = require("../modules/notification/service");
 
 // Function to send a notification to a single device
-exports.pushNotificationTo = async (to, title, body, click_action, userId) => {
+exports.pushNotificationTo = async (to, title, body, click_action) => {
   const message = {
     token: to,
     notification: {

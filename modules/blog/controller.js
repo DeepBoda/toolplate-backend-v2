@@ -1,9 +1,9 @@
+ 
 "use strict";
 const { Op } = require("sequelize");
 const sequelize = require("../../config/db");
 const moment = require("moment");
 const createError = require("http-errors");
-const slugify = require("slugify");
 const service = require("./service");
 const { pushNotificationTopic } = require("../../service/firebase");
 const notificationService = require("../notification/service");
@@ -922,24 +922,3 @@ exports.delete = async (req, res, next) => {
     next(error);
   }
 };
-
-const makeSLug = async (req, res, next) => {
-  try {
-    const allBlog = await service.findAll({
-      attributes: ["id", "title"],
-    });
-
-    for (let i in allBlog) {
-      let slug = slugify(allBlog[i].title, {
-        replacement: "-", // Replace spaces with hyphens
-        lower: true, // Convert to lowercase
-        remove: /[*+~.()'"!:@/?\\[\],{}]/g, // Remove special characters
-      });
-      allBlog[i].slug = slug;
-      allBlog[i].save();
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-// makeSLug();

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+ 
 const client = require("../config/esClient");
 const toolService = require("../modules/tool/service");
 const categoryService = require("../modules/category/service");

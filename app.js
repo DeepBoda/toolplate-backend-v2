@@ -1,6 +1,7 @@
+"use strict";
+
 const express = require("express");
 const path = require("path");
-const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const createError = require("http-errors");
 const cors = require("cors");
@@ -16,29 +17,25 @@ const serviceToken = isProduction
   ? process.env.WOOFFER_SERVICE
   : process.env.WOOFFER_SERVICE_DEV;
 
-// // Add V8 heap statistics logging
-// const v8 = require("v8");
-// console.log(v8.getHeapCodeStatistics());
-// console.log(v8.getHeapStatistics());
-
 const app = express();
 
 wooffer(token, serviceToken);
 app.use(wooffer.requestMonitoring);
 
-// Configure environment-specific settings
-
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use(bodyParser.json());
 // Middleware for parsing cookies
 app.use(cookieParser());
 
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
+
+// Database connection
 const sequelize = require("./config/db");
+
+// IP Whitelist middleware (assuming it's implemented correctly)
 
 // Configure CORS
 const frontendDomains = isProduction
@@ -62,9 +59,8 @@ const corsOptions = {
 //   origin: "*",
 // };
 
-// Enable CORS for all routes (preflight and regular requests)
+// Enable CORS for all routes
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 // Apply compression only if response size is above 1KB
 app.use(compression({ threshold: 1024 }));
@@ -72,30 +68,13 @@ app.use(compression({ threshold: 1024 }));
 // Use helmet middleware to set various security headers
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Disable CSP entirely for testing purposes
+    contentSecurityPolicy: false, // Customize CSP as needed
   })
 );
 
-// Define your IP whitelist based on the environment
-const allowedIPs = isProduction
-  ? process.env.PROD_ALLOWED_IPS.split(",")
-  : process.env.DEV_ALLOWED_IPS.split(",");
-
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);
-// app.use((req, res, next) => {
-//   const clientIP = req.ip; // Get the client's IP address
-//   // console.log("req : ", req);
-//   console.log("client IP: ", clientIP);
-//   console.log("req IP: ", req.socket.remoteAddress);
-
-//   if (allowedIPs.includes(clientIP)) {
-//     next(); // Allow the request to proceed to the next middleware
-//   } else {
-//     next();
-//     // res.status(403).send("Access denied. Your IP is not whitelisted.");
-//   }
-// });
+// app.use(ipWhitelist); // Uncomment if IP whitelisting is needed
 
 // Middleware for API key validation
 const { validateAPIKey } = require("./middlewares/auth");
@@ -103,7 +82,6 @@ app.use(validateAPIKey);
 
 // Define your routes
 const indexRouter = require("./routes");
-const logService = require("./modules/log/service");
 app.use("/", indexRouter);
 
 // Catch all routes that don't match any other routes and return 404 error
@@ -126,7 +104,7 @@ if (force) {
       if (input.toLowerCase() === "yes" || input.toLowerCase() === "y") {
         sequelize
           .sync({ force: true })
-          .then((result) => {
+          .then(() => {
             console.log(`✔ Database connected successfully! 🎯`);
             readline.close(); // Close the readline interface after the user's response
           })
@@ -143,16 +121,16 @@ if (force) {
   sequelize
     // .sync()
     .authenticate()
-    .then(async (result) => {
+    .then(async () => {
       console.log(`✔ Database connection successful! 🎯`);
     })
     .catch((error) => {
-      console.error("Error while creating tables...\n", error);
+      console.error("Error while connecting to the database...\n", error);
     });
 }
 
 // Error handler for the entire app
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   // Handle specific error types
   if (err.name === "SequelizeUniqueConstraintError") {
     err.status = 409;
@@ -194,23 +172,10 @@ app.use((err, req, res, next) => {
     message: err.message || "Unknown Error",
   });
 
+  // Additional logging for error monitoring
   app.use((err, req, res, next) => {
     try {
-      // // Conditional Logging
-      // if (err.status >= 500 || res.statusCode >= 500) {
-      //   // Assuming responseInClientSlack returns a promise
-      //    responseInClientSlack({
-      //     attachments: [
-      //       {
-      //         title: `error`,
-      //         text: `\n\nstatusCode: ${err?.status} \n\nMessage : ${err?.message}\n\n stack: ${err?.stack} \n\n user:${req?.requestor?.id}`,
-      //         color: "#FF0000",
-      //       },
-      //     ],
-      //   });
-      // }
-
-      // Assuming logService.create returns a promise
+      const logService = require("./modules/log/service");
       logService.create({
         method: req.method,
         url: req.url,
@@ -224,13 +189,11 @@ app.use((err, req, res, next) => {
         userId: req?.requestor?.id,
       });
     } catch (logError) {
-      // Handle errors that occur during logging gracefully.
-      // You might choose to log these errors to your server logs.
       console.error("Error while logging:", logError);
     }
 
-    // Re-throw the error to let the subsequent error-handling middleware handle it
-    throw err;
+    next(err);
   });
 });
+
 module.exports = app;

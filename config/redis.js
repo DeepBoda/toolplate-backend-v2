@@ -8,21 +8,20 @@ const redisClient = createClient({
   database: REDIS_DATABASE,
 });
 
-try {
-  // Connect to Redis
-  redisClient.connect();
+redisClient.on("ready", () => {
+  console.log(`Redis connected successfully to \x1b[32m[${REDIS_PORT}]\x1b[0m`);
+});
 
-  redisClient.on("ready", () => {
-    console.log(
-      `Redis connected successfully to \x1b[32m[${REDIS_PORT}]\x1b[0m`
-    );
-  });
+redisClient.on("error", (err) => {
+  console.error("Error in Redis Connection:", err);
+});
 
-  redisClient.on("error", (err) => {
-    console.error("Error in Redis Connection:", err);
-  });
-} catch (error) {
-  console.error("Error initializing Redis client:", error);
-}
+(async () => {
+  try {
+    await redisClient.connect();
+  } catch (error) {
+    console.error("Error initializing Redis client:", error);
+  }
+})();
 
 module.exports = redisClient;

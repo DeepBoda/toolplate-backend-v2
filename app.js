@@ -18,6 +18,7 @@ const serviceToken = isProduction
   : process.env.WOOFFER_SERVICE_DEV;
 
 const app = express();
+app.disable("x-powered-by");
 
 wooffer(token, serviceToken);
 app.use(wooffer.requestMonitoring);
@@ -66,11 +67,7 @@ app.use(cors(corsOptions));
 app.use(compression({ threshold: 1024 }));
 
 // Use helmet middleware to set various security headers
-app.use(
-  helmet({
-    contentSecurityPolicy: false, // Customize CSP as needed
-  })
-);
+app.use(helmet());
 
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);

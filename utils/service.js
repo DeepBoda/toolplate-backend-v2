@@ -1,4 +1,3 @@
- 
 "use strict";
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
@@ -103,7 +102,7 @@ exports.trimUrl = (url) => {
     const { pathname, search } = new URL(url);
     return `${pathname}${search}`;
   } catch (err) {
-    console.log("Error parsing URL:", err);
+    console.log("Error parsing URL:", url);
     return url;
   }
 };

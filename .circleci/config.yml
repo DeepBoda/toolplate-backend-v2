@@ -1,4 +1,5 @@
 version: 2.1
+
 jobs:
   deploy:
     docker:
@@ -8,3 +9,9 @@ jobs:
       - run:
           name: Run deploy script
           command: ./deploy.sh
+
+workflows:
+  version: 2
+  example:
+    jobs:
+      - deploy

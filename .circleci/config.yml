@@ -17,19 +17,18 @@ jobs:
             - "SHA256:X3RD1erbC+w6Iqz/fZoHZUrweUqOIny4BgOT1KAruPM"
       - run:
           name: SSH to EC2 and deploy
-          command: |
-            ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh" | tee deploy_output.txt
+          command: ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh > deploy_output.txt"
       - run:
           name: Notify Slack - Deployment Succeeded
           when: on_success
           command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt | jq -Rs .)
+            DEPLOY_OUTPUT=$(cat deploy_output.txt)
             curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Succeeded\nOutput:\n$DEPLOY_OUTPUT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - run:
           name: Notify Slack - Deployment Failed
           when: on_fail
           command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt | jq -Rs .)
+            DEPLOY_OUTPUT=$(cat deploy_output.txt)
             curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Failed\nOutput:\n$DEPLOY_OUTPUT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
 
 workflows:

@@ -11,7 +11,15 @@ jobs:
           command: |
             BRANCH=$(git rev-parse --abbrev-ref HEAD)
             COMMIT=$(git rev-parse --short HEAD)
-            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Started\nBranch: $BRANCH\nCommit: $COMMIT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            curl -X POST -H 'Content-type: application/json' --data "{
+              \"attachments\": [
+                {
+                  \"title\": \"Website Deployment Started\",
+                  \"text\": \"Branch: $BRANCH\nCommit: $COMMIT\",
+                  \"color\": \"#FFA500\"
+                }
+              ]
+            }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - add_ssh_keys:
           fingerprints:
             - "SHA256:X3RD1erbC+w6Iqz/fZoHZUrweUqOIny4BgOT1KAruPM"
@@ -25,14 +33,34 @@ jobs:
           name: Notify Slack - Deployment Succeeded
           when: on_success
           command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt)
-            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Succeeded\nOutput:\n$DEPLOY_OUTPUT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            DEPLOY_OUTPUT=$(cat deploy_output.txt | head -n 20)
+            DEPLOY_OUTPUT_FILE=$(cat deploy_output.txt | wc -l)
+            curl -X POST -H 'Content-type: application/json' --data "{
+              \"attachments\": [
+                {
+                  \"title\": \"Website Deployment Succeeded\",
+                  \"text\": \"Output:\n$DEPLOY_OUTPUT\n...\nTotal lines: $DEPLOY_OUTPUT_FILE\",
+                  \"color\": \"#7CD197\",
+                  \"mrkdwn_in\": [\"text\"]
+                }
+              ]
+            }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - run:
           name: Notify Slack - Deployment Failed
           when: on_fail
           command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt)
-            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Failed\nOutput:\n$DEPLOY_OUTPUT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            DEPLOY_OUTPUT=$(cat deploy_output.txt | head -n 20)
+            DEPLOY_OUTPUT_FILE=$(cat deploy_output.txt | wc -l)
+            curl -X POST -H 'Content-type: application/json' --data "{
+              \"attachments\": [
+                {
+                  \"title\": \"Website Deployment Failed\",
+                  \"text\": \"Output:\n$DEPLOY_OUTPUT\n...\nTotal lines: $DEPLOY_OUTPUT_FILE\",
+                  \"color\": \"#FF0000\",
+                  \"mrkdwn_in\": [\"text\"]
+                }
+              ]
+            }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
 
 workflows:
   version: 2

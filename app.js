@@ -17,7 +17,7 @@ const serviceToken = isProduction
   ? process.env.WOOFFER_SERVICE
   : process.env.WOOFFER_SERVICE_DEV;
 
-const app = express();
+// const app = express();
 app.disable("x-powered-by");
 
 wooffer(token, serviceToken);

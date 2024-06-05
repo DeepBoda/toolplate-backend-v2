@@ -1,20 +1,27 @@
 version: 2.1
 
-jobs:
-  deploy:
+executors:
+  docker-executor:
     docker:
       - image: cimg/base:stable
+        auth:
+          username: my-dockerhub-username
+          password: $DOCKERHUB_PASSWORD
+
+jobs:
+  deploy:
+    executor: docker-executor
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:X3RD1erbC+w6Iqz/fZoHZUrweUqOIny4BgOT1KAruPM"
       - run:
           name: Notify Slack - Deployment Started
           command: |
             BRANCH=$(git rev-parse --abbrev-ref HEAD)
             COMMIT=$(git rev-parse --short HEAD)
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Started\nBranch: '$BRANCH'\nCommit: '$COMMIT'"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
-      - add_ssh_keys:
-          fingerprints:
-            - "SHA256:X3RD1erbC+w6Iqz/fZoHZUrweUqOIny4BgOT1KAruPM"
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Started\nBranch: $BRANCH\nCommit: $COMMIT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - run:
           name: SSH to EC2 and deploy
           command: ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh"
@@ -23,12 +30,12 @@ jobs:
           when: on_success
           command: |
             AUDIT_RESULTS=$(npm audit --json)
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Succeeded\nAudit Results:\n'$AUDIT_RESULTS'"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Succeeded\nAudit Results:\n$AUDIT_RESULTS\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - run:
           name: Notify Slack - Deployment Failed
           when: on_fail
           command: |
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Failed"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Failed\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
 
 workflows:
   version: 2

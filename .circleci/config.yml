@@ -11,28 +11,26 @@ jobs:
           command: |
             BRANCH=$(git rev-parse --abbrev-ref HEAD)
             COMMIT=$(git rev-parse --short HEAD)
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Started\nBranch: '$BRANCH'\nCommit: '$COMMIT'"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Started\nBranch: $BRANCH\nCommit: $COMMIT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - add_ssh_keys:
           fingerprints:
             - "SHA256:X3RD1erbC+w6Iqz/fZoHZUrweUqOIny4BgOT1KAruPM"
       - run:
           name: SSH to EC2 and deploy
           command: |
-            DEPLOY_OUTPUT=$(ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh" 2>&1)
-            echo "$DEPLOY_OUTPUT"
-            echo "$DEPLOY_OUTPUT" > deploy_output.txt
+            ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh" | tee deploy_output.txt
       - run:
           name: Notify Slack - Deployment Succeeded
           when: on_success
           command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt)
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Succeeded\nOutput:\n'$DEPLOY_OUTPUT'"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            DEPLOY_OUTPUT=$(cat deploy_output.txt | jq -Rs .)
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Succeeded\nOutput:\n$DEPLOY_OUTPUT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - run:
           name: Notify Slack - Deployment Failed
           when: on_fail
           command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt)
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Failed\nOutput:\n'$DEPLOY_OUTPUT'"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            DEPLOY_OUTPUT=$(cat deploy_output.txt | jq -Rs .)
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"Website Deployment Failed\nOutput:\n$DEPLOY_OUTPUT\"}" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
 
 workflows:
   version: 2

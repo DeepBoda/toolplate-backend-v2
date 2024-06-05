@@ -6,10 +6,12 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:X3RD1erbC+w6Iqz/fZoHZUrweUqOIny4BgOT1KAruPM"
       - run:
-          name: Run deploy script
-          command: ./deploy.sh
-
+          name: SSH to EC2 and deploy
+          command: ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh"
 workflows:
   version: 2
   example:

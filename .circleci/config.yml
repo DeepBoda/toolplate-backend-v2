@@ -8,7 +8,9 @@ jobs:
       - run:
           name: Notify Slack - Deployment Started
           command: |
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Deployment process started."}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            COMMIT=$(git rev-parse --short HEAD)
+            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Started\nBranch: '$BRANCH'\nCommit: '$COMMIT'"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - checkout
       - add_ssh_keys:
           fingerprints:
@@ -21,12 +23,13 @@ jobs:
           name: Notify Slack - Deployment Succeeded
           when: on_success
           command: |
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Deployment completed successfully."}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            AUDIT_RESULTS=$(npm audit --json)
+            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Succeeded\nAudit Results:\n'$AUDIT_RESULTS'"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - run:
           name: Notify Slack - Deployment Failed
           when: on_fail
           command: |
-            curl -X POST -H 'Content-type: application/json' --data '{"text":"Deployment failed."}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+            curl -X POST -H 'Content-type: application/json' --data '{"text":"Website Deployment Failed"}' https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
 
 workflows:
   version: 2

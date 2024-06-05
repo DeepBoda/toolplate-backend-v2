@@ -17,7 +17,10 @@ jobs:
             - "SHA256:X3RD1erbC+w6Iqz/fZoHZUrweUqOIny4BgOT1KAruPM"
       - run:
           name: SSH to EC2 and deploy
-          command: ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh > deploy_output.txt"
+          command: ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh > /root/toolplate-backend/deploy_output.txt"
+      - run:
+          name: Download deploy_output.txt
+          command: scp -o StrictHostKeyChecking=no root@3.111.35.110:/root/toolplate-backend/deploy_output.txt .
       - run:
           name: Notify Slack - Deployment Succeeded
           when: on_success

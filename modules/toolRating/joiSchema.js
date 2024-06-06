@@ -11,6 +11,5 @@ module.exports = {
   update: Joi.object().keys({
     title: Joi.string(),
     review: Joi.string(),
-    rating: Joi.number(),
   }),
 };

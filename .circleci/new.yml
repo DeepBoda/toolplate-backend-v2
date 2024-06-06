@@ -62,10 +62,9 @@ jobs:
             }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
 
 workflows:
-  version: 2
   new:
     jobs:
-      - deploy:
+      - deployment:
           filters:
             branches:
               only: new

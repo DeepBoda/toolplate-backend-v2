@@ -49,13 +49,12 @@ jobs:
           name: Notify Slack - Deployment Failed
           when: on_fail
           command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt | head -n 20)
-            DEPLOY_OUTPUT_FILE=$(cat deploy_output.txt | wc -l)
+            DEPLOY_OUTPUT=$(cat deploy_output.txt)
             curl -X POST -H 'Content-type: application/json' --data "{
               \"attachments\": [
                 {
                   \"title\": \"Website Deployment Failed\",
-                  \"text\": \"Output:\n$DEPLOY_OUTPUT\n...\nTotal lines: $DEPLOY_OUTPUT_FILE\",
+                  \"text\": \"Output:\n$DEPLOY_OUTPUT\n",
                   \"color\": \"#FF0000\",
                   \"mrkdwn_in\": [\"text\"]
                 }

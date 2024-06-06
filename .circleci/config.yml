@@ -7,20 +7,20 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Notify Slack - Deployment Started
-        command: |
-          BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          COMMIT=$(git rev-parse --short HEAD)
-          AUTHOR=$(git log -1 --pretty=format:'%an <%ae>')
-          curl -X POST -H 'Content-type: application/json' --data "{
-            \"attachments\": [
-              {
-                \"title\": \"Website Deployment Started\",
-                \"text\": \"Branch: $BRANCH\nCommit: $COMMIT\nAuthor: $AUTHOR\",
-                \"color\": \"#F7CE46\"
-              }
-            ]
-          }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
+          name: Notify Slack - Deployment Started
+          command: |
+            BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            COMMIT=$(git rev-parse --short HEAD)
+            AUTHOR=$(git log -1 --pretty=format:'%an <%ae>')
+            curl -X POST -H 'Content-type: application/json' --data "{
+              \"attachments\": [
+                {
+                  \"title\": \"Backend Deployment Started...\",
+                  \"text\": \"Branch: $BRANCH\\nCommit: $COMMIT\\nAuthor: $AUTHOR\",
+                  \"color\": \"#F7CE46\"
+                }
+              ]
+            }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - add_ssh_keys:
           fingerprints:
             - "SHA256:X3RD1erbC+w6Iqz/fZoHZUrweUqOIny4BgOT1KAruPM"
@@ -38,8 +38,8 @@ jobs:
             curl -X POST -H 'Content-type: application/json' --data "{
               \"attachments\": [
                 {
-                  \"title\": \"Website Deployment Succeeded\",
-                  \"text\": \"Output:\n$DEPLOY_OUTPUT\",
+                  \"title\": \"Backend Deployment Succeeded!\",
+                  \"text\": \"Output:\\n$DEPLOY_OUTPUT\",
                   \"color\": \"#47BC63\",
                   \"mrkdwn_in\": [\"text\"]
                 }
@@ -53,8 +53,8 @@ jobs:
             curl -X POST -H 'Content-type: application/json' --data "{
               \"attachments\": [
                 {
-                  \"title\": \"Website Deployment Failed\",
-                  \"text\": \"Output:\n$DEPLOY_OUTPUT\n",
+                  \"title\": \"Backend Deployment Failed\",
+                  \"text\": \"Output:\\n$DEPLOY_OUTPUT\",
                   \"color\": \"#EF4444\",
                   \"mrkdwn_in\": [\"text\"]
                 }

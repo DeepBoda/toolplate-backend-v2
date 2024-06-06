@@ -60,9 +60,11 @@ jobs:
                 }
               ]
             }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
-
 workflows:
   version: 2
   example:
     jobs:
-      - deploy
+      - deploy:
+          filters:
+            branches:
+              only: development

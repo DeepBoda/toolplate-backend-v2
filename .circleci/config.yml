@@ -27,49 +27,41 @@ jobs:
       - run:
           name: SSH to EC2 and Deploy
           command: |
+            set +e
+            SSH_HOST=""
             if [ "${CIRCLE_BRANCH}" == "production" ]; then
-              ssh -o StrictHostKeyChecking=no root@13.235.186.84 "bash /root/toolplate-backend/deploy.sh > /root/toolplate-backend/deploy_output.txt"
+              SSH_HOST="13.235.186.84"
             elif [ "${CIRCLE_BRANCH}" == "development" ]; then
-              ssh -o StrictHostKeyChecking=no root@15.206.61.168 "bash /root/toolplate-backend/deploy.sh > /root/toolplate-backend/deploy_output.txt"
+              SSH_HOST="15.206.61.168"
             elif [ "${CIRCLE_BRANCH}" == "new" ]; then
-              ssh -o StrictHostKeyChecking=no root@3.111.35.110 "bash /root/toolplate-backend/deploy.sh > /root/toolplate-backend/deploy_output.txt"
+              SSH_HOST="3.111.35.110"
             fi
+            ssh -o StrictHostKeyChecking=no root@$SSH_HOST "bash /root/toolplate-backend/deploy.sh > /root/toolplate-backend/deploy_output.txt 2>&1"
+            EXIT_STATUS=$?
+            if [ $EXIT_STATUS -ne 0 ]; then
+              echo "Deployment script failed with status $EXIT_STATUS" > deploy_output.txt
+            fi
+            set -e
       - run:
           name: Download deploy_output.txt
+          command: scp -o StrictHostKeyChecking=no root@$SSH_HOST:/root/toolplate-backend/deploy_output.txt .
+      - run:
+          name: Notify Slack - Deployment Outcome
           command: |
-            if [ "${CIRCLE_BRANCH}" == "production" ]; then
-              scp -o StrictHostKeyChecking=no root@13.235.186.84:/root/toolplate-backend/deploy_output.txt .
-            elif [ "${CIRCLE_BRANCH}" == "development" ]; then
-              scp -o StrictHostKeyChecking=no root@15.206.61.168:/root/toolplate-backend/deploy_output.txt .
-            elif [ "${CIRCLE_BRANCH}" == "new" ]; then
-              scp -o StrictHostKeyChecking=no root@3.111.35.110:/root/toolplate-backend/deploy_output.txt .
+            DEPLOY_OUTPUT=$(cat deploy_output.txt || echo "Deployment failed, no output found.")
+            STATUS_COLOR="#EF4444"
+            if [ $EXIT_STATUS -eq 0 ]; then
+              STATUS_COLOR="#47BC63"
+              TITLE="✅ Deployment Succeeded!"
+            else
+              TITLE="❌ Deployment Failed"
             fi
-      - run:
-          name: Notify Slack - Deployment Succeeded
-          when: on_success
-          command: |
-            DEPLOY_OUTPUT=$(< deploy_output.txt)
             curl -X POST -H 'Content-type: application/json' --data "{
               \"attachments\": [
                 {
-                  \"title\": \"✅ Deployment Succeeded!\",
-                  \"text\": \"Output:\\n$DEPLOY_OUTPUT\",
-                  \"color\": \"#47BC63\",
-                  \"mrkdwn_in\": [\"text\"]
-                }
-              ]
-            }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
-      - run:
-          name: Notify Slack - Deployment Failed
-          when: on_fail
-          command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt)
-            curl -X POST -H 'Content-type: application/json' --data "{
-              \"attachments\": [
-                {
-                  \"title\": \"❌ Deployment Failed\",
-                  \"text\": \"Output:\\n$DEPLOY_OUTPUT\",
-                  \"color\": \"#EF4444\",
+                  \"title\": \"$TITLE\",
+                  \"text\": \"Output: $DEPLOY_OUTPUT\",
+                  \"color\": \"$STATUS_COLOR\",
                   \"mrkdwn_in\": [\"text\"]
                 }
               ]

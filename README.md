@@ -2,4 +2,4 @@
 
 Toolplate.ai
 
-CircleCI-CD
+CircleCI

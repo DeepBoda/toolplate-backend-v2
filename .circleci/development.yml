@@ -67,5 +67,4 @@ workflows:
       - deploy:
           filters:
             branches:
-              only:
-                - development
+              only: development

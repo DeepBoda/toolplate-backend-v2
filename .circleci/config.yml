@@ -10,14 +10,33 @@ jobs:
           name: Notify Slack - Deployment Started
           command: |
             BRANCH=$(git rev-parse --abbrev-ref HEAD)
-            COMMIT=$(git rev-parse --short HEAD)
+            COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s')
             AUTHOR=$(git log -1 --pretty=format:'%an <%ae>')
             curl -X POST -H 'Content-type: application/json' --data "{
-              \"attachments\": [
+              \"blocks\": [
                 {
-                  \"title\": \"Backend Deployment Started...\",
-                  \"text\": \"Branch: $BRANCH\\nCommit: $COMMIT\\nAuthor: $AUTHOR\",
-                  \"color\": \"#F7CE46\"
+                  \"type\": \"header\",
+                  \"text\": {
+                    \"type\": \"plain_text\",
+                    \"text\": \"🚀 Deployment Started\"
+                  }
+                },
+                {
+                  \"type\": \"section\",
+                  \"fields\": [
+                    {
+                      \"type\": \"mrkdwn\",
+                      \"text\": \"*Branch:* $BRANCH\"
+                    },
+                    {
+                      \"type\": \"mrkdwn\",
+                      \"text\": \"*Commit:* $COMMIT_MESSAGE\"
+                    },
+                    {
+                      \"type\": \"mrkdwn\",
+                      \"text\": \"*Author:* $AUTHOR\"
+                    }
+                  ]
                 }
               ]
             }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
@@ -36,29 +55,57 @@ jobs:
           command: |
             DEPLOY_OUTPUT=$(< deploy_output.txt)
             curl -X POST -H 'Content-type: application/json' --data "{
-              \"attachments\": [
+              \"blocks\": [
                 {
-                  \"title\": \"Backend Deployment Succeeded!\",
-                  \"text\": \"Output:\\n$DEPLOY_OUTPUT\",
-                  \"color\": \"#47BC63\",
-                  \"mrkdwn_in\": [\"text\"]
+                  \"type\": \"header\",
+                  \"text\": {
+                    \"type\": \"plain_text\",
+                    \"text\": \"✅ Deployment Succeeded\"
+                  }
+                },
+                {
+                  \"type\": \"section\",
+                  \"text\": {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"Deployment output:\\n$DEPLOY_OUTPUT\"
+                  },
+                  \"accessory\": {
+                    \"type\": \"button\",
+                    \"text\": {
+                      \"type\": \"plain_text\",
+                      \"text\": \"View Log\"
+                    },
+                    \"url\": \"http://example.com/logs\"
+                  }
                 }
-              ]
+              ],
+              \"channel\": \"ci-cd\",
+              \"color\": \"#36a64f\"
             }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
       - run:
           name: Notify Slack - Deployment Failed
           when: on_fail
           command: |
-            DEPLOY_OUTPUT=$(cat deploy_output.txt)
+            DEPLOY_OUTPUT=$(< deploy_output.txt)
             curl -X POST -H 'Content-type: application/json' --data "{
-              \"attachments\": [
+              \"blocks\": [
                 {
-                  \"title\": \"Backend Deployment Failed\",
-                  \"text\": \"Output:\\n$DEPLOY_OUTPUT\",
-                  \"color\": \"#EF4444\",
-                  \"mrkdwn_in\": [\"text\"]
+                  \"type\": \"header\",
+                  \"text\": {
+                    \"type\": \"plain_text\",
+                    \"text\": \"❌ Deployment Failed\"
+                  }
+                },
+                {
+                  \"type\": \"section\",
+                  \"text\": {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"Failure Details:\\n$DEPLOY_OUTPUT\"
+                  }
                 }
-              ]
+              ],
+              \"channel\": \"ci-cd\",
+              \"color\": \"#e01e5a\"
             }" https://hooks.slack.com/services/REPLACE/WITH/ACTUAL_WEBHOOK
 
 workflows:

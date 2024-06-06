@@ -63,7 +63,7 @@ jobs:
 
 workflows:
   version: 2
-  example:
+  new:
     jobs:
       - deploy:
           filters:

@@ -16,7 +16,7 @@ jobs:
               \"attachments\": [
                 {
                   \"title\": \"🚀 Deployment Started...\",
-                  \"text\": \"Branch: $BRANCH\\nCommit: $COMMIT_MESSAGE\\nAuthor: $AUTHOR\",
+                  \"text\": \"Project: Toolplate Backend\\nBranch: $BRANCH\\nCommit: $COMMIT_MESSAGE\\nAuthor: $AUTHOR\",
                   \"color\": \"#F7CE46\"
                 }
               ]

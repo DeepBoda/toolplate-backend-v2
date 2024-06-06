@@ -65,4 +65,7 @@ workflows:
   version: 2
   example:
     jobs:
-      - deploy
+      - deploy:
+          filters:
+            branches:
+              only: production

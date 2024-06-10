@@ -320,6 +320,7 @@ exports.getMetaData = async (req, res, next) => {
           "id",
           "title",
           "description",
+          "image",
           "metaTitle",
           "metaDescription",
           "slug",

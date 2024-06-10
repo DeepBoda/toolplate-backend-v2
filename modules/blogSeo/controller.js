@@ -4,6 +4,7 @@ const service = require("./service");
 const redisService = require("../../utils/redis");
 const blogService = require("../blog/service");
 const { usersqquery, sqquery } = require("../../utils/query");
+const Blog = require("../blog/model");
 
 // ------------- Only Admin can Create --------------
 exports.add = async (req, res, next) => {
@@ -94,6 +95,10 @@ exports.getBySlug = async (req, res, next) => {
       data = await service.findOne({
         where: {
           blogId: id,
+        },
+        include: {
+          model: Blog,
+          attributes: ["title", "image"],
         },
       });
       redisService.set(cacheKey, data);

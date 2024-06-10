@@ -105,7 +105,7 @@ exports.getBySlug = async (req, res, next) => {
         },
         include: {
           model: Tool,
-          attributes: ["title", "price"],
+          attributes: ["title", "image", "price"],
           include: {
             model: ToolCategory,
             attributes: ["categoryId"],

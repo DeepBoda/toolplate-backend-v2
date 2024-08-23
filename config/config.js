@@ -1,4 +1,6 @@
 require("dotenv").config();
+const { readFileSync } = require("fs");
+
 const config = {
   test: {
     username: "root",
@@ -32,7 +34,9 @@ const config = {
     port: 3306,
     dialect: "mysql",
     dialectOptions: {
-      ssl: "Amazon RDS",
+      ssl: {
+        ca: readFileSync(__dirname + "/ap-south-1-bundle.pem"),
+      },
     },
     pool: {
       max: 250,

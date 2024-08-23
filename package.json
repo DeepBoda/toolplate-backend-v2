@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "lint": "eslint . --fix",
-    "start": "npm run lint && node --max-old-space-size=4096 ./bin/www",
+    "start": "node --max-old-space-size=4096 ./bin/www",
     "dev": "npm run lint && nodemon --max-old-space-size=4096 ./bin/www",
     "migration:run": "npx sequelize-cli db:migrate",
     "migration:undo": "npx sequelize-cli db:migrate:undo",

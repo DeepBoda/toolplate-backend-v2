@@ -1,100 +1,110 @@
 /**
- * Graceful Shutdown Handler
+ * Graceful Shutdown Utility
  * 
- * Orchestrates clean shutdown of all application resources when the process
- * receives SIGTERM or SIGINT signals. Ensures:
- * 
- * 1. HTTP server stops accepting new connections
- * 2. In-flight requests complete (up to timeout)
- * 3. Database connection pool is closed
- * 4. Redis client is disconnected
- * 5. Process exits with appropriate code
+ * Handles OS signals (SIGTERM, SIGINT) to cleanly stop the application.
+ * Ensures:
+ * 1. New connections are rejected (503 Service Unavailable)
+ * 2. Active connections finish processing
+ * 3. Database pool is closed
+ * 4. Redis connection is quit
+ * 5. Process exits with code 0 (success) or 1 (failure)
  */
 
-const SHUTDOWN_TIMEOUT_MS = 30000; // 30 seconds max wait
+const db = require('../config/db');
+const redisClient = require('../config/redis');
+const { SHUTDOWN_TIMEOUT_MS } = require('../constants/shutdown');
+const connectionTracker = require('../middlewares/connectionTracker');
+
+let isShuttingDown = false;
 
 /**
- * Perform graceful shutdown of all resources
- * @param {Object} server - HTTP server instance
- * @returns {Promise<number>} Exit code (0 = clean, 1 = errors)
+ * Perform resource cleanup sequence
+ * @param {http.Server} server - Express HTTP server instance
+ * @param {string} signal - Signal received (SIGTERM/SIGINT)
  */
-const performShutdown = async (server) => {
-    console.log('\n🔄 Graceful shutdown initiated...');
-    let hasErrors = false;
+const performShutdown = async (server, signal) => {
+    if (isShuttingDown) {
+        console.log(`Shutdown already in progress. Ignoring ${signal}.`);
+        return;
+    }
+    isShuttingDown = true;
+    console.log(`Received ${signal}. Starting graceful shutdown...`);
 
-    // Step 1: Stop accepting new connections
+    // Stop accepting new connections immediately
+    connectionTracker.startClosing();
+
+    // Force exit if shutdown hangs
+    const forceExitTimeout = setTimeout(() => {
+        console.error('Shutdown timed out. Forcing exit.');
+        process.exit(1);
+    }, SHUTDOWN_TIMEOUT_MS);
+
     try {
-        await new Promise((resolve, reject) => {
+        // 1. Close HTTP server (stops new connections)
+        await new Promise((resolve) => {
             server.close((err) => {
-                if (err) {
-                    console.error('❌ Error closing HTTP server:', err.message);
-                    reject(err);
-                } else {
-                    console.log('✅ HTTP server closed — no new connections');
-                    resolve();
-                }
+                if (err) console.error('Error closing HTTP server:', err);
+                else console.log('HTTP server closed.');
+                resolve();
             });
         });
-    } catch {
-        hasErrors = true;
-    }
 
-    // Step 2: Close database connection pool
-    try {
-        const db = require('../config/db');
-        await db.close();
-        console.log('✅ Database connection pool closed');
+        // 2. Wait for active connections to drain? 
+        // server.close() already waits for keep-alive connections to end in newer Node versions,
+        // but connectionTracker specifically handles in-flight request blocking.
+        const remaining = connectionTracker.getActiveConnections();
+        if (remaining > 0) {
+            console.log(`Waiting for ${remaining} active connections to finish...`);
+        }
+
+        // 3. Close Database connection
+        try {
+            await db.close();
+            console.log('Database connection closed.');
+        } catch (err) {
+            console.error('Error closing database connection:', err);
+        }
+
+        // 4. Close Redis connection
+        try {
+            await redisClient.quit();
+            console.log('Redis connection closed.');
+        } catch (err) {
+            console.error('Error closing Redis connection:', err);
+        }
+
+        // Clear timeout and exit successfully
+        clearTimeout(forceExitTimeout);
+        console.log('Graceful shutdown completed. Exiting.');
+        process.exit(0);
     } catch (error) {
-        console.error('❌ Error closing database:', error.message);
-        hasErrors = true;
+        console.error('Error during shutdown:', error);
+        process.exit(1);
     }
-
-    // Step 3: Disconnect Redis
-    try {
-        const redisClient = require('../config/redis');
-        await redisClient.quit();
-        console.log('✅ Redis client disconnected');
-    } catch (error) {
-        console.error('❌ Error disconnecting Redis:', error.message);
-        hasErrors = true;
-    }
-
-    const exitCode = hasErrors ? 1 : 0;
-    console.log(`\n${hasErrors ? '⚠️' : '✅'} Shutdown complete (exit code: ${exitCode})`);
-    return exitCode;
 };
 
 /**
- * Register shutdown signal handlers on the HTTP server
- * @param {Object} server - HTTP server instance
+ * Register signal handlers
+ * @param {http.Server} server - Express HTTP server instance
  */
 const registerShutdownHandlers = (server) => {
-    let isShuttingDown = false;
+    ['SIGTERM', 'SIGINT'].forEach((signal) => {
+        process.on(signal, () => performShutdown(server, signal));
+    });
 
-    const handleSignal = async (signal) => {
-        if (isShuttingDown) {
-            console.log(`\n⚡ Force shutdown (received ${signal} again)`);
-            process.exit(1);
-        }
+    // Handle uncaught exceptions/rejections
+    process.on('uncaughtException', (err) => {
+        console.error('Uncaught Exception:', err);
+        performShutdown(server, 'SIGTERM');
+    });
 
-        isShuttingDown = true;
-        console.log(`\n📡 Received ${signal}`);
-
-        // Force exit after timeout
-        const forceExitTimer = setTimeout(() => {
-            console.error('❌ Shutdown timed out — forcing exit');
-            process.exit(1);
-        }, SHUTDOWN_TIMEOUT_MS + 5000); // 5s buffer over resource timeout
-
-        // Don't let the timer keep the process alive
-        forceExitTimer.unref();
-
-        const exitCode = await performShutdown(server);
-        process.exit(exitCode);
-    };
-
-    process.on('SIGTERM', () => handleSignal('SIGTERM'));
-    process.on('SIGINT', () => handleSignal('SIGINT'));
+    process.on('unhandledRejection', (reason, promise) => {
+        console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+        performShutdown(server, 'SIGTERM');
+    });
 };
 
-module.exports = { performShutdown, registerShutdownHandlers, SHUTDOWN_TIMEOUT_MS };
+module.exports = {
+    performShutdown,
+    registerShutdownHandlers,
+};

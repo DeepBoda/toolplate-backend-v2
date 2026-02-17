@@ -27,6 +27,10 @@ app.use(wooffer.requestMonitoring);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Input sanitization (after parsing, before routes)
+const { sanitizeMiddleware } = require("./middlewares/sanitize");
+app.use(sanitizeMiddleware);
+
 // Middleware for parsing cookies
 app.use(cookieParser());
 

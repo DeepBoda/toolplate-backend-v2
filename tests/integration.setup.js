@@ -69,6 +69,8 @@ jest.mock('../config/redis', () => ({
     keys: jest.fn().mockResolvedValue([]),
     quit: jest.fn().mockResolvedValue(true),
     flushAll: jest.fn().mockResolvedValue('OK'),
+    ttl: jest.fn().mockResolvedValue(-1),
+    expire: jest.fn().mockResolvedValue(1),
 }));
 
 // ─── Firebase Admin SDK ───

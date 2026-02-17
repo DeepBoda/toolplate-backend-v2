@@ -23,6 +23,10 @@ app.disable("x-powered-by");
 wooffer(token, serviceToken);
 app.use(wooffer.requestMonitoring);
 
+// Track active connections for graceful shutdown
+const { trackConnection } = require("./middlewares/connectionTracker");
+app.use(trackConnection);
+
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -76,6 +80,9 @@ app.use(helmet());
 // Middleware for checking allowed IPs
 app.set("trust proxy", true);
 // app.use(ipWhitelist); // Uncomment if IP whitelisting is needed
+
+// Health check endpoint (before auth - no API key required)
+app.use("/health", require("./modules/health"));
 
 // Middleware for API key validation
 const { validateAPIKey } = require("./middlewares/auth");

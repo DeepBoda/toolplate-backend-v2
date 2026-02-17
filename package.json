@@ -1,6 +1,6 @@
 {
   "name": "toolplate.ai",
-  "version": "0.0",
+  "version": "2.0.0",
   "description": "Toolplate.ai- An extensive Directory of AI tools, reviews and news!",
   "main": "app.js",
   "private": true,
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TST-Technology/toolplate-backend.git"
+    "url": "https://github.com/DeepBoda/toolplate-backend-v2.git"
   },
   "homepage": "https://toolplate.ai",
   "keywords": [
@@ -35,6 +35,9 @@
     "lint": "eslint . --fix",
     "start": "node --max-old-space-size=4096 ./bin/www",
     "dev": "npm run lint && nodemon --max-old-space-size=4096 ./bin/www",
+    "test": "jest --coverage --forceExit --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --coverage --ci --forceExit --detectOpenHandles",
     "migration:run": "npx sequelize-cli db:migrate",
     "migration:undo": "npx sequelize-cli db:migrate:undo",
     "migration:undo:all": "npx sequelize-cli db:migrate:undo:all",
@@ -42,7 +45,10 @@
     "seeder:create": "npx sequelize-cli seed:generate --name",
     "seeder:run": "npx sequelize-cli db:seed --seed",
     "seeder:all": "npx sequelize-cli db:seed:all",
-    "seeder:undo": "npx sequelize-cli db:seed:undo"
+    "seeder:undo": "npx sequelize-cli db:seed:undo",
+    "docker:build": "docker build -t toolplate-backend:latest .",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.438.0",
@@ -81,6 +87,25 @@
   "devDependencies": {
     "@eslint/js": "^9.2.0",
     "eslint": "^9.2.0",
-    "globals": "^15.2.0"
+    "globals": "^15.2.0",
+    "jest": "^30.2.0",
+    "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "modules/**/*.js",
+      "middlewares/**/*.js",
+      "utils/**/*.js",
+      "!**/node_modules/**"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js",
+      "**/__tests__/**/*.test.js"
+    ],
+    "setupFiles": [
+      "./tests/setup.js"
+    ]
   }
 }

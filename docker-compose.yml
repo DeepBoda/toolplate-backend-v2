@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # ─────────────────────────────────────────
+  # Application
+  # ─────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: toolplate-backend
+    ports:
+      - "${PORT:-3001}:3001"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - REDIS_PORT=6379
+      - REDIS_HOST=redis
+    depends_on:
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+    stop_grace_period: 35s
+    networks:
+      - toolplate-network
+    volumes:
+      - app-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+
+  # ─────────────────────────────────────────
+  # Redis Cache
+  # ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: toolplate-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+    networks:
+      - toolplate-network
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # ─────────────────────────────────────────
+  # Elasticsearch
+  # ─────────────────────────────────────────
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: toolplate-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=toolplate-cluster
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+    networks:
+      - toolplate-network
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+networks:
+  toolplate-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  es-data:
+    driver: local
+  app-logs:
+    driver: local

@@ -69,6 +69,8 @@ jest.mock('../config/redis', () => ({
     keys: jest.fn().mockResolvedValue([]),
     quit: jest.fn().mockResolvedValue(true),
     flushAll: jest.fn().mockResolvedValue('OK'),
+    ttl: jest.fn().mockResolvedValue(-1),
+    expire: jest.fn().mockResolvedValue(1),
 }));
 
 // ─── Firebase Admin SDK ───
@@ -139,3 +141,4 @@ process.env.SMTP_PORT = '587';
 process.env.SMTP_USER = 'test@test.com';
 process.env.SMTP_PASS = 'test-pass';
 process.env.GOOGLE_CLIENT_ID = 'test-client-id';
+process.env.API_KEY_DEV = 'test-api-key';

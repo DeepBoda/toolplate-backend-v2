@@ -77,6 +77,9 @@ app.use(helmet());
 app.set("trust proxy", true);
 // app.use(ipWhitelist); // Uncomment if IP whitelisting is needed
 
+// Health check endpoint (before auth - no API key required)
+app.use("/health", require("./modules/health"));
+
 // Middleware for API key validation
 const { validateAPIKey } = require("./middlewares/auth");
 app.use(validateAPIKey);

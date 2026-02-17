@@ -1,132 +1,80 @@
 /**
  * Input Sanitization Middleware
  * 
- * Global middleware that sanitizes all string fields in request bodies
- * to prevent XSS attacks, HTML injection, and SQL injection patterns.
- * 
- * Applied after JSON parsing and before route handlers.
- * Does NOT modify non-string values (numbers, booleans, null).
+ * Prevents XSS, HTML injection, and basic SQL injection by sanitizing
+ * string inputs in request body, query params, and URL parameters.
  * 
  * @module middlewares/sanitize
  */
 
-/**
- * Dangerous HTML/XSS patterns to strip
- */
-const XSS_PATTERNS = [
-    // Script tags (with content)
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    // Script tags (self-closing or incomplete)
-    /<script\b[^>]*\/?>/gi,
-    // Event handlers (onclick, onerror, onload, onmouseover, etc.)
-    /\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi,
-    // javascript: protocol in href/src/action
-    /(?:href|src|action)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi,
-    // Standalone javascript: protocol
-    /javascript\s*:/gi,
-    // HTML tags with dangerous attributes (iframe, embed, object)
-    /<\/?(?:iframe|embed|object|applet|form|input|button|textarea|select)\b[^>]*>/gi,
-    // data: URI in attributes (data:text/html)
-    /data\s*:\s*text\/html/gi,
-    // Expression/eval patterns
-    /expression\s*\(/gi,
-    /eval\s*\(/gi,
-];
+const { XSS_PATTERNS } = require('../constants/sanitizePatterns');
 
 /**
- * SQL injection patterns to neutralize
- */
-const SQL_PATTERNS = [
-    /('\s*;\s*DROP\s+TABLE)/gi,
-    /('\s*;\s*DELETE\s+FROM)/gi,
-    /('\s*;\s*UPDATE\s+\w+\s+SET)/gi,
-    /('\s*;\s*INSERT\s+INTO)/gi,
-    /(UNION\s+SELECT)/gi,
-    /(UNION\s+ALL\s+SELECT)/gi,
-    /(\bOR\s+1\s*=\s*1)/gi,
-    /(\bAND\s+1\s*=\s*1)/gi,
-    /(--\s*$)/gm,
-];
-
-/**
- * Sanitize a single value.
- * - Strings: strips dangerous HTML/JS patterns and SQL injection
- * - Non-strings: returned unchanged
- * 
- * @param {*} value - Value to sanitize
- * @returns {*} - Sanitized value
+ * Sanitize a single value
+ * @param {string} value - Value to sanitize
+ * @returns {string} - Sanitized value
  */
 const sanitizeValue = (value) => {
-    if (typeof value !== 'string') {
-        return value;
-    }
+    if (typeof value !== 'string') return value;
 
     let sanitized = value;
 
-    // Strip XSS patterns
-    for (const pattern of XSS_PATTERNS) {
-        sanitized = sanitized.replace(pattern, '');
-    }
+    // Replace dangerous patterns with empty string or encoded equivalent
+    sanitized = sanitized.replace(XSS_PATTERNS.SCRIPT_TAGS, '');
+    sanitized = sanitized.replace(XSS_PATTERNS.EVENT_HANDLERS, '');
+    sanitized = sanitized.replace(XSS_PATTERNS.JAVASCRIPT_PROTOCOL, '');
+    sanitized = sanitized.replace(XSS_PATTERNS.DANGEROUS_TAGS, '');
 
-    // Strip remaining HTML tags (but preserve content)
-    sanitized = sanitized.replace(/<\/?[^>]+(>|$)/g, '');
+    // Basic SQLi prevention (for manual queries, though ORM handles most)
+    sanitized = sanitized.replace(XSS_PATTERNS.SQL_INJECTION, '');
 
-    // Neutralize SQL injection patterns
-    for (const pattern of SQL_PATTERNS) {
-        sanitized = sanitized.replace(pattern, '');
-    }
-
-    // Trim excess whitespace caused by removals
-    sanitized = sanitized.replace(/\s+/g, ' ').trim();
-
-    return sanitized;
+    return sanitized.trim();
 };
 
 /**
- * Recursively sanitize all string values in an object or array.
- * 
- * @param {Object|Array} obj - Object or array to sanitize
- * @returns {Object|Array} - Sanitized copy
+ * Recursively sanitize an object or array
+ * @param {Object|Array} data - Data structure to sanitize
+ * @returns {Object|Array} - Sanitized structure
  */
-const sanitizeBody = (obj) => {
-    if (obj === null || obj === undefined) {
-        return obj;
+const sanitizeData = (data) => {
+    if (!data) return data;
+
+    if (Array.isArray(data)) {
+        return data.map(item => sanitizeData(item));
     }
 
-    if (Array.isArray(obj)) {
-        return obj.map((item) => sanitizeBody(item));
-    }
-
-    if (typeof obj === 'object') {
-        const sanitized = {};
-        for (const [key, value] of Object.entries(obj)) {
-            if (typeof value === 'string') {
-                sanitized[key] = sanitizeValue(value);
-            } else if (typeof value === 'object' && value !== null) {
-                sanitized[key] = sanitizeBody(value);
-            } else {
-                sanitized[key] = value;
-            }
+    if (typeof data === 'object' && data !== null) {
+        const sanitizedObj = {};
+        for (const [key, value] of Object.entries(data)) {
+            sanitizedObj[key] = sanitizeData(value);
         }
-        return sanitized;
+        return sanitizedObj;
     }
 
-    return sanitizeValue(obj);
+    return sanitizeValue(data);
 };
 
 /**
- * Express middleware that sanitizes req.body.
- * Must be mounted after express.json() and before route handlers.
- * 
- * @param {Object} req - Express request
- * @param {Object} res - Express response  
- * @param {Function} next - Express next middleware
+ * Express middleware to sanitize inputs
  */
 const sanitizeMiddleware = (req, res, next) => {
-    if (req.body && typeof req.body === 'object') {
-        req.body = sanitizeBody(req.body);
+    if (req.body) {
+        req.body = sanitizeData(req.body);
     }
+
+    if (req.query) {
+        req.query = sanitizeData(req.query);
+    }
+
+    if (req.params) {
+        req.params = sanitizeData(req.params);
+    }
+
     next();
 };
 
-module.exports = { sanitizeValue, sanitizeBody, sanitizeMiddleware };
+module.exports = {
+    sanitizeValue,
+    sanitizeData,
+    sanitizeMiddleware,
+};

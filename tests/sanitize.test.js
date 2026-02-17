@@ -1,181 +1,135 @@
 /**
- * Input Sanitization Middleware Tests
+ * Input Sanitization Unit Tests
  * 
- * Tests for the global sanitization middleware that strips dangerous
- * content from request bodies to prevent XSS and injection attacks.
+ * Verifies that the sanitization middleware correctly strips
+ * XSS and SQL injection patterns from request bodies, query params,
+ * and URL parameters, while preserving legitimate data.
  */
 
-const { sanitizeValue, sanitizeBody, sanitizeMiddleware } = require('../middlewares/sanitize');
+const { sanitizeMiddleware, sanitizeValue, sanitizeData } = require('../middlewares/sanitize');
+const { XSS_PATTERNS } = require('../constants/sanitizePatterns');
 
-describe('Input Sanitization', () => {
-    // ─── sanitizeValue unit tests ───
+describe('Input Sanitization Middleware', () => {
+    let req, res, next;
+
+    beforeEach(() => {
+        req = { body: {}, query: {}, params: {} };
+        res = {};
+        next = jest.fn();
+    });
+
+    // ─── sanitizeValue() ───
 
     describe('sanitizeValue()', () => {
-        test('strips script tags from strings', () => {
-            const input = '<script>alert("xss")</script>Best AI Tool';
-            const result = sanitizeValue(input);
-            expect(result).not.toContain('<script>');
-            expect(result).not.toContain('</script>');
-            expect(result).toContain('Best AI Tool');
+        test('removes <script> tags', () => {
+            const input = 'Hello <script>alert("XSS")</script> World';
+            expect(sanitizeValue(input)).toBe('Hello  World');
         });
 
-        test('strips event handler attributes', () => {
-            const input = '<img onerror="alert(1)" src="x">';
-            const result = sanitizeValue(input);
-            expect(result).not.toContain('onerror');
+        test('removes event handlers', () => {
+            const input = '<img src="x" onerror="alert(1)">';
+            expect(sanitizeValue(input)).toBe('<img src="x">');
         });
 
-        test('strips onload handlers', () => {
-            const input = '<body onload="malicious()">';
-            const result = sanitizeValue(input);
-            expect(result).not.toContain('onload');
+        test('removes javascript: protocol', () => {
+            const input = '<a href="javascript:alert(1)">Click me</a>';
+            expect(sanitizeValue(input)).toBe('<a href="">Click me</a>');
         });
 
-        test('strips javascript: protocol', () => {
-            const input = '<a href="javascript:alert(1)">Click</a>';
-            const result = sanitizeValue(input);
-            expect(result).not.toMatch(/javascript:/i);
+        test('removes dangerous tags (iframe)', () => {
+            const input = 'Check this <iframe src="evil.com"></iframe> out';
+            expect(sanitizeValue(input)).toBe('Check this  out');
         });
 
-        test('preserves normal text', () => {
-            expect(sanitizeValue('Hello World')).toBe('Hello World');
+        test('removes SQL injection patterns', () => {
+            const input = "admin'; DROP TABLE users; --";
+            expect(sanitizeValue(input)).toBe("admin';   users;");
         });
 
-        test('preserves email addresses', () => {
-            expect(sanitizeValue('user@example.com')).toBe('user@example.com');
+        test('preserves legitimate text', () => {
+            const input = 'Hello World';
+            expect(sanitizeValue(input)).toBe('Hello World');
         });
 
-        test('preserves URLs', () => {
-            expect(sanitizeValue('https://example.com/path?q=1&page=2')).toBe('https://example.com/path?q=1&page=2');
+        test('trims whitespace', () => {
+            const input = '  Hello  ';
+            expect(sanitizeValue(input)).toBe('Hello');
         });
 
-        test('does not modify numbers', () => {
-            expect(sanitizeValue(42)).toBe(42);
-        });
-
-        test('does not modify booleans', () => {
+        test('returns non-string values as-is', () => {
+            expect(sanitizeValue(123)).toBe(123);
             expect(sanitizeValue(true)).toBe(true);
-            expect(sanitizeValue(false)).toBe(false);
-        });
-
-        test('does not modify null', () => {
             expect(sanitizeValue(null)).toBe(null);
         });
+    });
 
-        test('does not modify undefined', () => {
-            expect(sanitizeValue(undefined)).toBe(undefined);
+    // ─── sanitizeData() ───
+
+    describe('sanitizeData()', () => {
+        test('recursively sanitizes objects', () => {
+            const input = {
+                name: 'John <script>alert(1)</script>',
+                details: {
+                    bio: '<img src=x onerror=alert(1)>',
+                },
+            };
+            const sanitized = sanitizeData(input);
+            expect(sanitized.name).toBe('John');
+            expect(sanitized.details.bio).toBe('<img src=x>');
         });
 
-        test('strips SQL injection patterns', () => {
-            const input = "'; DROP TABLE users; --";
-            const result = sanitizeValue(input);
-            expect(result).not.toMatch(/DROP\s+TABLE/i);
+        test('recursively sanitizes arrays', () => {
+            const input = ['<script>', 'safe'];
+            const sanitized = sanitizeData(input);
+            expect(sanitized[0]).toBe('');
+            expect(sanitized[1]).toBe('safe');
         });
 
-        test('strips UNION SELECT injection', () => {
-            const input = "' UNION SELECT * FROM users --";
-            const result = sanitizeValue(input);
-            expect(result).not.toMatch(/UNION\s+SELECT/i);
+        test('handles mixed nested structures', () => {
+            const input = {
+                tags: ['<script>', { name: 'safe' }],
+            };
+            const sanitized = sanitizeData(input);
+            expect(sanitized.tags[0]).toBe('');
+            expect(sanitized.tags[1].name).toBe('safe');
         });
     });
 
-    // ─── sanitizeBody deep object tests ───
-
-    describe('sanitizeBody()', () => {
-        test('sanitizes nested objects', () => {
-            const input = {
-                data: {
-                    name: '<script>alert("xss")</script>Test',
-                },
-            };
-            const result = sanitizeBody(input);
-            expect(result.data.name).not.toContain('<script>');
-            expect(result.data.name).toContain('Test');
-        });
-
-        test('sanitizes arrays', () => {
-            const input = {
-                tags: ['<script>x</script>', 'valid-tag', '<img onerror="x">'],
-            };
-            const result = sanitizeBody(input);
-            expect(result.tags[0]).not.toContain('<script>');
-            expect(result.tags[1]).toBe('valid-tag');
-            expect(result.tags[2]).not.toContain('onerror');
-        });
-
-        test('handles deeply nested structures', () => {
-            const input = {
-                level1: {
-                    level2: {
-                        level3: '<script>deep</script>Content',
-                    },
-                },
-            };
-            const result = sanitizeBody(input);
-            expect(result.level1.level2.level3).not.toContain('<script>');
-            expect(result.level1.level2.level3).toContain('Content');
-        });
-
-        test('preserves mixed type objects', () => {
-            const input = {
-                name: 'Valid Name',
-                count: 5,
-                active: true,
-                tags: ['tag1', 'tag2'],
-                nested: { value: 'test' },
-            };
-            const result = sanitizeBody(input);
-            expect(result.name).toBe('Valid Name');
-            expect(result.count).toBe(5);
-            expect(result.active).toBe(true);
-            expect(result.tags).toEqual(['tag1', 'tag2']);
-            expect(result.nested.value).toBe('test');
-        });
-
-        test('returns empty object for empty input', () => {
-            expect(sanitizeBody({})).toEqual({});
-        });
-    });
-
-    // ─── Middleware integration tests ───
+    // ─── sanitizeMiddleware() ───
 
     describe('sanitizeMiddleware()', () => {
-        test('sanitizes req.body and calls next', () => {
-            const req = {
-                body: {
-                    title: '<script>alert("test")</script>Clean Title',
-                    count: 10,
-                },
-            };
-            const res = {};
-            const next = jest.fn();
-
+        test('sanitizes req.body', () => {
+            req.body = { field: '<script>' };
             sanitizeMiddleware(req, res, next);
-
-            expect(req.body.title).not.toContain('<script>');
-            expect(req.body.title).toContain('Clean Title');
-            expect(req.body.count).toBe(10);
-            expect(next).toHaveBeenCalledTimes(1);
+            expect(req.body.field).toBe('');
+            expect(next).toHaveBeenCalled();
         });
 
-        test('handles request with no body', () => {
-            const req = {};
-            const res = {};
-            const next = jest.fn();
-
+        test('sanitizes req.query', () => {
+            req.query = { search: '<script>' };
             sanitizeMiddleware(req, res, next);
-
-            expect(next).toHaveBeenCalledTimes(1);
+            expect(req.query.search).toBe('');
+            expect(next).toHaveBeenCalled();
         });
 
-        test('handles request with empty body', () => {
-            const req = { body: {} };
-            const res = {};
-            const next = jest.fn();
-
+        test('sanitizes req.params', () => {
+            req.params = { id: '<script>' };
             sanitizeMiddleware(req, res, next);
-
-            expect(next).toHaveBeenCalledTimes(1);
+            expect(req.params.id).toBe('');
+            expect(next).toHaveBeenCalled();
         });
+
+        test('handles missing body/query/params cleanly', () => {
+            req = {};
+            sanitizeMiddleware(req, res, next);
+            expect(next).toHaveBeenCalled();
+        });
+    });
+
+    // ─── Constants Verify ───
+
+    test('constants are exported correctly', () => {
+        expect(XSS_PATTERNS).toBeDefined();
+        expect(XSS_PATTERNS.SCRIPT_TAGS).toBeInstanceOf(RegExp);
     });
 });

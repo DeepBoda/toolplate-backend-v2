@@ -2,9 +2,13 @@
 
 const router = require("express").Router();
 const tool = require("./controller");
-const {authMiddleware,protectRoute} = require("../../middlewares/auth");
+const { compareTools } = require("./compareController");
+const { authMiddleware, protectRoute } = require("../../middlewares/auth");
 
-router.use( authMiddleware);
+// Public comparison endpoint (no JWT required, only API key)
+router.route("/compare").post(compareTools);
+
+router.use(authMiddleware);
 router.route("/").get(authMiddleware, tool.getAll);
 router.route("/count").get(authMiddleware, tool.getAllCounts);
 router.route("/all").get(authMiddleware, tool.getAllDynamic);

@@ -49,6 +49,7 @@ router.use(
   "/listing-comments/replyLike",
   require("../modules/listingCommentReplyLike")
 );
+router.use("/comparison", require("../modules/toolComparison"));
 router.use("/submit-tool", require("../modules/submitTool"));
 router.use("/elasticsearch", require("../modules/elasticsearch"));
 

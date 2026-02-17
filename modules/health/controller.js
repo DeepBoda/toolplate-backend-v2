@@ -1,64 +1,32 @@
 /**
  * Health Check Controller
  * 
- * Checks the health of all application dependencies (database, Redis)
- * and returns a structured response with latency metrics.
+ * HTTP handler for GET /health endpoint.
+ * Delegates to service layer for dependency checks and response building.
+ * 
+ * @module modules/health/controller
  */
 
-const db = require('../../config/db');
-const redisClient = require('../../config/redis');
-
-/**
- * Check individual service health with latency measurement
- * @param {string} name - Service name
- * @param {Function} checkFn - Async function that tests the service
- * @returns {Object} - { status, latency_ms, error? }
- */
-const checkService = async (name, checkFn) => {
-    const start = Date.now();
-    try {
-        await checkFn();
-        return {
-            status: 'connected',
-            latency_ms: Date.now() - start,
-        };
-    } catch (error) {
-        return {
-            status: 'disconnected',
-            latency_ms: Date.now() - start,
-            error: error.message,
-        };
-    }
-};
+const healthService = require('./service');
 
 /**
  * GET /health
+ * GET /health?verbose=true
  * 
  * Returns application health status with dependency checks.
+ * When verbose=true, includes system metrics (CPU, memory, platform).
  * Does NOT require authentication.
  * 
  * @param {Object} req - Express request
  * @param {Object} res - Express response
  */
 const getHealthStatus = async (req, res) => {
-    const [database, redis] = await Promise.all([
-        checkService('database', () => db.authenticate()),
-        checkService('redis', () => redisClient.ping()),
-    ]);
+    const verbose = req.query.verbose === 'true' || req.query.verbose === true;
 
-    const isHealthy = database.status === 'connected' && redis.status === 'connected';
+    const dependencies = await healthService.checkDependencies();
+    const { statusCode, body } = healthService.buildHealthResponse(dependencies, verbose);
 
-    const statusCode = isHealthy ? 200 : 503;
-
-    res.status(statusCode).json({
-        status: isHealthy ? 'healthy' : 'unhealthy',
-        uptime: Math.floor(process.uptime()),
-        timestamp: new Date().toISOString(),
-        dependencies: {
-            database,
-            redis,
-        },
-    });
+    res.status(statusCode).json(body);
 };
 
 module.exports = { getHealthStatus };

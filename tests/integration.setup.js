@@ -59,8 +59,6 @@ jest.mock('../config/db', () => ({
 }));
 
 // ─── Redis ───
-// We mock redis partially here for integration tests loading the app.
-// For cache tests, we might want to mock the underlying client specifically.
 jest.mock('../config/redis', () => ({
     isReady: true,
     ping: jest.fn().mockResolvedValue('PONG'),

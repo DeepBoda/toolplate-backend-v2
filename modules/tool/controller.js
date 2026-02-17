@@ -8,6 +8,7 @@ const service = require("./service");
 // const { pushNotificationTopic } = require("../../service/firebase");
 // const notificationService = require("../notification/service");
 const redisService = require("../../utils/redis");
+const cacheService = require("../../modules/cache/service");
 const seoService = require("../toolSeo/service");
 const viewService = require("../toolView/service");
 const { usersqquery, sqquery } = require("../../utils/query");
@@ -109,11 +110,9 @@ exports.add = async (req, res, next) => {
     const seoData = {
       toolId: tool.id,
       title: `${tool.title} AI Reviews, Features, Pricing, & Alternative Tools`,
-      description: `Explore ${tool.title} on Toolplate: a ${
-        tool.price == "Premium" ? "Paid" : tool.price
-      } ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
-        tool.title
-      }. Your one-stop resource for ${tool.title} insights`,
+      description: `Explore ${tool.title} on Toolplate: a ${tool.price == "Premium" ? "Paid" : tool.price
+        } ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${tool.title
+        }. Your one-stop resource for ${tool.title} insights`,
     };
     seoService.create(seoData);
 
@@ -135,9 +134,23 @@ exports.add = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    // let data = await redisService.get(`tools`);
-    // if (!data)
+    const userId = req.requestor ? req.requestor.id : null;
     const { categoryIds, price, ...query } = req.query;
+
+    // Cache Optimization: Check cache for anonymous users
+    // (Authenticated users have personalized 'isWishlisted' field, so we don't cache their response generally,
+    // or we'd need user-specific columns which is inefficient. For now, public cache.)
+    const cacheKey = req.requestor ? null : cacheService.generateKey('tools', req.query);
+
+    if (cacheKey) {
+      const cachedData = await cacheService.get(cacheKey);
+      if (cachedData) {
+        return res.status(200).send({
+          status: "success",
+          data: cachedData,
+        });
+      }
+    }
 
     if (price && !["Free", "Freemium", "Premium"].includes(price)) {
       return next(createHttpError(404, "Invalid value , route not found!"));
@@ -154,8 +167,6 @@ exports.getAll = async (req, res, next) => {
         [Op.in]: categoryIdArray,
       };
     }
-
-    const userId = req.requestor ? req.requestor.id : null;
 
     // Dynamically create conditions based on the selected price
     const priceConditions = {
@@ -200,7 +211,10 @@ exports.getAll = async (req, res, next) => {
       ],
     });
 
-    // redisService.set(`tools`, data);
+    // Cache the result for anonymous users
+    if (cacheKey) {
+      await cacheService.set(cacheKey, data);
+    }
 
     res.status(200).send({
       status: "success",
@@ -1548,11 +1562,9 @@ exports.update = async (req, res, next) => {
     const categoryNames = cats.map((category) => category.name).join(" and ");
     const seoData = {
       // title: `${req.body.title} AI - Key Features, Reviews, Pricing, & Alternative Tools`,
-      description: `Explore ${req.body.title} on Toolplate: a ${
-        req.body.price == "Premium" ? "Paid" : req.body.price
-      } ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${
-        req.body.title
-      }. Your one-stop resource for ${req.body.title} insights`,
+      description: `Explore ${req.body.title} on Toolplate: a ${req.body.price == "Premium" ? "Paid" : req.body.price
+        } ${categoryNames} tool: Read in-depth features and details, user reviews, pricing, and find alternative tools of ${req.body.title
+        }. Your one-stop resource for ${req.body.title} insights`,
     };
     seoService.update(seoData, {
       where: {

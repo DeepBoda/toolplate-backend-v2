@@ -63,7 +63,7 @@ jest.mock('../config/redis', () => ({
     isReady: true,
     ping: jest.fn().mockResolvedValue('PONG'),
     connect: jest.fn().mockResolvedValue(true),
-    get: jest.fn().mockResolvedValue(null), // Default miss
+    get: jest.fn().mockResolvedValue(null),
     set: jest.fn().mockResolvedValue('OK'),
     del: jest.fn().mockResolvedValue(1),
     keys: jest.fn().mockResolvedValue([]),

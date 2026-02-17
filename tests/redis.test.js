@@ -1,151 +1,150 @@
 /**
- * Redis Cache Optimization Tests
+ * Cache Service Unit Tests
  * 
- * Tests for the improved Redis utility with default TTLs,
- * prefix-based flush, and key namespacing.
+ * Verifies that the cache service correctly abstracts Redis operations,
+ * handles serialization/deserialization, default TTL, and error conditions.
  */
 
-// Mock Redis client
 jest.mock('../config/redis', () => ({
-    get: jest.fn(),
-    set: jest.fn(),
-    del: jest.fn(),
-    keys: jest.fn(),
-    flushAll: jest.fn(),
     isReady: true,
+    get: jest.fn(),
+    set: jest.fn(), // Note: ioredis set with EX args behaves differently in mock
+    del: jest.fn(),
+    flushAll: jest.fn(),
 }));
 
 const redisClient = require('../config/redis');
-const redisUtils = require('../utils/redis');
-const CACHE_TTL = require('../constants/cacheTTL');
+const cacheService = require('../modules/cache/service');
 
-describe('Redis Cache Optimization', () => {
+describe('Cache Service', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        redisClient.set.mockResolvedValue('OK');
-        redisClient.get.mockResolvedValue(null);
-        redisClient.del.mockResolvedValue(1);
-        redisClient.keys.mockResolvedValue([]);
+        redisClient.isReady = true;
     });
 
-    // ─── TTL enforcement ───
+    describe('set()', () => {
+        test('stores value as JSON string with TTL', async () => {
+            redisClient.set.mockResolvedValue('OK');
+            const key = 'test-key';
+            const value = { data: 123 };
 
-    describe('set() TTL behavior', () => {
-        test('applies default TTL when none provided', async () => {
-            await redisUtils.set('test-key', { data: 'value' });
+            const success = await cacheService.set(key, value, 60);
 
+            expect(success).toBe(true);
             expect(redisClient.set).toHaveBeenCalledWith(
-                'test-key',
-                JSON.stringify({ data: 'value' }),
-                { EX: CACHE_TTL.DEFAULT }
+                key,
+                JSON.stringify(value),
+                'EX',
+                60
             );
         });
 
-        test('respects explicit TTL when provided', async () => {
-            await redisUtils.set('test-key', { data: 'value' }, 600);
+        test('uses default TTL if not provided', async () => {
+            redisClient.set.mockResolvedValue('OK');
+            const key = 'test-key';
+            const value = 'data';
+
+            await cacheService.set(key, value);
 
             expect(redisClient.set).toHaveBeenCalledWith(
-                'test-key',
-                JSON.stringify({ data: 'value' }),
-                { EX: 600 }
+                key,
+                JSON.stringify(value),
+                'EX',
+                3600 // Default
             );
         });
 
-        test('uses specific TTL constant', async () => {
-            await redisUtils.set('category:list', { items: [] }, CACHE_TTL.CATEGORY);
+        test('returns false if redis is not ready', async () => {
+            redisClient.isReady = false;
+            const success = await cacheService.set('key', 'value');
+            expect(success).toBe(false);
+            expect(redisClient.set).not.toHaveBeenCalled();
+        });
 
-            expect(redisClient.set).toHaveBeenCalledWith(
-                'category:list',
-                JSON.stringify({ items: [] }),
-                { EX: 86400 }
-            );
+        test('handles redis errors gracefully', async () => {
+            redisClient.set.mockRejectedValue(new Error('Redis Error'));
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+            const success = await cacheService.set('key', 'value');
+
+            expect(success).toBe(false);
+            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Cache Set Error'), expect.any(Error));
+            consoleSpy.mockRestore();
         });
     });
-
-    // ─── get() behavior ───
 
     describe('get()', () => {
-        test('returns parsed JSON for existing keys', async () => {
-            redisClient.get.mockResolvedValue(JSON.stringify({ name: 'test' }));
+        test('returns parsed object on hit', async () => {
+            const stored = JSON.stringify({ data: 'cached' });
+            redisClient.get.mockResolvedValue(stored);
 
-            const result = await redisUtils.get('test-key');
-            expect(result).toEqual({ name: 'test' });
+            const result = await cacheService.get('key');
+
+            expect(result).toEqual({ data: 'cached' });
+            expect(redisClient.get).toHaveBeenCalledWith('key');
         });
 
-        test('returns null for non-existing keys', async () => {
+        test('returns null on miss', async () => {
             redisClient.get.mockResolvedValue(null);
-
-            const result = await redisUtils.get('missing-key');
+            const result = await cacheService.get('key');
             expect(result).toBeNull();
         });
 
-        test('returns null on error', async () => {
-            redisClient.get.mockRejectedValue(new Error('Connection lost'));
-
-            const result = await redisUtils.get('test-key');
+        test('returns null if redis not ready', async () => {
+            redisClient.isReady = false;
+            const result = await cacheService.get('key');
             expect(result).toBeNull();
+            expect(redisClient.get).not.toHaveBeenCalled();
+        });
+
+        test('handles JSON parse errors gracefully? (Data corruption)', async () => {
+            redisClient.get.mockResolvedValue('{ invalid json');
+            // JSON.parse throws. Service catches it? Let's check implementation.
+            // Implementation: try { ... JSON.parse ... } catch (error) ...
+            // So it should return null ideally, or log error.
+
+            // But implementation catches `error` from `redisClient.get`.
+            // Does it catch synchronous errors inside existing try block?
+            // Yes, `await redisClient.get` throws async, but subsequent sync code inside `try` is caught.
+            // `JSON.parse` is sync.
+
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+            const result = await cacheService.get('key');
+
+            expect(result).toBeNull(); // Should catch SyntaxError
+            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Cache Get Error'), expect.any(SyntaxError));
+            consoleSpy.mockRestore();
         });
     });
-
-    // ─── flushByPrefix ───
-
-    describe('flushByPrefix()', () => {
-        test('deletes only matching keys', async () => {
-            redisClient.keys.mockResolvedValue(['tool:1', 'tool:2']);
-            redisClient.del.mockResolvedValue(2);
-
-            const count = await redisUtils.flushByPrefix('tool:*');
-
-            expect(redisClient.keys).toHaveBeenCalledWith('tool:*');
-            expect(redisClient.del).toHaveBeenCalledWith(['tool:1', 'tool:2']);
-            expect(count).toBe(2);
-        });
-
-        test('handles no matching keys gracefully', async () => {
-            redisClient.keys.mockResolvedValue([]);
-
-            const count = await redisUtils.flushByPrefix('nonexistent:*');
-
-            expect(redisClient.keys).toHaveBeenCalledWith('nonexistent:*');
-            expect(redisClient.del).not.toHaveBeenCalled();
-            expect(count).toBe(0);
-        });
-
-        test('returns 0 on error', async () => {
-            redisClient.keys.mockRejectedValue(new Error('Redis error'));
-
-            const count = await redisUtils.flushByPrefix('tool:*');
-            expect(count).toBe(0);
-        });
-    });
-
-    // ─── del() behavior ───
 
     describe('del()', () => {
-        test('deletes a specific key', async () => {
-            await redisUtils.del('key-to-delete');
-            expect(redisClient.del).toHaveBeenCalledWith('key-to-delete');
+        test('deletes key', async () => {
+            redisClient.del.mockResolvedValue(1);
+            const success = await cacheService.del('key');
+            expect(success).toBe(true);
+            expect(redisClient.del).toHaveBeenCalledWith('key');
         });
     });
 
-    // ─── hDel pattern delete ───
+    describe('flush()', () => {
+        test('flushes all cache', async () => {
+            redisClient.flushAll.mockResolvedValue('OK');
+            const success = await cacheService.flush();
+            expect(success).toBe(true);
+            expect(redisClient.flushAll).toHaveBeenCalled();
+        });
+    });
 
-    describe('hDel()', () => {
-        test('deletes all keys matching pattern', async () => {
-            redisClient.keys.mockResolvedValue(['blog:1', 'blog:2', 'blog:3']);
-
-            await redisUtils.hDel('blog:*');
-
-            expect(redisClient.keys).toHaveBeenCalledWith('blog:*');
-            expect(redisClient.del).toHaveBeenCalledWith(['blog:1', 'blog:2', 'blog:3']);
+    describe('generateKey()', () => {
+        test('formats key with prefix', () => {
+            expect(cacheService.generateKey('user', 123)).toBe('tp:user:123');
         });
 
-        test('does nothing when no keys match', async () => {
-            redisClient.keys.mockResolvedValue([]);
-
-            await redisUtils.hDel('empty:*');
-
-            expect(redisClient.del).not.toHaveBeenCalled();
+        test('handles object identifiers', () => {
+            const filter = { type: 'admin', active: true };
+            const expected = `tp:list:${JSON.stringify(filter)}`;
+            expect(cacheService.generateKey('list', filter)).toBe(expected);
         });
     });
 });

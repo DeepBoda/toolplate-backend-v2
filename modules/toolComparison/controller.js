@@ -4,6 +4,17 @@
  * Handles API requests for tool comparison.
  */
 const service = require("./service");
+const Joi = require("joi");
+
+const compareSchema = Joi.object({
+    slugs: Joi.string().required().custom((value, helpers) => {
+        const slugArray = value.split(',').map(s => s.trim()).filter(Boolean);
+        if (slugArray.length < 2 || slugArray.length > 5) {
+            return helpers.message("Please provide between 2 and 5 tools to compare");
+        }
+        return slugArray;
+    }, "Slug array parsing")
+});
 
 /**
  * Compare tools by slugs.
@@ -12,32 +23,28 @@ const service = require("./service");
  */
 exports.compare = async (req, res, next) => {
     try {
-        const { slugs } = req.query;
-
-        if (!slugs) {
+        const { error, value } = compareSchema.validate(req.query);
+        if (error) {
             return res.status(400).json({
                 status: "fail",
-                message: "Please provide 'slugs' query parameter (comma-separated list of slugs)",
+                message: error.details[0].message,
             });
         }
 
-        const slugArray = slugs.split(',').map(s => s.trim()).filter(Boolean);
+        const slugArray = value.slugs;
 
-        if (slugArray.length < 2) {
-            return res.status(400).json({
-                status: "fail",
-                message: "Please provide at least 2 tools to compare",
-            });
-        }
+        // Analytics Hook
+        console.info(`[ANALYTICS] Tool Comparison Requested: ${slugArray.join(' vs ')}`);
 
         const data = await service.compareBySlugs(slugArray);
 
         res.status(200).json({
             status: "success",
-            count: data.length,
-            data,
+            count: data.tools.length,
+            data: data.tools,
+            sharedFeatures: data.sharedFeatures,
         });
-    } catch (error) {
-        next(error);
+    } catch (err) {
+        next(err);
     }
 };

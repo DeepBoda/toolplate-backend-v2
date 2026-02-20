@@ -20,7 +20,7 @@ const { toolAttributes, categoryAttributes } = require("../../constants/queryAtt
  * @returns {Promise<Object[]>} - Array of detailed tool objects
  */
 const compareBySlugs = async (slugs) => {
-    if (!slugs || slugs.length === 0) return [];
+    if (!slugs || slugs.length === 0) return { tools: [], sharedFeatures: [] };
 
     // Limit comparison to 4 tools to prevent abuse/load
     const toolsToCompare = slugs.slice(0, 4);
@@ -58,11 +58,33 @@ const compareBySlugs = async (slugs) => {
         ],
     });
 
-    // Sort tools to match input order?
-    // Not strictly necessary but nice for UI.
-    // const sortedTools = toolsToCompare.map(slug => tools.find(t => t.slug === slug)).filter(Boolean);
+    console.log("DB TOOLS RECEIVED:", tools);
 
-    return tools;
+    // Compute shared features (intersection of pros)
+    const allPros = tools.map((t) => {
+        let p = t.pros;
+        if (typeof p === "string") {
+            try {
+                p = JSON.parse(p);
+            } catch (e) {
+                p = [];
+            }
+        }
+        return Array.isArray(p) ? p : [];
+    });
+
+    let sharedFeatures = [];
+    if (allPros.length > 0) {
+        // Base the intersection on the first tool's pros
+        sharedFeatures = allPros[0].filter((feature) =>
+            allPros.every((prosList) => prosList.includes(feature))
+        );
+    }
+
+    return {
+        tools,
+        sharedFeatures,
+    };
 };
 
 module.exports = {
